@@ -1,0 +1,26 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700&display=swap'); /* */
+
+:root {
+  /* Cores base da Imobiliária Valdinei */
+  --color-primary: #C79C31; 
+  --color-secondary: #14143C; 
+  --color-dark: #14143c; 
+  
+  /* Cores de Apoio (Brancos, Cinzas e Textos) */
+  --color-background: #F8F9FA;
+  --color-surface: #FFFFFF;
+  --color-text-main: #333333;
+  --color-text-muted: #666666;
+
+  /* Tipografia */
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Outfit', sans-serif;
+
+  /* Espaçamentos e Bordas padrão da equipe */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  
+  /* Transições suaves */
+  --transition-fast: 0.2s ease-in-out;
+}
