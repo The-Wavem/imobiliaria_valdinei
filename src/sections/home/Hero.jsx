@@ -1,7 +1,53 @@
+import { useState } from "react";
+import { BedDouble, Building2, MapPin, DollarSign } from "lucide-react";
 import Button from "@components/ui/Button/Button.jsx";
+import Input from "@components/ui/Input/Input.jsx";
+import Select from "@components/ui/Select/Select.jsx";
 import styles from "./Hero.module.css";
 
+const bairroOptions = [
+  { value: "", label: "Selecione um bairro" },
+  { value: "agua-verde", label: "Água Verde" },
+  { value: "batel", label: "Batel" },
+  { value: "centro", label: "Centro" },
+  { value: "portao", label: "Portão" },
+];
+
+const valorOptions = [
+  { value: "", label: "Selecione a faixa de valor" },
+  { value: "ate-300", label: "Até R$ 300 mil" },
+  { value: "ate-500", label: "Até R$ 500 mil" },
+  { value: "ate-800", label: "Até R$ 800 mil" },
+  { value: "acima-800", label: "Acima de R$ 800 mil" },
+];
+
+const initialFilters = {
+  cidade: "Curitiba e região",
+  bairro: "",
+  valor: "",
+  quartos: "",
+};
+
 export default function Hero() {
+  const [searchTab, setSearchTab] = useState("Comprar");
+  const [filters, setFilters] = useState(initialFilters);
+
+  const handleFieldChange = (field) => (event) => {
+    const { value } = event.target;
+
+    setFilters((currentFilters) => ({
+      ...currentFilters,
+      [field]: value,
+    }));
+  };
+
+  const handleSearch = () => {
+    console.log({
+      transaction: searchTab,
+      filters,
+    });
+  };
+
   return (
     <section className={styles.hero}>
       <div className={styles.overlay} />
@@ -16,44 +62,63 @@ export default function Hero() {
           </p>
 
           <div className={styles.actions}>
-            <Button variant="primary">Buscar imóveis</Button>
-            <Button variant="outline">Falar com corretor</Button>
+            <Button variant="primary">Falar com corretor</Button>
+            <Button variant="outline">Ver imóveis</Button>
           </div>
         </div>
 
         <div className={styles.searchCard}>
-          <div className={styles.tabs} aria-label="Filtro de imóveis">
-            <span className={`${styles.tab} ${styles.tabActive}`}>Comprar</span>
-            <span className={styles.tab}>Alugar</span>
-            <span className={styles.tab}>Lançamentos</span>
+          <div className={styles.tabs} aria-label="Tipo de transação">
+            {['Comprar', 'Alugar'].map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                className={`${styles.tab} ${searchTab === tab ? styles.tabActive : ""}`}
+                onClick={() => setSearchTab(tab)}
+              >
+                {tab}
+              </button>
+            ))}
           </div>
 
           <div className={styles.fields}>
-            <label className={styles.field}>
-              <span>Cidade</span>
-              <div className={styles.fieldValue}>Curitiba e região</div>
-            </label>
+            <Input
+              icon={MapPin}
+              label="Cidade"
+              placeholder="Curitiba e região"
+              value={filters.cidade}
+              onChange={handleFieldChange("cidade")}
+            />
 
-            <label className={styles.field}>
-              <span>Bairro</span>
-              <div className={styles.fieldValue}>Selecione um bairro</div>
-            </label>
+            <Select
+              icon={Building2}
+              label="Bairro"
+              options={bairroOptions}
+              value={filters.bairro}
+              onChange={handleFieldChange("bairro")}
+            />
 
-            <label className={styles.field}>
-              <span>Tipo</span>
-              <div className={styles.fieldValue}>
-                Apartamento, casa ou terreno
-              </div>
-            </label>
+            <Select
+              icon={DollarSign}
+              label="Faixa de valor"
+              options={valorOptions}
+              value={filters.valor}
+              onChange={handleFieldChange("valor")}
+            />
 
-            <label className={styles.field}>
-              <span>Faixa de preço</span>
-              <div className={styles.fieldValue}>Até R$ 500 mil</div>
-            </label>
+            <Input
+              icon={BedDouble}
+              label="Quartos"
+              placeholder="Ex: 2, 3, 4"
+              value={filters.quartos}
+              onChange={handleFieldChange("quartos")}
+            />
           </div>
 
           <div className={styles.searchAction}>
-            <Button variant="secondary">Buscar imóveis</Button>
+            <Button variant="secondary" onClick={handleSearch}>
+              Buscar imóveis
+            </Button>
           </div>
         </div>
       </div>
