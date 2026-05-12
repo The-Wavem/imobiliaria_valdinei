@@ -6,6 +6,7 @@ export default function Input({
   placeholder,
   value,
   onChange,
+  type = "text",
   className = "",
 }) {
   return (
@@ -21,7 +22,7 @@ export default function Input({
 
         <input
           className={styles.input}
-          type="text"
+          type={type}
           placeholder={placeholder}
           value={value}
           onChange={onChange}
