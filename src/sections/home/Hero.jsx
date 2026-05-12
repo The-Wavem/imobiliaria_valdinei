@@ -1,35 +1,35 @@
 import { useState } from "react";
-import { BedDouble, Building2, MapPin, DollarSign } from "lucide-react";
+import { BedDouble, Home as HomeIcon, MapPin, DollarSign } from "lucide-react";
 import Button from "@components/ui/Button/Button.jsx";
 import Input from "@components/ui/Input/Input.jsx";
 import Select from "@components/ui/Select/Select.jsx";
 import styles from "./Hero.module.css";
 
 const bairroOptions = [
-  { value: "", label: "Selecione um bairro" },
-  { value: "agua-verde", label: "Água Verde" },
-  { value: "batel", label: "Batel" },
-  { value: "centro", label: "Centro" },
-  { value: "portao", label: "Portão" },
+  { value: "", label: "Nº de quartos" },
+  { value: "1", label: "1+ quartos" },
+  { value: "2", label: "2+ quartos" },
+  { value: "3", label: "3+ quartos" },
+  { value: "4", label: "4+ quartos" },
 ];
 
 const valorOptions = [
-  { value: "", label: "Selecione a faixa de valor" },
-  { value: "ate-300", label: "Até R$ 300 mil" },
-  { value: "ate-500", label: "Até R$ 500 mil" },
-  { value: "ate-800", label: "Até R$ 800 mil" },
-  { value: "acima-800", label: "Acima de R$ 800 mil" },
+  { value: "", label: "Escolha o valor" },
+  { value: "ate-1500", label: "Até R$ 1.500" },
+  { value: "ate-3000", label: "Até R$ 3.000" },
+  { value: "ate-5000", label: "Até R$ 5.000" },
+  { value: "qualquer", label: "Qualquer valor" },
 ];
 
 const initialFilters = {
-  cidade: "Curitiba e região",
+  cidade: "",
   bairro: "",
   valor: "",
   quartos: "",
 };
 
 export default function Hero() {
-  const [searchTab, setSearchTab] = useState("Comprar");
+  const [searchTab, setSearchTab] = useState("Alugar");
   const [filters, setFilters] = useState(initialFilters);
 
   const handleFieldChange = (field) => (event) => {
@@ -53,23 +53,18 @@ export default function Hero() {
       <div className={styles.overlay} />
 
       <div className={styles.container}>
-        <div className={styles.copy}>
-          <span className={styles.kicker}>Imobiliária Valdinei</span>
-          <h1>Encontre o imóvel dos seus sonhos</h1>
-          <p>
-            Casas, apartamentos e terrenos em Curitiba e região com um
-            atendimento próximo e especializado.
-          </p>
-
-          <div className={styles.actions}>
-            <Button variant="primary">Falar com corretor</Button>
-            <Button variant="outline">Ver imóveis</Button>
-          </div>
-        </div>
-
         <div className={styles.searchCard}>
+          <div className={styles.cardHeader}>
+            <span className={styles.kicker}>Imobiliária Valdinei</span>
+            <h1>{searchTab === "Alugar" ? "Alugue o lar ideal" : "Compre o lar ideal"}</h1>
+            <p>
+              Explore imóveis em Curitiba e região com uma busca simples,
+              objetiva e preparada para guiar sua próxima decisão.
+            </p>
+          </div>
+
           <div className={styles.tabs} aria-label="Tipo de transação">
-            {['Comprar', 'Alugar'].map((tab) => (
+            {['Alugar', 'Comprar'].map((tab) => (
               <button
                 key={tab}
                 type="button"
@@ -85,40 +80,56 @@ export default function Hero() {
             <Input
               icon={MapPin}
               label="Cidade"
-              placeholder="Curitiba e região"
+              placeholder="Busque por cidade"
               value={filters.cidade}
               onChange={handleFieldChange("cidade")}
             />
 
-            <Select
-              icon={Building2}
+            <Input
+              icon={HomeIcon}
               label="Bairro"
-              options={bairroOptions}
+              placeholder="Busque por bairro"
               value={filters.bairro}
               onChange={handleFieldChange("bairro")}
             />
 
-            <Select
-              icon={DollarSign}
-              label="Faixa de valor"
-              options={valorOptions}
-              value={filters.valor}
-              onChange={handleFieldChange("valor")}
-            />
+            <div className={styles.fieldsGrid}>
+              <Select
+                icon={DollarSign}
+                label="Valor total até"
+                options={valorOptions}
+                value={filters.valor}
+                onChange={handleFieldChange("valor")}
+              />
 
-            <Input
-              icon={BedDouble}
-              label="Quartos"
-              placeholder="Ex: 2, 3, 4"
-              value={filters.quartos}
-              onChange={handleFieldChange("quartos")}
-            />
+              <Select
+                icon={BedDouble}
+                label="Quartos"
+                options={bairroOptions}
+                value={filters.quartos}
+                onChange={handleFieldChange("quartos")}
+              />
+            </div>
           </div>
 
           <div className={styles.searchAction}>
-            <Button variant="secondary" onClick={handleSearch}>
+            <Button variant="primary" onClick={handleSearch}>
               Buscar imóveis
             </Button>
+          </div>
+        </div>
+
+        <div className={styles.copy}>
+          <span className={styles.sideLabel}>Curitiba e região</span>
+          <h2>O lar perfeito para sua família viver os melhores momentos.</h2>
+          <p>
+            Encontre o imóvel dos seus sonhos com a segurança e transparência
+            que você merece.
+          </p>
+
+          <div className={styles.actions}>
+            <Button variant="primary">Falar com corretor</Button>
+            <Button variant="outline">Ver imóveis</Button>
           </div>
         </div>
       </div>
