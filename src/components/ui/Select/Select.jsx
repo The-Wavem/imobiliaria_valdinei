@@ -1,8 +1,11 @@
+import { useId } from "react";
 import styles from "./Select.module.css";
 
 export default function Select({ icon: Icon, label, options, value, onChange }) {
+  const selectId = useId();
+
   return (
-    <label className={styles.field}>
+    <label className={styles.field} htmlFor={selectId}>
       <span className={styles.label}>{label}</span>
 
       <div className={styles.control}>
@@ -12,7 +15,7 @@ export default function Select({ icon: Icon, label, options, value, onChange }) 
           </span>
         ) : null}
 
-        <select className={styles.select} value={value} onChange={onChange}>
+        <select id={selectId} className={styles.select} value={value} onChange={onChange}>
           {options.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}

@@ -1,6 +1,7 @@
 .field {
   display: grid;
   gap: 0.45rem;
+  cursor: pointer;
 }
 
 .label {
@@ -47,7 +48,9 @@
   background: transparent;
   color: var(--color-text-main);
   font-family: var(--font-sans);
+  font-weight: 500;
   font-size: 0.98rem;
+  line-height: 1.2;
 }
 
 .input::placeholder {

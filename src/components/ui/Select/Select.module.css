@@ -1,6 +1,7 @@
 .field {
   display: grid;
   gap: 0.45rem;
+  cursor: pointer;
 }
 
 .label {
@@ -12,11 +13,12 @@
 }
 
 .control {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 0.75rem;
   min-height: 3.4rem;
-  padding: 0.85rem 1rem;
+  padding: 0.85rem 3rem 0.85rem 1rem;
   border-radius: 16px;
   border: 1px solid rgba(20, 20, 60, 0.14);
   background: #ffffff;
@@ -30,6 +32,24 @@
 .field:focus-within .control {
   border-color: var(--color-primary);
   box-shadow: 0 0 0 4px rgba(199, 156, 49, 0.14);
+}
+
+.control::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 1rem;
+  width: 1rem;
+  height: 1rem;
+  transform: translateY(-50%);
+  pointer-events: none;
+  background-color: var(--color-text-muted);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+.field:focus-within .control::after {
+  background-color: var(--color-primary);
 }
 
 .icon {
@@ -47,8 +67,12 @@
   background: transparent;
   color: var(--color-text-main);
   font-family: var(--font-sans);
+  font-weight: 500;
   font-size: 0.98rem;
+  line-height: 1.2;
   appearance: none;
+  -webkit-appearance: none;
+  padding-right: 0.25rem;
 }
 
 .select option {
