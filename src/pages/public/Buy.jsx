@@ -56,7 +56,9 @@ export default function Buy() {
     return properties.filter((property) => {
       const location = (filters.location || "").trim().toLowerCase();
       const propertyType = filters.propertyType || "";
-      const priceRange = filters.priceRange || "";
+      const priceMin = Number((filters.priceMin || "").toString().replace(/[^0-9]/g, "") || 0);
+      const priceMaxRaw = (filters.priceMax || "").toString().replace(/[^0-9]/g, "");
+      const priceMax = priceMaxRaw ? Number(priceMaxRaw) : Number.POSITIVE_INFINITY;
       const bedrooms = filters.bedrooms || "Qualquer";
       const bathrooms = filters.bathrooms || "Qualquer";
       const parking = filters.parking || "Qualquer";
@@ -68,12 +70,7 @@ export default function Buy() {
       const matchesType = !propertyType || property.type.toLowerCase() === propertyType;
 
       const buyPrice = property.price;
-      const matchesPrice =
-        !priceRange ||
-        (priceRange === "ate-500" && buyPrice <= 500000) ||
-        (priceRange === "ate-800" && buyPrice <= 800000) ||
-        (priceRange === "ate-1200" && buyPrice <= 1200000) ||
-        (priceRange === "acima-1200" && buyPrice > 1200000);
+      const matchesPrice = buyPrice >= priceMin && buyPrice <= priceMax;
 
       const matchesBedrooms =
         bedrooms === "Qualquer" || property.beds >= Number(bedrooms.replace("+", ""));

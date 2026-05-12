@@ -15,20 +15,13 @@ const typeOptions = [
   { value: "terreno", label: "Terreno" },
 ];
 
-const priceOptions = [
-  { value: "", label: "Faixa de Preço" },
-  { value: "ate-500", label: "Até R$ 500 mil" },
-  { value: "ate-800", label: "Até R$ 800 mil" },
-  { value: "ate-1200", label: "Até R$ 1,2 mi" },
-  { value: "acima-1200", label: "Acima de R$ 1,2 mi" },
-];
-
 export default function FilterBar({ onSearch, onAdvancedFiltersApply }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [filters, setFilters] = useState({
     location: "",
     propertyType: "",
-    priceRange: "",
+    priceMin: "",
+    priceMax: "",
   });
   const [advancedFilters, setAdvancedFilters] = useState({
     bedrooms: "Qualquer",
@@ -40,7 +33,7 @@ export default function FilterBar({ onSearch, onAdvancedFiltersApply }) {
   });
 
   const handleFieldChange = (field) => (event) => {
-    const { value } = event.target;
+    const value = typeof event === "string" ? event : event?.target?.value;
 
     setFilters((currentFilters) => ({
       ...currentFilters,
@@ -67,6 +60,7 @@ export default function FilterBar({ onSearch, onAdvancedFiltersApply }) {
             placeholder="Cidade ou Bairro"
             value={filters.location}
             onChange={handleFieldChange("location")}
+            className={styles.fieldItem}
           />
 
           <Select
@@ -75,15 +69,35 @@ export default function FilterBar({ onSearch, onAdvancedFiltersApply }) {
             options={typeOptions}
             value={filters.propertyType}
             onChange={handleFieldChange("propertyType")}
+            className={styles.fieldItem}
           />
 
-          <Select
-            icon={DollarSign}
-            label="Faixa de Preço"
-            options={priceOptions}
-            value={filters.priceRange}
-            onChange={handleFieldChange("priceRange")}
-          />
+          <div className={styles.priceGroup}>
+            <div className={styles.priceHeader}>
+              <DollarSign size={16} />
+              <span>Faixa de Preço</span>
+            </div>
+
+            <div className={styles.priceInputs}>
+              <Input
+                label="Mínimo"
+                placeholder="R$ 0"
+                value={filters.priceMin}
+                onChange={handleFieldChange("priceMin")}
+                type="text"
+                className={styles.priceInput}
+              />
+
+              <Input
+                label="Máximo"
+                placeholder="R$ 500 mil"
+                value={filters.priceMax}
+                onChange={handleFieldChange("priceMax")}
+                type="text"
+                className={styles.priceInput}
+              />
+            </div>
+          </div>
 
           <div className={styles.actions}>
             <Button variant="primary" className={styles.searchButton} onClick={handleSearch}>

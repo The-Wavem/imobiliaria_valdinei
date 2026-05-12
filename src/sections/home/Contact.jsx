@@ -21,7 +21,7 @@ export default function Contact() {
   const [formData, setFormData] = useState(initialFormState);
 
   const handleFieldChange = (field) => (event) => {
-    const { value } = event.target;
+    const value = typeof event === "string" ? event : event?.target?.value;
 
     setFormData((currentData) => ({
       ...currentData,

@@ -1,47 +1,59 @@
-import * as SelectPrimitive from "@radix-ui/react-select";
+import { useState } from "react";
+import * as Popover from "@radix-ui/react-popover";
 import { ChevronDown, Check } from "lucide-react";
 import styles from "./Select.module.css";
 
 export default function Select({ icon: Icon, label, options = [], value, onChange, className = "" }) {
   const selectableOptions = options.filter((option) => option.value !== "");
+  const [open, setOpen] = useState(false);
 
-  const handleValueChange = (nextValue) => {
+  const handleOptionSelect = (nextValue) => {
     if (typeof onChange === "function") {
-      onChange({ target: { value: nextValue } });
+      onChange(nextValue);
     }
+
+    setOpen(false);
   };
 
+  const selectedOption = options.find((option) => option.value === value);
+  const displayValue = selectedOption ? selectedOption.label : "Selecione...";
+
   return (
-    <SelectPrimitive.Root value={value} onValueChange={handleValueChange}>
-      <SelectPrimitive.Trigger className={`${styles.container} ${className}`.trim()}>
+    <Popover.Root open={open} onOpenChange={setOpen} modal={false}>
+      <Popover.Trigger type="button" className={`${styles.container} ${className}`.trim()}>
         <div className={styles.visualLayout}>
           {Icon ? <Icon className={styles.icon} size={20} /> : null}
 
           <div className={styles.textStack}>
             <span className={styles.label}>{label}</span>
-            <SelectPrimitive.Value className={styles.value} placeholder="Selecione..." />
+            <span className={styles.value}>{displayValue}</span>
           </div>
 
-          <SelectPrimitive.Icon asChild>
+          <span aria-hidden="true">
             <ChevronDown className={styles.arrow} size={20} />
-          </SelectPrimitive.Icon>
+          </span>
         </div>
-      </SelectPrimitive.Trigger>
+      </Popover.Trigger>
 
-      <SelectPrimitive.Portal>
-        <SelectPrimitive.Content className={styles.content} position="popper" sideOffset={10}>
-          <SelectPrimitive.Viewport className={styles.viewport}>
+      <Popover.Portal>
+        <Popover.Content className={styles.content} sideOffset={10} align="start">
+          <div className={styles.viewport}>
             {selectableOptions.map((option) => (
-              <SelectPrimitive.Item key={option.value} className={styles.item} value={option.value}>
-                <SelectPrimitive.ItemIndicator className={styles.itemIndicator}>
+              <button
+                type="button"
+                key={option.value}
+                className={styles.item}
+                onClick={() => handleOptionSelect(option.value)}
+              >
+                <span className={styles.itemIndicator} aria-hidden="true">
                   <Check size={16} />
-                </SelectPrimitive.ItemIndicator>
-                <SelectPrimitive.ItemText>{option.label}</SelectPrimitive.ItemText>
-              </SelectPrimitive.Item>
+                </span>
+                <span>{option.label}</span>
+              </button>
             ))}
-          </SelectPrimitive.Viewport>
-        </SelectPrimitive.Content>
-      </SelectPrimitive.Portal>
-    </SelectPrimitive.Root>
+          </div>
+        </Popover.Content>
+      </Popover.Portal>
+    </Popover.Root>
   );
 }
