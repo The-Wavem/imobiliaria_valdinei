@@ -1,0 +1,68 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+}
+
+.modal {
+  width: min(56rem, 100%);
+  max-height: calc(100vh - 2rem);
+  overflow: auto;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 30px 80px rgba(15, 23, 42, 0.24);
+}
+
+.header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid rgba(20, 20, 60, 0.08);
+}
+
+.header h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  line-height: 1.2;
+  color: var(--color-secondary);
+}
+
+.closeButton {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(20, 20, 60, 0.06);
+  color: var(--color-secondary);
+  cursor: pointer;
+  transition: background-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.closeButton:hover {
+  background: rgba(20, 20, 60, 0.1);
+  transform: scale(1.03);
+}
+
+.content {
+  padding: 1.5rem;
+}
+
+@media (max-width: 640px) {
+  .header,
+  .content {
+    padding-inline: 1rem;
+  }
+}
