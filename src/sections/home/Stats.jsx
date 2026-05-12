@@ -23,15 +23,6 @@ export default function Stats() {
   return (
     <section className={styles.statsSection}>
       <div className={styles.container}>
-        <div className={styles.header}>
-          <span className={styles.kicker}>Números que contam nossa história</span>
-          <h2>Mais alcance, mais confiança e mais oportunidades para sua próxima escolha.</h2>
-          <p>
-            Uma operação preparada para apresentar as melhores opções com
-            atendimento consultivo e proximidade em cada etapa.
-          </p>
-        </div>
-
         <div className={styles.grid}>
           {stats.map((stat) => (
             <article className={styles.card} key={stat.label}>
