@@ -39,7 +39,20 @@
 }
 
 .card:hover .image {
-  transform: scale(1.05);
+  transform: scale(1.08);
+}
+
+/* Ícones com fundo translúcido para quartos/banheiros/vagas */
+.statItem svg {
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
+  padding: 0.35rem;
+  border-radius: 50%;
+  width: 1.5rem;
+  height: 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .badges {
