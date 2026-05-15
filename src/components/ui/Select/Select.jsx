@@ -1,25 +1,59 @@
+import { useState } from "react";
+import * as Popover from "@radix-ui/react-popover";
+import { ChevronDown, Check } from "lucide-react";
 import styles from "./Select.module.css";
 
-export default function Select({ icon: Icon, label, options, value, onChange }) {
+export default function Select({ icon: Icon, label, options = [], value, onChange, className = "" }) {
+  const selectableOptions = options.filter((option) => option.value !== "");
+  const [open, setOpen] = useState(false);
+
+  const handleOptionSelect = (nextValue) => {
+    if (typeof onChange === "function") {
+      onChange(nextValue);
+    }
+
+    setOpen(false);
+  };
+
+  const selectedOption = options.find((option) => option.value === value);
+  const displayValue = selectedOption ? selectedOption.label : "Selecione...";
+
   return (
-    <label className={styles.field}>
-      <span className={styles.label}>{label}</span>
+    <Popover.Root open={open} onOpenChange={setOpen} modal={false}>
+      <Popover.Trigger type="button" className={`${styles.container} ${className}`.trim()}>
+        <div className={styles.visualLayout}>
+          {Icon ? <Icon className={styles.icon} size={20} /> : null}
 
-      <div className={styles.control}>
-        {Icon ? (
-          <span className={styles.icon}>
-            <Icon size={16} strokeWidth={2} />
+          <div className={styles.textStack}>
+            <span className={styles.label}>{label}</span>
+            <span className={styles.value}>{displayValue}</span>
+          </div>
+
+          <span aria-hidden="true">
+            <ChevronDown className={styles.arrow} size={20} />
           </span>
-        ) : null}
+        </div>
+      </Popover.Trigger>
 
-        <select className={styles.select} value={value} onChange={onChange}>
-          {options.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </div>
-    </label>
+      <Popover.Portal>
+        <Popover.Content className={styles.content} sideOffset={10} align="start">
+          <div className={styles.viewport}>
+            {selectableOptions.map((option) => (
+              <button
+                type="button"
+                key={option.value}
+                className={styles.item}
+                onClick={() => handleOptionSelect(option.value)}
+              >
+                <span className={styles.itemIndicator} aria-hidden="true">
+                  <Check size={16} />
+                </span>
+                <span>{option.label}</span>
+              </button>
+            ))}
+          </div>
+        </Popover.Content>
+      </Popover.Portal>
+    </Popover.Root>
   );
 }

@@ -1,3 +1,4 @@
+import { useId } from "react";
 import styles from "./Input.module.css";
 
 export default function Input({
@@ -9,8 +10,10 @@ export default function Input({
   type = "text",
   className = "",
 }) {
+  const inputId = useId();
+
   return (
-    <label className={`${styles.field} ${className}`.trim()}>
+    <label className={`${styles.field} ${className}`.trim()} htmlFor={inputId}>
       <span className={styles.label}>{label}</span>
 
       <div className={styles.control}>
@@ -21,6 +24,7 @@ export default function Input({
         ) : null}
 
         <input
+          id={inputId}
           className={styles.input}
           type={type}
           placeholder={placeholder}

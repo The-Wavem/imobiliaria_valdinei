@@ -140,10 +140,28 @@
 
 .visitButton {
   width: 100%;
+  background: var(--color-secondary);
 }
 
 .visitButton svg {
   flex-shrink: 0;
+}
+
+.actions {
+  display: flex;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.actions button,
+.detailsButton,
+.visitButton {
+  flex: 1 1 0;
+}
+
+.detailsButton {
+  /* outline variant uses transparent background; keep it aligned with variables */
+  background: transparent;
 }
 
 @media (max-width: 640px) {
