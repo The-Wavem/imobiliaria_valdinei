@@ -9,6 +9,7 @@ import PropertyDescription from "@sections/property-detail/PropertyDescription";
 import PropertyFeatures from "@sections/property-detail/PropertyFeatures";
 import PropertyMap from "@sections/property-detail/PropertyMap";
 import ContactSidebar from "@sections/property-detail/ContactSidebar";
+import PropertyContactForm from "@sections/property-detail/PropertyContactForm";
 
 const dummyProperties = [
   {
@@ -111,6 +112,8 @@ export default function PropertyDetail() {
           <ContactSidebar code={property.code} price={property.price} condo={property.condo} iptu={property.iptu} />
         </aside>
       </main>
+
+      <PropertyContactForm property={property} />
     </div>
   );
 }
