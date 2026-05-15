@@ -2,7 +2,7 @@ import { MapPin, Heart, Bed, Bath, Maximize, Calendar } from "lucide-react";
 import Button from "@components/ui/Button/Button.jsx";
 import styles from "./PropertyCard.module.css";
 
-export default function PropertyCard({ property }) {
+export default function PropertyCard({ property, onViewDetails }) {
   return (
     <article className={styles.card}>
       <div className={styles.imageWrap}>
@@ -57,10 +57,16 @@ export default function PropertyCard({ property }) {
           </div>
         </div>
 
-        <Button variant="secondary" className={styles.visitButton}>
-          <Calendar size={18} />
-          Agendar Visita
-        </Button>
+        <div className={styles.actions}>
+          <Button variant="outline" className={styles.detailsButton} onClick={onViewDetails}>
+            Ver Detalhes
+          </Button>
+
+          <Button variant="primary" className={styles.visitButton}>
+            <Calendar size={18} />
+            Agendar Visita
+          </Button>
+        </div>
       </div>
     </article>
   );

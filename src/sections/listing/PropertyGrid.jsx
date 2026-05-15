@@ -4,7 +4,7 @@ import Button from "@components/ui/Button/Button.jsx";
 import PropertyCard from "@components/ui/PropertyCard/PropertyCard.jsx";
 import styles from "./PropertyGrid.module.css";
 
-export default function PropertyGrid({ properties, title }) {
+export default function PropertyGrid({ properties, title, onPropertyClick }) {
   const navigate = useNavigate();
 
   if (!properties.length) {
@@ -38,7 +38,11 @@ export default function PropertyGrid({ properties, title }) {
 
         <div className={styles.grid}>
           {properties.map((property) => (
-            <PropertyCard key={property.id} property={property} />
+            <PropertyCard
+              key={property.id}
+              property={property}
+              onViewDetails={() => onPropertyClick && onPropertyClick(property.id)}
+            />
           ))}
         </div>
       </div>

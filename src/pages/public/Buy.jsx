@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Footer from "@components/layout/Footer.jsx";
 import FilterBar from "@components/ui/FilterBar/FilterBar.jsx";
 import CategoryHero from "@sections/listing/CategoryHero.jsx";
@@ -51,6 +52,11 @@ const properties = [
 
 export default function Buy() {
   const [filters, setFilters] = useState({});
+  const navigate = useNavigate();
+
+  const handlePropertyClick = (propertyId) => {
+    navigate(`/imovel/${propertyId}`);
+  };
 
   const filteredProperties = useMemo(() => {
     return properties.filter((property) => {
@@ -101,7 +107,7 @@ export default function Buy() {
         onSearch={setFilters}
         onAdvancedFiltersApply={setFilters}
       />
-      <PropertyGrid properties={filteredProperties} title="Imóveis para Comprar" />
+      <PropertyGrid properties={filteredProperties} title="Imóveis para Comprar" onPropertyClick={handlePropertyClick} />
       <Footer />
     </div>
   );
