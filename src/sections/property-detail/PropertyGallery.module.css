@@ -1,14 +1,23 @@
 .gallery {
+  height: min(550px, 70vh);
+  max-height: 550px;
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: 0 12px 30px rgba(16,24,40,0.06);
 }
 
+.gallery :global(.swiper),
+.gallery :global(.swiper-wrapper),
+.gallery :global(.swiper-slide) {
+  height: 100%;
+}
+
 .image {
   width: 100%;
-  height: 480px;
+  height: 100%;
   object-fit: cover;
   cursor: zoom-in;
+  display: block;
 }
 
 :global(.swiper-button-prev), :global(.swiper-button-next) {

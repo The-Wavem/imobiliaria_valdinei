@@ -1,6 +1,17 @@
-.container { background: var(--color-background); padding: 2.5rem 1rem; margin-top: 2rem; border-radius: 12px; }
+.container {
+  background: #FFFFFF;
+  padding: 2.5rem;
+  margin-top: 2rem;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-secondary);
+}
 .inner { max-width: 900px; margin: 0 auto; }
-.title { font-family: var(--font-display); font-weight: 600; margin-bottom: 1rem; }
+.title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: var(--color-brand-secondary);
+}
 .form { display: grid; gap: 1rem; }
 .textareaLabel { display:block; }
 .actions { display:flex; justify-content:flex-end; margin-top:0.5rem; }

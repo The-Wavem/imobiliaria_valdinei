@@ -1,3 +1,10 @@
-.section { padding: 3rem 0; border-bottom: 1px solid #e2e8f0; }
-.subtitle { text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em; color: var(--color-primary); margin-bottom: 1rem; font-family:var(--font-display); }
+.section { padding: 2rem 0; border-bottom: 1px solid rgba(20, 20, 60, 0.08); }
+.subtitle {
+	text-transform: uppercase;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	color: var(--color-brand-secondary);
+	margin-bottom: 1rem;
+	font-family: var(--font-display);
+}
 .desc p { color: var(--color-text-muted); line-height: 1.8; }

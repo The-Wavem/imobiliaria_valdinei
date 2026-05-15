@@ -1,11 +1,6 @@
-:root {
-  /* rely on global theme variables from @theme/variables.css */
-}
-
 .page {
-  padding: 2rem 1rem;
-  max-width: 1200px;
-  margin: 0 auto;
+  background-color: #F8F9FA;
+  padding: 3rem 5%;
   font-family: var(--font-base, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue');
 }
 
@@ -15,45 +10,13 @@
   align-items: center;
   color: var(--color-muted, #6b7280);
   font-size: 0.875rem;
-  margin-bottom: 1rem;
-}
-
-.topCarousel {
-  width: 100%;
-  border-radius: 16px;
-  overflow: hidden;
-  margin-bottom: 1.5rem;
-}
-
-.carouselImage {
-  width: 100%;
-  height: 420px;
-  object-fit: cover;
-  cursor: zoom-in;
-}
-
-/* position navigation arrows outside the image using global selectors */
-:global(.swiper-button-prev), :global(.swiper-button-next) {
-  color: var(--color-primary);
-  background: rgba(255,255,255,0.9);
-  border-radius: 999px;
-  width: 3rem;
-  height: 3rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 8px 20px rgba(16,24,40,0.08);
-}
-
-:global(.swiper-button-prev) {
-  left: calc(50% - 620px); /* place outside left */
-}
-
-:global(.swiper-button-next) {
-  right: calc(50% - 620px); /* place outside right */
+  margin: 0 auto 1.5rem;
+  max-width: 1400px;
 }
 
 .container {
+  max-width: 1400px;
+  margin: 0 auto;
   display: grid;
   grid-template-columns: 70% 30%;
   gap: 2rem;
@@ -61,119 +24,14 @@
 }
 
 .left {
-  background: transparent;
-}
-
-.header {
-  margin-bottom: 1rem;
-}
-
-.title {
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: 1.75rem;
-  margin: 0 0 0.5rem 0;
-}
-
-.location {
-  display: flex;
-  gap: 0.5rem;
-  color: var(--color-muted);
-  align-items: center;
-  margin-bottom: 0.75rem;
-}
-
-.specs {
-  display: flex;
-  gap: 1.25rem;
-  list-style: none;
-  padding: 0;
-  margin: 0 0 1rem 0;
-  color: var(--color-secondary, #374151);
-}
-
-.specs li {
-  display: inline-flex;
-  gap: 0.5rem;
-  align-items: center;
-  font-weight: 500;
-}
-
-.badges {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  margin-bottom: 1rem;
-}
-
-.badge {
-  background: linear-gradient(180deg, var(--color-gold) 0%, #d4af37 100%);
-  color: white;
-  padding: 0.35rem 0.6rem;
-  border-radius: 0.5rem;
-  font-weight: 600;
-  font-size: 0.75rem;
-}
-
-.description h2 {
-  font-family: var(--font-display);
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-}
-
-.description p {
-  color: var(--color-secondary, #374151);
-  line-height: 1.6;
+  background-color: #FFFFFF;
+  border-radius: var(--radius-lg);
+  padding: 2.5rem;
+  box-shadow: var(--shadow-secondary);
 }
 
 .sidebar {
-  position: relative;
-}
-
-.sidebarInner {
-  position: sticky;
-  top: 1.5rem;
-  background: var(--color-surface);
-  border: 1px solid rgba(20,20,60,0.06);
-  padding: 1rem;
-  border-radius: 12px;
-}
-
-.priceWrap {
-  text-align: left;
-  margin-bottom: 1rem;
-}
-
-.priceLabel {
-  font-size: 0.875rem;
-  color: var(--color-muted);
-}
-
-.priceValue {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--color-primary);
-  margin-top: 0.25rem;
-}
-
-.code {
-  margin-top: 0.5rem;
-  font-size: 0.875rem;
-  color: var(--color-muted);
-}
-
-.cta {
-  display: flex;
-  gap: 0.75rem;
-  flex-direction: column;
-}
-
-.ctaPrimary {
-  width: 100%;
-}
-
-.ctaOutline {
-  width: 100%;
+  align-self: start;
 }
 
 /* Mobile: sidebar becomes fixed bottom bar */
@@ -182,40 +40,15 @@
     grid-template-columns: 1fr;
   }
 
-  .carouselImage {
-    height: 260px;
-  }
-
-  .sidebarInner {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    margin: 0;
-    border-radius: 12px 12px 0 0;
-    display: flex;
-    gap: 0.75rem;
-    align-items: center;
-    padding: 0.75rem;
-    background: var(--color-surface);
-    z-index: 60;
-  }
-
-  .priceWrap {
-    flex: 1 1 auto;
-  }
-
-  .cta {
-    flex-direction: row;
-    gap: 0.5rem;
-  }
-
-  .cta button {
-    flex: 1 1 50%;
-  }
-
-  /* Add bottom padding to page so content is not hidden behind fixed bar */
   .page {
-    padding-bottom: 5.5rem;
+    padding: 1.5rem 1rem;
+  }
+
+  .left {
+    padding: 1.5rem;
+  }
+
+  .sidebar {
+    position: static;
   }
 }
