@@ -8,24 +8,58 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  color: #FFFFFF;
+  color: #ffffff;
 }
 .priceWrap,
 .taxes,
 .code,
 .priceLabel,
 .priceValue {
-  color: #FFFFFF;
+  color: #ffffff;
 }
 
-.priceWrap { display: grid; gap: 0.25rem; }
-.priceLabel { font-size: 0.9rem; opacity: 0.9; }
-.priceValue { font-weight: 700; font-size: 1.35rem; }
-.code { font-size: 0.9rem; opacity: 0.9; }
-.taxes { font-size: 0.95rem; display: grid; gap: 0.35rem; }
-.cta { display:flex; gap:0.5rem; flex-direction:column; }
+.priceWrap {
+  display: grid;
+  gap: 0.25rem;
+}
+.priceLabel {
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+.priceValue {
+  font-weight: 700;
+  font-size: 1.35rem;
+}
+.code {
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+.taxes {
+  font-size: 0.95rem;
+  display: grid;
+  gap: 0.35rem;
+}
+.cta {
+  display: flex;
+  gap: 0.5rem;
+  flex-direction: column;
+}
+.whatsappButton {
+  background: #25d366;
+  color: #ffffff;
+  border: 0;
+}
 
-@media (max-width:900px) {
-  .sidebarInner { position: static; }
-  .cta { flex-direction:row; gap:0.5rem; }
+.whatsappButton:hover {
+  background: #1ebe5b;
+}
+
+@media (max-width: 900px) {
+  .sidebarInner {
+    position: static;
+  }
+  .cta {
+    flex-direction: row;
+    gap: 0.5rem;
+  }
 }

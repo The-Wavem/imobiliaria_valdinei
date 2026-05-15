@@ -18,7 +18,9 @@ export default function ContactSidebar({ code, price, condo, iptu }) {
 
       <div className={styles.cta}>
         <Button variant="primary">Agendar Visita</Button>
-        <Button variant="outline">WhatsApp</Button>
+        <Button variant="outline" className={styles.whatsappButton}>
+          WhatsApp
+        </Button>
       </div>
     </aside>
   );

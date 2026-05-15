@@ -1,7 +1,8 @@
 import { useMemo } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import styles from "./PropertyDetail.module.css";
 
+import Breadcrumb from "@components/ui/Breadcrumb/Breadcrumb.jsx";
 import PropertyGallery from "@sections/property-detail/PropertyGallery";
 import PropertyHeader from "@sections/property-detail/PropertyHeader";
 import PropertyInfo from "@sections/property-detail/PropertyInfo";
@@ -14,6 +15,7 @@ import PropertyContactForm from "@sections/property-detail/PropertyContactForm";
 const dummyProperties = [
   {
     id: "rent-1",
+    category: "Alugar",
     code: "RNT-001",
     title: "Studio mobiliado próximo ao centro",
     location: "Centro, Curitiba",
@@ -32,6 +34,7 @@ const dummyProperties = [
   },
   {
     id: "1",
+    category: "Comprar",
     code: "BUY-001",
     title: "Apartamento Garden no Batel",
     location: "Batel, Curitiba",
@@ -48,6 +51,7 @@ const dummyProperties = [
   },
   {
     id: "2",
+    category: "Comprar",
     code: "BUY-002",
     title: "Casa moderna em condomínio fechado",
     location: "Santa Felicidade, Curitiba",
@@ -64,6 +68,7 @@ const dummyProperties = [
   },
   {
     id: "3",
+    category: "Alugar",
     code: "STU-001",
     title: "Studio mobiliado próximo ao centro",
     location: "Centro, Curitiba",
@@ -89,13 +94,7 @@ export default function PropertyDetail() {
 
   return (
     <div className={styles.page}>
-      <nav className={styles.breadcrumbs} aria-label="Breadcrumb">
-        <Link to="/">Início</Link>
-        <span>›</span>
-        <Link to={"/alugar"}>Alugar</Link>
-        <span>›</span>
-        <span>{property.title}</span>
-      </nav>
+      <Breadcrumb property={property} />
 
       <PropertyGallery images={property.images} title={property.title} />
 
