@@ -2,7 +2,7 @@
   width: 100%;
   display: grid;
   gap: 0.45rem;
-  cursor: pointer;
+  /* cursor: pointer; */
 }
 
 .label {

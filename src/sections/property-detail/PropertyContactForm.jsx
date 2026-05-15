@@ -8,7 +8,9 @@ export default function PropertyContactForm({ property }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [message, setMessage] = useState(`Olá, tenho interesse no imóvel ${property?.title || ""}. Gostaria de mais informações.`);
+  const [message, setMessage] = useState(
+    `Olá, tenho interesse no imóvel ${property?.title || ""}. Gostaria de mais informações.`,
+  );
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -19,17 +21,45 @@ export default function PropertyContactForm({ property }) {
   return (
     <section className={styles.container}>
       <div className={styles.inner}>
-        <h2 className={styles.title}>Ficou interessado no {property?.title}?</h2>
+        <h2 className={styles.title}>
+          Ficou interessado no {property?.title}?
+        </h2>
 
         <form className={styles.form} onSubmit={handleSubmit}>
-          <Input label="Nome" value={name} onChange={(e) => setName(e.target.value)} placeholder="Seu nome" />
-          <Input label="Email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com" type="email" />
-          <Input label="Telefone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(41) 9XXXX-XXXX" />
+          <Input
+            label="Nome"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Seu nome"
+            className={styles.input}
+          />
+          <Input
+            label="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="seu@email.com"
+            type="email"
+            className={styles.input}
+          />
+          <Input
+            label="Telefone"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="(41) 9XXXX-XXXX"
+            className={styles.input}
+          />
 
-          <label className={`${inputStyles.field} ${styles.textareaLabel}`.trim()}>
+          <label
+            className={`${inputStyles.field} ${styles.textareaLabel}`.trim()}
+          >
             <span className={inputStyles.label}>Mensagem</span>
             <div className={inputStyles.control}>
-              <textarea className={inputStyles.input} rows={5} value={message} onChange={(e) => setMessage(e.target.value)} />
+              <textarea
+                className={inputStyles.input}
+                rows={5}
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+              />
             </div>
           </label>
 
