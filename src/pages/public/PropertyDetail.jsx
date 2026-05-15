@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation } from "swiper";
+import { Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 import { MapPin, Bed, Bath, Maximize, Phone } from "lucide-react";
@@ -26,6 +26,54 @@ const dummyProperties = [
     ],
     description:
       "Belíssimo studio com acabamento premium, posição solar excelente e acabamento de alto padrão. Próximo a transporte, serviços e com fácil acesso ao centro.",
+  },
+  {
+    id: "1",
+    code: "BUY-001",
+    title: "Apartamento Garden no Batel",
+    location: "Batel, Curitiba",
+    price: 1450000,
+    beds: 3,
+    baths: 2,
+    area: 142,
+    parking: 2,
+    amenities: ["Mobiliado", "Elevador"],
+    images: [
+      "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&q=80&w=1600",
+    ],
+    description: "Apartamento garden com áreas amplas, acabamento moderno e excelente localização.",
+  },
+  {
+    id: "2",
+    code: "BUY-002",
+    title: "Casa moderna em condomínio fechado",
+    location: "Santa Felicidade, Curitiba",
+    price: 890000,
+    beds: 4,
+    baths: 3,
+    area: 210,
+    parking: 3,
+    amenities: ["Piscina", "Churrasqueira"],
+    images: [
+      "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&q=80&w=1600",
+    ],
+    description: "Casa moderna em condomínio com área externa, projeto contemporâneo e lazer completo.",
+  },
+  {
+    id: "3",
+    code: "STU-001",
+    title: "Studio mobiliado próximo ao centro",
+    location: "Centro, Curitiba",
+    price: 3200,
+    beds: 1,
+    baths: 1,
+    area: 42,
+    parking: 1,
+    amenities: ["Mobiliado", "Elevador"],
+    images: [
+      "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&q=80&w=1600",
+    ],
+    description: "Studio compacto, mobiliado, ótima localização e fácil acesso aos serviços.",
   },
 ];
 

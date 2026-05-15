@@ -27,6 +27,17 @@
   transition: transform 0.5s ease;
 }
 
+.cardLink {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.titleLink {
+  color: inherit;
+  text-decoration: none;
+}
+
 .card:hover .image {
   transform: scale(1.05);
 }

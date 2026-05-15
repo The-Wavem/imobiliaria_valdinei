@@ -1,17 +1,30 @@
 import { MapPin, Heart, Bed, Bath, Maximize, Calendar } from "lucide-react";
+import { Link } from "react-router-dom";
 import Button from "@components/ui/Button/Button.jsx";
+import buttonStyles from "@components/ui/Button/Button.module.css";
 import styles from "./PropertyCard.module.css";
 
 export default function PropertyCard({ property, onViewDetails }) {
   return (
     <article className={styles.card}>
       <div className={styles.imageWrap}>
-        <img
-          src={property.image}
-          alt={property.title}
-          className={styles.image}
-          referrerPolicy="no-referrer"
-        />
+        <Link
+          to={`/imovel/${property.id}`}
+          className={styles.cardLink}
+          onClick={(e) => {
+            if (onViewDetails) {
+              e.preventDefault();
+              onViewDetails(property.id);
+            }
+          }}
+        >
+          <img
+            src={property.image}
+            alt={property.title}
+            className={styles.image}
+            referrerPolicy="no-referrer"
+          />
+        </Link>
 
         <div className={styles.badges}>
           <span className={styles.badge}>{property.type}</span>
@@ -31,7 +44,20 @@ export default function PropertyCard({ property, onViewDetails }) {
           <span>{property.location}</span>
         </div>
 
-        <h3 className={styles.title}>{property.title}</h3>
+        <h3 className={styles.title}>
+          <Link
+            to={`/imovel/${property.id}`}
+            className={styles.titleLink}
+            onClick={(e) => {
+              if (onViewDetails) {
+                e.preventDefault();
+                onViewDetails(property.id);
+              }
+            }}
+          >
+            {property.title}
+          </Link>
+        </h3>
 
         <p className={styles.price}>
           {property.price.toLocaleString("pt-BR", {
@@ -56,11 +82,19 @@ export default function PropertyCard({ property, onViewDetails }) {
             <span>{property.area}m²</span>
           </div>
         </div>
-
         <div className={styles.actions}>
-          <Button variant="outline" className={styles.detailsButton} onClick={onViewDetails}>
+          <Link
+            to={`/imovel/${property.id}`}
+            className={`${buttonStyles.btn} ${buttonStyles.outline} ${styles.detailsButton}`}
+            onClick={(e) => {
+              if (onViewDetails) {
+                e.preventDefault();
+                onViewDetails(property.id);
+              }
+            }}
+          >
             Ver Detalhes
-          </Button>
+          </Link>
 
           <Button variant="primary" className={styles.visitButton}>
             <Calendar size={18} />
