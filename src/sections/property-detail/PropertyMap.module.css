@@ -1,0 +1,6 @@
+.mapSection { margin-top: 1rem; }
+.locationHeader { display:flex; align-items:center; gap:0.5rem; margin-bottom:0.5rem; color:var(--color-secondary); }
+.locationText strong { font-weight:600; font-family:var(--font-display); }
+
+.mapWrap { border-radius: var(--radius-lg); overflow:hidden; box-shadow: 0 12px 30px rgba(16,24,40,0.06); }
+.map { width:100%; height:320px; border:0; }

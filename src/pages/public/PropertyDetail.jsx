@@ -1,12 +1,14 @@
 import { useMemo } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation } from "swiper/modules";
-import "swiper/css";
-import "swiper/css/navigation";
-import { MapPin, Bed, Bath, Maximize, Phone } from "lucide-react";
-import Button from "@components/ui/Button/Button.jsx";
 import styles from "./PropertyDetail.module.css";
+
+import PropertyGallery from "@sections/property-detail/PropertyGallery";
+import PropertyHeader from "@sections/property-detail/PropertyHeader";
+import PropertyInfo from "@sections/property-detail/PropertyInfo";
+import PropertyDescription from "@sections/property-detail/PropertyDescription";
+import PropertyFeatures from "@sections/property-detail/PropertyFeatures";
+import PropertyMap from "@sections/property-detail/PropertyMap";
+import ContactSidebar from "@sections/property-detail/ContactSidebar";
 
 const dummyProperties = [
   {
@@ -77,37 +79,6 @@ const dummyProperties = [
   },
 ];
 
-function BadgeList({ items = [] }) {
-  return (
-    <div className={styles.badges}>
-      {items.map((b) => (
-        <span key={b} className={styles.badge}>
-          {b}
-        </span>
-      ))}
-    </div>
-  );
-}
-
-function Specs({ beds, baths, area, parking }) {
-  return (
-    <ul className={styles.specs}>
-      <li>
-        <Bed size={16} /> <span>{beds} quarto{beds > 1 ? "s" : ""}</span>
-      </li>
-      <li>
-        <Bath size={16} /> <span>{baths} banheiro{baths > 1 ? "s" : ""}</span>
-      </li>
-      <li>
-        <Maximize size={16} /> <span>{area} m²</span>
-      </li>
-      <li>
-        <Phone size={16} /> <span>{parking} vaga{parking > 1 ? "s" : ""}</span>
-      </li>
-    </ul>
-  );
-}
-
 export default function PropertyDetail() {
   const { id } = useParams();
 
@@ -125,58 +96,19 @@ export default function PropertyDetail() {
         <span>{property.title}</span>
       </nav>
 
-      <div className={styles.topCarousel}>
-        <Swiper
-          modules={[Navigation]}
-          navigation
-          spaceBetween={10}
-          slidesPerView={1}
-        >
-          {property.images.map((src, idx) => (
-            <SwiperSlide key={idx}>
-              <img
-                src={src}
-                alt={`${property.title} - ${idx + 1}`}
-                className={styles.carouselImage}
-                onClick={() => console.log("Simular abrir em tela cheia", src)}
-              />
-            </SwiperSlide>
-          ))}
-        </Swiper>
-      </div>
+      <PropertyGallery images={property.images} title={property.title} />
 
       <main className={styles.container}>
         <section className={styles.left}>
-          <header className={styles.header}>
-            <h1 className={styles.title}>{property.title}</h1>
-            <div className={styles.location}>
-              <MapPin size={14} /> <span>{property.location}</span>
-            </div>
-            <Specs beds={property.beds} baths={property.baths} area={property.area} parking={property.parking} />
-            <BadgeList items={property.amenities} />
-          </header>
-
-          <section className={styles.description}>
-            <h2>Descrição</h2>
-            <p>{property.description}</p>
-          </section>
+          <PropertyHeader title={property.title} location={property.location} price={property.price} />
+          <PropertyInfo beds={property.beds} baths={property.baths} area={property.area} parking={property.parking} />
+          <PropertyFeatures features={property.amenities} />
+          <PropertyDescription description={property.description} />
+          <PropertyMap address={property.location} />
         </section>
 
         <aside className={styles.sidebar}>
-          <div className={styles.sidebarInner}>
-            <div className={styles.priceWrap}>
-              <div className={styles.priceLabel}>Preço</div>
-              <div className={styles.priceValue}>
-                {property.price.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-              </div>
-              <div className={styles.code}>Código: {property.code}</div>
-            </div>
-
-            <div className={styles.cta}>
-              <Button variant="primary" className={styles.ctaPrimary}>Agendar Visita</Button>
-              <Button variant="outline" className={styles.ctaOutline}>Falar com Corretor</Button>
-            </div>
-          </div>
+          <ContactSidebar code={property.code} price={property.price} condo={property.condo} iptu={property.iptu} />
         </aside>
       </main>
     </div>

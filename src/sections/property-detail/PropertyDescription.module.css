@@ -1,0 +1,2 @@
+.desc h2 { font-family: var(--font-display); font-weight: 600; margin-bottom: 0.5rem; }
+.desc p { color: var(--color-secondary); line-height: 1.6; }
