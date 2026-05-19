@@ -1,5 +1,6 @@
-import { MapPin, Heart, Bed, Bath, Maximize, Calendar } from "lucide-react";
+import { MapPin, Bed, Bath, Maximize, Calendar } from "lucide-react";
 import Button from "@components/ui/Button/Button.jsx";
+import ButtonFavorito from "@components/ui/Button_Favorito/Button_Favorito.jsx";
 import styles from "./PropertyCard.module.css";
 
 export default function PropertyCard({ property }) {
@@ -20,9 +21,7 @@ export default function PropertyCard({ property }) {
           </span>
         </div>
 
-        <button type="button" className={styles.favoriteButton} aria-label="Favoritar imóvel">
-          <Heart size={18} />
-        </button>
+        <ButtonFavorito property={property} />
       </div>
 
       <div className={styles.content}>
