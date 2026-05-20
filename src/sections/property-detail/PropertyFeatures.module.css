@@ -1,6 +1,6 @@
 .section {
-	padding: 2rem 0;
-	border-bottom: 1px solid rgba(20, 20, 60, 0.08);
+	padding: 0;
+	border-bottom: 0;
 }
 
 .subtitle {
@@ -24,15 +24,15 @@
 	display: inline-flex;
 	align-items: center;
 	gap: 0.5rem;
-	background: rgba(199, 156, 49, 0.08);
-	border: 1px solid rgba(199, 156, 49, 0.16);
+	background: var(--color-primary-light);
+	border: 1px solid rgba(199, 156, 49, 0.12);
 	color: var(--color-brand-secondary);
 	padding: 0.7rem 0.95rem;
 	border-radius: 999px;
 	font-weight: 600;
 	font-size: 0.85rem;
-	box-shadow: 0 8px 18px rgba(20, 20, 60, 0.06);
-	backdrop-filter: var(--glass-blur);
+	box-shadow: none;
+	backdrop-filter: none;
 }
 
 .featureIcon {
