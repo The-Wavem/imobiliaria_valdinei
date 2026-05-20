@@ -1,9 +1,10 @@
 .container {
-  background: #ffffff;
-  padding: 2.5rem;
+  background-color: #FFFFFF;
+  padding: 3rem;
   margin-top: 2rem;
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-secondary);
+  border: 1px solid rgba(20, 20, 60, 0.08);
+  box-shadow: 0 22px 45px -18px rgba(20, 20, 60, 0.12);
 }
 .inner {
   max-width: 900px;
@@ -12,39 +13,121 @@
 .title {
   font-family: var(--font-display);
   font-weight: 700;
+  font-size: 1.45rem;
+  line-height: 1.2;
   margin-bottom: 1rem;
   color: var(--color-brand-secondary);
 }
 .form {
-  display: grid;
-  gap: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
 .form:hover{
   cursor: none
 }
 
-.input {
+.field {
   width: 100%;
-  padding: 0.75rem 1rem;
-  border: 1px solid rgba(20, 20, 60, 0.12);
-  border-radius: var(--radius-md);
-  font-size: 1rem;
-  color: var(--color-dark);
+  display: grid;
+  gap: 0.5rem;
 }
 
-.textareaLabel {
-  display: block;
+.field > span {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  color: var(--color-brand-secondary);
+}
+
+.field > div {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-height: 3.6rem;
+  padding: 0.82rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid #E2E8F0;
+  background-color: #FFFFFF;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast), background-color var(--transition-fast);
+}
+
+.field:hover > div {
+  border-color: rgba(199, 156, 49, 0.38);
+  background-color: #FFFFFF;
+}
+
+.field:focus-within > div {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(199, 156, 49, 0.15);
+}
+
+.field input {
+  width: 100%;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--color-text-main);
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 0.96rem;
+  line-height: 1.15;
+}
+
+.field input::placeholder {
+  color: rgba(102, 102, 102, 0.8);
+}
+
+.messageField {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.messageField > div {
+  align-items: flex-start;
+}
+
+.messageField:hover > div {
+  border-color: rgba(199, 156, 49, 0.38);
+}
+
+.textarea {
+  width: 100%;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--color-text-main);
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 0.96rem;
+  line-height: 1.5;
+  resize: vertical;
+  min-height: 120px;
+  max-height: 250px;
+}
+
+.textarea::placeholder {
+  color: rgba(102, 102, 102, 0.8);
+}
+
+.messageField:focus-within > div {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(199, 156, 49, 0.15);
 }
 
 .actions {
   display: flex;
-  justify-content: flex-end;
   margin-top: 0.5rem;
 }
 
+.submitButton {
+  width: 100%;
+}
+
 @media (max-width: 900px) {
-  .actions {
-    justify-content: stretch;
+  .container {
+    padding: 2rem;
   }
 }

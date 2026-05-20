@@ -21,9 +21,7 @@ export default function PropertyContactForm({ property }) {
   return (
     <section className={styles.container}>
       <div className={styles.inner}>
-        <h2 className={styles.title}>
-          Ficou interessado no {property?.title}?
-        </h2>
+        <h2 className={styles.title}>Ficou interessado no {property?.title}?</h2>
 
         <form className={styles.form} onSubmit={handleSubmit}>
           <Input
@@ -31,7 +29,7 @@ export default function PropertyContactForm({ property }) {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Seu nome"
-            className={styles.input}
+            className={styles.field}
           />
           <Input
             label="Email"
@@ -39,23 +37,23 @@ export default function PropertyContactForm({ property }) {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="seu@email.com"
             type="email"
-            className={styles.input}
+            className={styles.field}
           />
           <Input
             label="Telefone"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             placeholder="(41) 9XXXX-XXXX"
-            className={styles.input}
+            className={styles.field}
           />
 
           <label
-            className={`${inputStyles.field} ${styles.textareaLabel}`.trim()}
+            className={`${inputStyles.field} ${styles.messageField}`.trim()}
           >
             <span className={inputStyles.label}>Mensagem</span>
             <div className={inputStyles.control}>
               <textarea
-                className={inputStyles.input}
+                className={styles.textarea}
                 rows={5}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
@@ -64,7 +62,9 @@ export default function PropertyContactForm({ property }) {
           </label>
 
           <div className={styles.actions}>
-            <Button variant="primary">Enviar</Button>
+            <Button variant="primary" className={styles.submitButton}>
+              Enviar
+            </Button>
           </div>
         </form>
       </div>

@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useParams } from "react-router-dom";
+import { motion } from "framer-motion";
 import styles from "./PropertyDetail.module.css";
 
 import Breadcrumb from "@components/ui/Breadcrumb/Breadcrumb.jsx";
@@ -11,6 +12,26 @@ import PropertyFeatures from "@sections/property-detail/PropertyFeatures";
 import PropertyMap from "@sections/property-detail/PropertyMap";
 import ContactSidebar from "@sections/property-detail/ContactSidebar";
 import PropertyContactForm from "@sections/property-detail/PropertyContactForm";
+
+const pageVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.2 } },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } },
+};
+
+const sidebarVariants = {
+  hidden: { opacity: 0, x: 24, y: 12 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    y: 0,
+    transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 0.15 },
+  },
+};
 
 const dummyProperties = [
   {
@@ -98,19 +119,31 @@ export default function PropertyDetail() {
 
       <PropertyGallery images={property.images} title={property.title} />
 
-      <main className={styles.container}>
-        <section className={styles.left}>
-          <PropertyHeader title={property.title} location={property.location} price={property.price} />
-          <PropertyInfo beds={property.beds} baths={property.baths} area={property.area} parking={property.parking} />
-          <PropertyFeatures features={property.amenities} />
-          <PropertyDescription description={property.description} />
-          <PropertyMap address={property.location} />
-        </section>
+      <motion.main className={styles.container} variants={pageVariants} initial="hidden" animate="visible">
+        <motion.section className={styles.left}>
+          <motion.div variants={itemVariants}>
+            <PropertyHeader title={property.title} location={property.location} price={property.price} />
+          </motion.div>
+          <motion.div variants={itemVariants}>
+            <PropertyInfo beds={property.beds} baths={property.baths} area={property.area} parking={property.parking} />
+          </motion.div>
+          <motion.div variants={itemVariants}>
+            <PropertyFeatures features={property.amenities} />
+          </motion.div>
+          <motion.div variants={itemVariants}>
+            <PropertyDescription description={property.description} />
+          </motion.div>
+          <motion.div variants={itemVariants}>
+            <PropertyMap address={property.location} />
+          </motion.div>
+        </motion.section>
 
         <aside className={styles.sidebar}>
-          <ContactSidebar code={property.code} price={property.price} condo={property.condo} iptu={property.iptu} />
+          <motion.div variants={sidebarVariants}>
+            <ContactSidebar code={property.code} price={property.price} condo={property.condo} iptu={property.iptu} />
+          </motion.div>
         </aside>
-      </main>
+      </motion.main>
 
       <PropertyContactForm property={property} />
     </div>
