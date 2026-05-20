@@ -1,22 +1,30 @@
 .container {
-  background-color: #FFFFFF;
-  padding: 3rem;
+  padding: 4rem 0;
   margin-top: 2rem;
-  border-radius: var(--radius-lg);
-  border: 1px solid rgba(20, 20, 60, 0.08);
-  box-shadow: 0 22px 45px -18px rgba(20, 20, 60, 0.12);
 }
 .inner {
-  max-width: 900px;
+  max-width: 800px;
   margin: 0 auto;
+  background-color: #FFFFFF;
+  border-radius: 1.5rem;
+  padding: 3rem;
+  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.05);
+}
+.header {
+  text-align: center;
+  margin-bottom: 2.5rem;
 }
 .title {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 1.45rem;
-  line-height: 1.2;
-  margin-bottom: 1rem;
+  font-size: 2rem;
+  line-height: 1.15;
+  margin-bottom: 0.5rem;
   color: var(--color-brand-secondary);
+}
+.subtitle {
+  color: var(--color-text-muted);
+  margin: 0;
 }
 .form {
   display: flex;
@@ -24,8 +32,10 @@
   gap: 1.5rem;
 }
 
-.form:hover{
-  cursor: none
+.inputGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
 }
 
 .field {
@@ -49,18 +59,18 @@
   min-height: 3.6rem;
   padding: 0.82rem 1rem;
   border-radius: var(--radius-md);
-  border: 1px solid #E2E8F0;
-  background-color: #FFFFFF;
+  border: 1px solid transparent;
+  background-color: #F8F9FA;
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast), background-color var(--transition-fast);
 }
 
 .field:hover > div {
-  border-color: rgba(199, 156, 49, 0.38);
-  background-color: #FFFFFF;
+  border-color: rgba(199, 156, 49, 0.2);
 }
 
 .field:focus-within > div {
   border-color: var(--color-primary);
+  background-color: #FFFFFF;
   box-shadow: 0 0 0 3px rgba(199, 156, 49, 0.15);
 }
 
@@ -87,10 +97,13 @@
 
 .messageField > div {
   align-items: flex-start;
+  min-height: 120px;
+  border: 1px solid transparent;
+  background-color: #F8F9FA;
 }
 
 .messageField:hover > div {
-  border-color: rgba(199, 156, 49, 0.38);
+  border-color: rgba(199, 156, 49, 0.2);
 }
 
 .textarea {
@@ -114,6 +127,7 @@
 
 .messageField:focus-within > div {
   border-color: var(--color-primary);
+  background-color: #FFFFFF;
   box-shadow: 0 0 0 3px rgba(199, 156, 49, 0.15);
 }
 
@@ -129,5 +143,19 @@
 @media (max-width: 900px) {
   .container {
     padding: 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .inputGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .inner {
+    padding: 2rem;
+  }
+
+  .title {
+    font-size: 1.6rem;
   }
 }

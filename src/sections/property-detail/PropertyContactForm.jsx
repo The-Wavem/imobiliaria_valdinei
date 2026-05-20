@@ -21,29 +21,37 @@ export default function PropertyContactForm({ property }) {
   return (
     <section className={styles.container}>
       <div className={styles.inner}>
-        <h2 className={styles.title}>Ficou interessado no {property?.title}?</h2>
+        <div className={styles.header}>
+          <h2 className={styles.title}>Ficou interessado no {property?.title}?</h2>
+          <p className={styles.subtitle}>
+            Preencha os dados abaixo e o Valdinei entrará em contato rapidamente.
+          </p>
+        </div>
 
         <form className={styles.form} onSubmit={handleSubmit}>
-          <Input
-            label="Nome"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Seu nome"
-            className={styles.field}
-          />
+          <div className={styles.inputGrid}>
+            <Input
+              label="Nome"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Seu nome"
+              className={styles.field}
+            />
+            <Input
+              label="Telefone"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="(41) 9XXXX-XXXX"
+              className={styles.field}
+            />
+          </div>
+
           <Input
             label="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="seu@email.com"
             type="email"
-            className={styles.field}
-          />
-          <Input
-            label="Telefone"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="(41) 9XXXX-XXXX"
             className={styles.field}
           />
 
