@@ -1,6 +1,6 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion as motionFactory } from "framer-motion";
 import styles from "./PropertyDetail.module.css";
 
 import Breadcrumb from "@components/ui/Breadcrumb/Breadcrumb.jsx";
@@ -12,6 +12,7 @@ import PropertyFeatures from "@sections/property-detail/PropertyFeatures";
 import PropertyMap from "@sections/property-detail/PropertyMap";
 import ContactSidebar from "@sections/property-detail/ContactSidebar";
 import PropertyContactForm from "@sections/property-detail/PropertyContactForm";
+import VisitModal from "@sections/property-detail/VisitModal";
 
 const pageVariants = {
   hidden: { opacity: 0 },
@@ -32,6 +33,10 @@ const sidebarVariants = {
     transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 0.15 },
   },
 };
+
+const MotionMain = motionFactory.main;
+const MotionSection = motionFactory.section;
+const MotionDiv = motionFactory.div;
 
 const dummyProperties = [
   {
@@ -108,6 +113,7 @@ const dummyProperties = [
 
 export default function PropertyDetail() {
   const { id } = useParams();
+  const [isVisitModalOpen, setIsVisitModalOpen] = useState(false);
 
   const property = useMemo(() => {
     return dummyProperties.find((p) => p.id === id) || dummyProperties[0];
@@ -119,33 +125,45 @@ export default function PropertyDetail() {
 
       <PropertyGallery images={property.images} title={property.title} />
 
-      <motion.main className={styles.container} variants={pageVariants} initial="hidden" animate="visible">
-        <motion.section className={styles.left}>
-          <motion.div variants={itemVariants}>
+      <MotionMain className={styles.container} variants={pageVariants} initial="hidden" animate="visible">
+        <MotionSection className={styles.left}>
+          <MotionDiv variants={itemVariants}>
             <PropertyHeader title={property.title} location={property.location} />
-          </motion.div>
-          <motion.div variants={itemVariants}>
+          </MotionDiv>
+          <MotionDiv variants={itemVariants}>
             <PropertyInfo beds={property.beds} baths={property.baths} area={property.area} parking={property.parking} />
-          </motion.div>
-          <motion.div variants={itemVariants}>
+          </MotionDiv>
+          <MotionDiv variants={itemVariants}>
             <PropertyFeatures features={property.amenities} />
-          </motion.div>
-          <motion.div variants={itemVariants}>
+          </MotionDiv>
+          <MotionDiv variants={itemVariants}>
             <PropertyDescription description={property.description} />
-          </motion.div>
-          <motion.div variants={itemVariants}>
+          </MotionDiv>
+          <MotionDiv variants={itemVariants}>
             <PropertyMap address={property.location} />
-          </motion.div>
-        </motion.section>
+          </MotionDiv>
+        </MotionSection>
 
         <aside className={styles.sidebar}>
-          <motion.div variants={sidebarVariants}>
-            <ContactSidebar code={property.code} price={property.price} condo={property.condo} iptu={property.iptu} />
-          </motion.div>
+          <MotionDiv variants={sidebarVariants}>
+            <ContactSidebar
+              code={property.code}
+              price={property.price}
+              condo={property.condo}
+              iptu={property.iptu}
+              onScheduleVisit={() => setIsVisitModalOpen(true)}
+            />
+          </MotionDiv>
         </aside>
-      </motion.main>
+      </MotionMain>
 
       <PropertyContactForm property={property} />
+
+      <VisitModal
+        isOpen={isVisitModalOpen}
+        onClose={() => setIsVisitModalOpen(false)}
+        propertyName={property.title}
+      />
     </div>
   );
 }

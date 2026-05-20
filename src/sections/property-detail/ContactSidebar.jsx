@@ -2,7 +2,7 @@ import React from "react";
 import Button from "@components/ui/Button/Button.jsx";
 import styles from "./ContactSidebar.module.css";
 
-export default function ContactSidebar({ code, price, condo, iptu }) {
+export default function ContactSidebar({ code, price, condo, iptu, onScheduleVisit }) {
   return (
     <aside className={styles.sidebarInner}>
       <div className={styles.agentCard}>
@@ -32,7 +32,9 @@ export default function ContactSidebar({ code, price, condo, iptu }) {
       </div>
 
       <div className={styles.cta}>
-        <Button variant="primary">Agendar Visita</Button>
+        <Button type="button" variant="primary" onClick={onScheduleVisit}>
+          Agendar Visita
+        </Button>
         <Button variant="outline" className={styles.whatsappButton}>
           WhatsApp
         </Button>
