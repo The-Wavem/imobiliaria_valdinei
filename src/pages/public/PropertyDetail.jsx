@@ -122,7 +122,7 @@ export default function PropertyDetail() {
       <motion.main className={styles.container} variants={pageVariants} initial="hidden" animate="visible">
         <motion.section className={styles.left}>
           <motion.div variants={itemVariants}>
-            <PropertyHeader title={property.title} location={property.location} price={property.price} />
+            <PropertyHeader title={property.title} location={property.location} />
           </motion.div>
           <motion.div variants={itemVariants}>
             <PropertyInfo beds={property.beds} baths={property.baths} area={property.area} parking={property.parking} />
