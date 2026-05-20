@@ -1,0 +1,42 @@
+.section {
+  padding: 0;
+  border-bottom: 0;
+}
+.subtitle {
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--color-brand-secondary);
+  margin-bottom: 1rem;
+  font-family: var(--font-display);
+}
+
+.info {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.info li {
+  display: flex;
+  gap: 2rem;
+  align-items: center;
+  font-weight: 600;
+  color: var(--color-brand-secondary);
+  border-bottom: 1px solid #E2E8F0;
+  padding: 0 0 2rem 0;
+}
+
+.info li svg {
+  width: 1.15rem;
+  height: 1.15rem;
+  flex-shrink: 0;
+  color: var(--color-primary);
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  box-sizing: content-box;
+}

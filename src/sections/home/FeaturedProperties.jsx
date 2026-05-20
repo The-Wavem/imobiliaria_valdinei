@@ -44,7 +44,7 @@ const properties = [
   },
 ];
 
-export default function FeaturedProperties() {
+export default function FeaturedProperties({ onPropertyClick }) {
   return (
     <section className={styles.section}>
       <div className={styles.container}>
@@ -62,7 +62,11 @@ export default function FeaturedProperties() {
 
         <div className={styles.grid}>
           {properties.map((property) => (
-            <PropertyCard key={property.id} property={property} />
+            <PropertyCard
+              key={property.id}
+              property={property}
+              onViewDetails={() => onPropertyClick && onPropertyClick(property.id)}
+            />
           ))}
         </div>
       </div>
