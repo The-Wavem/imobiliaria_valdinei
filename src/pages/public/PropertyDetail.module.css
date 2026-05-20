@@ -6,7 +6,7 @@
 
 .container {
   max-width: 1400px;
-  margin: 0 auto;
+  margin: 4rem auto 0;
   display: grid;
   grid-template-columns: 70% 30%;
   gap: 4rem;
@@ -44,5 +44,11 @@
 
   .sidebar {
     position: static;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    margin-top: 2rem;
   }
 }
