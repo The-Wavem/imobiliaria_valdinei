@@ -3,7 +3,15 @@ import * as Popover from "@radix-ui/react-popover";
 import { ChevronDown, Check } from "lucide-react";
 import styles from "./Select.module.css";
 
-export default function Select({ icon: Icon, label, options = [], value, onChange, className = "" }) {
+export default function Select({
+  icon: Icon,
+  label,
+  options = [],
+  value,
+  onChange,
+  className = "",
+  compact = false,
+}) {
   const selectableOptions = options.filter((option) => option.value !== "");
   const [open, setOpen] = useState(false);
 
@@ -17,10 +25,11 @@ export default function Select({ icon: Icon, label, options = [], value, onChang
 
   const selectedOption = options.find((option) => option.value === value);
   const displayValue = selectedOption ? selectedOption.label : "Selecione...";
+  const containerClassName = `${styles.container} ${compact ? styles.compact : ""} ${className}`.trim();
 
   return (
     <Popover.Root open={open} onOpenChange={setOpen} modal={false}>
-      <Popover.Trigger type="button" className={`${styles.container} ${className}`.trim()}>
+      <Popover.Trigger type="button" className={containerClassName}>
         <div className={styles.visualLayout}>
           {Icon ? <Icon className={styles.icon} size={20} /> : null}
 

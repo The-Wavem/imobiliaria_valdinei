@@ -6,6 +6,7 @@ import Buy from "@/pages/public/Buy";
 import PropertyDetail from "@/pages/public/PropertyDetail";
 import Dashboard from "@/pages/admin/Dashboard";
 import PropertyManager from "@/pages/admin/PropertyManager";
+import LeadsManager from "@pages/admin/LeadsManager";
 
 export default function Router() {
   return (
@@ -17,7 +18,7 @@ export default function Router() {
       <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
       <Route path="/admin/dashboard" element={<Dashboard />} />
       <Route path="/admin/imoveis" element={<PropertyManager />} />
-      <Route path="/admin/leads" element={<Dashboard />} />
+      <Route path="/admin/leads" element={<LeadsManager />} />
       <Route path="/admin/visitas" element={<Dashboard />} />
     </Routes>
   );
