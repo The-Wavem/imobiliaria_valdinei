@@ -3,6 +3,7 @@ import {
   Bath,
   BedDouble,
   Check,
+  Camera,
   X,
   ImagePlus,
   MapPin,
@@ -10,7 +11,6 @@ import {
   Plus,
   Ruler,
   Save,
-  SquareCheckBig,
   ToggleLeft,
   ToggleRight,
   Trash2,
@@ -26,7 +26,8 @@ import styles from "./PropertyManager.module.css";
 const tabOptions = [
   { id: "basic", label: "Básico" },
   { id: "location", label: "Localização" },
-  { id: "features", label: "Características & Mídias" },
+  { id: "features", label: "Características" },
+  { id: "media", label: "Mídias" },
 ];
 
 const initialProperties = [
@@ -50,6 +51,11 @@ const initialProperties = [
       "https://images.unsplash.com/photo-1568605114967-8130f3a36994?auto=format&fit=crop&w=320&q=80",
     imageUrl:
       "https://images.unsplash.com/photo-1568605114967-8130f3a36994?auto=format&fit=crop&w=1200&q=80",
+    photos: [
+      "https://images.unsplash.com/photo-1568605114967-8130f3a36994?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1572120360610-d971b9d7767c?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1200&q=80",
+    ],
     amenities: ["Piscina", "Churrasqueira", "Ar-condicionado"],
   },
   {
@@ -72,6 +78,10 @@ const initialProperties = [
       "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=320&q=80",
     imageUrl:
       "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1200&q=80",
+    photos: [
+      "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=80",
+    ],
     amenities: ["Mobiliado", "Elevador", "Portaria 24h"],
   },
   {
@@ -94,6 +104,10 @@ const initialProperties = [
       "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=320&q=80",
     imageUrl:
       "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=80",
+    photos: [
+      "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&w=1200&q=80",
+    ],
     amenities: ["Portaria 24h", "Varanda gourmet"],
   },
   {
@@ -116,6 +130,10 @@ const initialProperties = [
       "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=320&q=80",
     imageUrl:
       "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80",
+    photos: [
+      "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1200&q=80",
+    ],
     amenities: ["Academia", "Piscina", "Elevador", "Pet friendly"],
   },
 ];
@@ -135,6 +153,7 @@ const emptyForm = {
   bathrooms: "",
   parkingSpaces: "",
   imageUrl: "",
+  photos: [],
   amenities: [],
 };
 
@@ -166,6 +185,7 @@ function normalizeForm(property = emptyForm) {
       property.parkingSpaces !== undefined && property.parkingSpaces !== null
         ? String(property.parkingSpaces)
         : "",
+    photos: property.photos || (property.imageUrl ? [property.imageUrl] : []),
     amenities: property.amenities || [],
   };
 }
@@ -196,6 +216,7 @@ export default function PropertyManager() {
   const [isAddingType, setIsAddingType] = useState(false);
   const [newType, setNewType] = useState("");
   const [newFeature, setNewFeature] = useState("");
+  const [newPhotoUrl, setNewPhotoUrl] = useState("");
 
   const categoryOptions = useMemo(
     () => [{ label: "Selecione", value: "" }, ...categories.map((item) => ({ label: item, value: item }))],
@@ -229,6 +250,7 @@ export default function PropertyManager() {
     setNewCategory("");
     setNewType("");
     setNewFeature("");
+    setNewPhotoUrl("");
     setIsModalOpen(true);
   };
 
@@ -247,6 +269,7 @@ export default function PropertyManager() {
     setNewCategory("");
     setNewType("");
     setNewFeature("");
+    setNewPhotoUrl("");
     setIsModalOpen(true);
   };
 
@@ -319,6 +342,32 @@ export default function PropertyManager() {
     setNewType("");
   };
 
+  const addPhoto = (urlValue) => {
+    const value = urlValue.trim();
+
+    if (!value) {
+      return;
+    }
+
+    setFormData((currentValue) => ({
+      ...currentValue,
+      photos: [...currentValue.photos, value],
+      imageUrl: currentValue.photos.length === 0 ? value : currentValue.imageUrl,
+    }));
+  };
+
+  const removePhoto = (photoIndex) => {
+    setFormData((currentValue) => {
+      const nextPhotos = currentValue.photos.filter((_, index) => index !== photoIndex);
+
+      return {
+        ...currentValue,
+        photos: nextPhotos,
+        imageUrl: nextPhotos[0] || "",
+      };
+    });
+  };
+
   const toggleAmenity = (amenity) => {
     setFormData((currentValue) => {
       const selected = currentValue.amenities.includes(amenity)
@@ -373,7 +422,8 @@ export default function PropertyManager() {
       bathrooms: Number(formData.bathrooms || 0),
       parkingSpaces: Number(formData.parkingSpaces || 0),
       imageUrl: formData.imageUrl.trim(),
-      thumbnail: formData.imageUrl.trim() || "",
+      thumbnail: formData.photos[0] || formData.imageUrl.trim() || "",
+      photos: formData.photos,
       amenities: formData.amenities,
       active: true,
     };
@@ -449,7 +499,7 @@ export default function PropertyManager() {
                     <tr key={property.id}>
                       <td>
                         <div className={styles.thumbnail}>
-                          <img src={property.thumbnail} alt={property.title} />
+                          <img src={property.photos?.[0] || property.thumbnail} alt={property.title} />
                         </div>
                       </td>
                       <td>
@@ -783,6 +833,83 @@ export default function PropertyManager() {
                   Adicionar
                 </Button>
               </div>
+            </section>
+          ) : null}
+
+          {activeTab === "media" ? (
+            <section className={styles.tabPanel}>
+              <div className={styles.mediaDropzone}>
+                <div className={styles.mediaDropzoneIcon} aria-hidden="true">
+                  <Camera size={34} />
+                </div>
+                <div className={styles.mediaDropzoneText}>
+                  <strong>Adicione fotos ou vídeos do imóvel</strong>
+                  <span>Você pode inserir URLs ou simular a seleção de arquivos com o botão abaixo.</span>
+                </div>
+
+                <div className={styles.mediaDropzoneActions}>
+                  <Input
+                    label="URL da mídia"
+                    icon={ImagePlus}
+                    placeholder="Cole a URL da foto"
+                    value={newPhotoUrl}
+                    onChange={(event) => setNewPhotoUrl(event.target.value)}
+                    className={styles.mediaDropzoneInput}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className={styles.mediaDropzoneButton}
+                    onClick={() => {
+                      const value = newPhotoUrl.trim();
+
+                      if (!value) {
+                        return;
+                      }
+
+                      addPhoto(value);
+                      setNewPhotoUrl("");
+                    }}
+                  >
+                    Procurar arquivos
+                  </Button>
+                </div>
+              </div>
+
+              <div className={styles.galleryShell}>
+                <div className={styles.galleryGrid}>
+                  {formData.photos.map((photoUrl, index) => (
+                    <div key={`${photoUrl}-${index}`} className={styles.thumbnailCard}>
+                      <img src={photoUrl} alt={`Mídia ${index + 1} do imóvel`} />
+
+                      {index === 0 ? <span className={styles.coverBadge}>Capa</span> : null}
+
+                      <button
+                        type="button"
+                        className={styles.removePhotoButton}
+                        onClick={() => removePhoto(index)}
+                        aria-label={`Remover mídia ${index + 1}`}
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+          ) : null}
+
+          {activeTab === "features" ? (
+            <section className={styles.tabPanel}>
+              <div className={styles.featureIntro}>
+                <div>
+                  <p className={styles.featureKicker}>Comodidades</p>
+                  <h3 className={styles.featureTitle}>Selecione as características do imóvel</h3>
+                </div>
+                <p className={styles.featureDescription}>
+                  Organize os diferenciais do imóvel antes de publicar.
+                </p>
+              </div>
 
               <div className={styles.checkboxGrid}>
                 {features.map((amenity) => (
@@ -795,33 +922,6 @@ export default function PropertyManager() {
                     <span>{amenity}</span>
                   </label>
                 ))}
-              </div>
-
-              <div className={styles.mediaField}>
-                <Input
-                  label="URL da imagem principal"
-                  icon={ImagePlus}
-                  placeholder="https://..."
-                  value={formData.imageUrl}
-                  onChange={(event) => handleFieldChange("imageUrl", event.target.value)}
-                />
-              </div>
-
-              <div className={styles.previewCard}>
-                <div className={styles.previewHeader}>
-                  <SquareCheckBig size={18} />
-                  <span>Resumo do cadastro</span>
-                </div>
-                <div className={styles.previewGrid}>
-                  <div>
-                    <strong>{formData.title || "Título do imóvel"}</strong>
-                    <span>{formData.code || "Código automático"}</span>
-                  </div>
-                  <div>
-                    <strong>{formData.category === "rent" ? "Alugar" : formData.category === "buy" ? "Comprar" : "Categoria"}</strong>
-                    <span>{formData.type || "Tipo do imóvel"}</span>
-                  </div>
-                </div>
               </div>
             </section>
           ) : null}
