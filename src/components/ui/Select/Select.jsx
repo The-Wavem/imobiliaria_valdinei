@@ -11,6 +11,8 @@ export default function Select({
   onChange,
   className = "",
   compact = false,
+  contentClassName = "",
+  statusColor = "",
 }) {
   const selectableOptions = options.filter((option) => option.value !== "");
   const [open, setOpen] = useState(false);
@@ -26,10 +28,11 @@ export default function Select({
   const selectedOption = options.find((option) => option.value === value);
   const displayValue = selectedOption ? selectedOption.label : "Selecione...";
   const containerClassName = `${styles.container} ${compact ? styles.compact : ""} ${className}`.trim();
+  const statusColorDataAttr = statusColor || undefined;
 
   return (
     <Popover.Root open={open} onOpenChange={setOpen} modal={false}>
-      <Popover.Trigger type="button" className={containerClassName}>
+      <Popover.Trigger type="button" className={containerClassName} data-status-color={statusColorDataAttr}>
         <div className={styles.visualLayout}>
           {Icon ? <Icon className={styles.icon} size={20} /> : null}
 
@@ -45,7 +48,12 @@ export default function Select({
       </Popover.Trigger>
 
       <Popover.Portal>
-        <Popover.Content className={styles.content} sideOffset={10} align="start">
+        <Popover.Content
+          className={`${styles.content} ${contentClassName}`.trim()}
+          data-status-color={statusColorDataAttr}
+          sideOffset={10}
+          align="start"
+        >
           <div className={styles.viewport}>
             {selectableOptions.map((option) => (
               <button

@@ -8,8 +8,15 @@ import Select from "@components/ui/Select/Select.jsx";
 import paginationStyles from "./Pagination.module.css";
 import styles from "./LeadsManager.module.css";
 
-const statusOptions = [
+const filterStatusOptions = [
   { label: "Todos", value: "Todos" },
+  { label: "Novo", value: "Novo" },
+  { label: "Em Atendimento", value: "Em Atendimento" },
+  { label: "Agendado", value: "Agendado" },
+  { label: "Finalizado", value: "Finalizado" },
+];
+
+const requestStatusOptions = [
   { label: "Novo", value: "Novo" },
   { label: "Em Atendimento", value: "Em Atendimento" },
   { label: "Agendado", value: "Agendado" },
@@ -26,6 +33,28 @@ const requestTypeStyles = {
   Visita: styles.requestBadgeVisit,
   Contato: styles.requestBadgeContact,
 };
+
+const requestStatusRowStyles = {
+  Novo: styles.rowNovo,
+  "Em Atendimento": styles.rowAtendimento,
+  Agendado: styles.rowAgendado,
+  Finalizado: styles.rowFinalizado,
+};
+
+const requestStatusColor = {
+  Novo: "novo",
+  "Em Atendimento": "atendimento",
+  Agendado: "agendado",
+  Finalizado: "finalizado",
+};
+
+function getRequestRowClass(status) {
+  return requestStatusRowStyles[status] || styles.rowNovo;
+}
+
+function getRequestStatusColor(status) {
+  return requestStatusColor[status] || "novo";
+}
 
 const initialRequests = [
   {
@@ -254,7 +283,7 @@ export default function LeadsManager() {
               <Select
                 compact
                 label="Status"
-                options={statusOptions}
+                options={filterStatusOptions}
                 value={filterStatus}
                 onChange={handleStatusFilterChange}
               />
@@ -294,7 +323,7 @@ export default function LeadsManager() {
                 </thead>
                 <tbody>
                   {visibleRequests.map((request) => (
-                    <tr key={request.id}>
+                    <tr key={request.id} className={`${styles.tableRow} ${getRequestRowClass(request.status)}`.trim()}>
                       <td>
                         <div className={styles.dateCell}>{request.date}</div>
                       </td>
@@ -319,10 +348,12 @@ export default function LeadsManager() {
                         <Select
                           compact
                           label="Status"
-                          options={statusOptions}
+                          options={requestStatusOptions}
                           value={request.status}
                           onChange={(nextStatus) => handleStatusChange(request.id, nextStatus)}
                           className={styles.statusSelect}
+                          contentClassName={styles.statusSelectMenu}
+                          statusColor={getRequestStatusColor(request.status)}
                         />
                       </td>
                       <td>

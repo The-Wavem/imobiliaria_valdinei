@@ -175,7 +175,7 @@
   width: 100%;
   min-width: 72rem;
   border-collapse: separate;
-  border-spacing: 0;
+  border-spacing: 0 0.5rem;
 }
 
 .table thead th {
@@ -197,15 +197,29 @@
   border-top-right-radius: var(--radius-md);
 }
 
-.table tbody td {
+.tableRow td {
   padding: 1rem;
   vertical-align: middle;
-  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
   background: #ffffff;
+  border-bottom: none;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  transition: background-color 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
 }
 
-.table tbody tr:hover td {
-  background: rgba(248, 249, 250, 0.85);
+.tableRow td:first-child {
+  border-left: 4px solid transparent;
+  border-top-left-radius: 1rem;
+  border-bottom-left-radius: 1rem;
+}
+
+.tableRow td:last-child {
+  border-top-right-radius: 1rem;
+  border-bottom-right-radius: 1rem;
+}
+
+.tableRow:hover td {
+  background: rgba(0, 0, 0, 0.02);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05);
 }
 
 .dateCell,
@@ -241,6 +255,7 @@
   font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.04em;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .requestBadgeVisit {
@@ -257,6 +272,26 @@
   width: 11rem;
   min-width: 11rem;
   max-width: 11rem;
+}
+
+.statusSelectMenu {
+  border-radius: 16px;
+}
+
+.rowNovo td:first-child {
+  border-left-color: var(--color-brand-secondary);
+}
+
+.rowAtendimento td:first-child {
+  border-left-color: #fbbf24;
+}
+
+.rowAgendado td:first-child {
+  border-left-color: var(--color-brand-primary);
+}
+
+.rowFinalizado td:first-child {
+  border-left-color: #10b981;
 }
 
 .actionsCell {
