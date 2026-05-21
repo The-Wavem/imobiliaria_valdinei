@@ -63,6 +63,24 @@
   box-shadow: 0 14px 36px rgba(15, 23, 42, 0.05);
 }
 
+.filterBar {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.filterFieldSearch {
+  flex: 1 1 22rem;
+  min-width: 0;
+}
+
+.filterFieldSelect {
+  flex: 0 0 15rem;
+  min-width: 0;
+}
+
 .metricsBar {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -340,6 +358,17 @@
   .header,
   .tableHeadBar {
     flex-direction: column;
+  }
+
+  .filterBar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filterFieldSelect,
+  .filterFieldSearch {
+    flex: 1 1 auto;
+    width: 100%;
   }
 
   .tableMeta {

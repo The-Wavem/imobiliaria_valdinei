@@ -1,16 +1,25 @@
 import { useMemo, useState } from "react";
 import { Eye, MessageCircle, Search } from "lucide-react";
 import AdminSidebar from "@components/layout/AdminSidebar";
+import Input from "@components/ui/Input/Input.jsx";
 import Button from "@components/ui/Button/Button.jsx";
 import Modal from "@components/ui/Modal/Modal.jsx";
 import Select from "@components/ui/Select/Select.jsx";
+import paginationStyles from "./Pagination.module.css";
 import styles from "./LeadsManager.module.css";
 
 const statusOptions = [
+  { label: "Todos", value: "Todos" },
   { label: "Novo", value: "Novo" },
   { label: "Em Atendimento", value: "Em Atendimento" },
   { label: "Agendado", value: "Agendado" },
   { label: "Finalizado", value: "Finalizado" },
+];
+
+const typeOptions = [
+  { label: "Todos", value: "Todos" },
+  { label: "Visita", value: "Visita" },
+  { label: "Contato", value: "Contato" },
 ];
 
 const requestTypeStyles = {
@@ -100,10 +109,29 @@ function getRequestTypeClass(requestType) {
   return requestTypeStyles[requestType] || styles.requestBadgeContact;
 }
 
+function parseBrazilianDateTime(dateValue) {
+  const [datePart = "", timePart = "00:00"] = String(dateValue || "").trim().split(" ");
+  const [day = "0", month = "0", year = "0"] = datePart.split("/");
+  const [hours = "0", minutes = "0"] = timePart.split(":");
+
+  return new Date(
+    Number(year),
+    Number(month) - 1,
+    Number(day),
+    Number(hours),
+    Number(minutes),
+  ).getTime();
+}
+
 export default function LeadsManager() {
   const [requests, setRequests] = useState(initialRequests);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState("Todos");
+  const [filterType, setFilterType] = useState("Todos");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const metrics = useMemo(
     () =>
@@ -113,6 +141,32 @@ export default function LeadsManager() {
       })),
     [requests],
   );
+
+  const processedLeads = useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+
+    return [...requests]
+      .filter((request) => {
+        const matchesSearch = normalizedSearch
+          ? request.client.name.toLowerCase().includes(normalizedSearch)
+          : true;
+
+        const matchesStatus = filterStatus === "Todos" || request.status === filterStatus;
+        const matchesType = filterType === "Todos" || request.requestType === filterType;
+
+        return matchesSearch && matchesStatus && matchesType;
+      })
+      .sort((leftRequest, rightRequest) => parseBrazilianDateTime(rightRequest.date) - parseBrazilianDateTime(leftRequest.date));
+  }, [filterStatus, filterType, requests, searchTerm]);
+
+  const totalRequests = processedLeads.length;
+  const totalPages = Math.max(1, Math.ceil(totalRequests / itemsPerPage));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const indexOfLastItem = safeCurrentPage * itemsPerPage;
+  const indexOfFirstItem = totalRequests === 0 ? 0 : indexOfLastItem - itemsPerPage;
+  const visibleRequests = processedLeads.slice(indexOfFirstItem, indexOfLastItem);
+  const showStart = totalRequests === 0 ? 0 : indexOfFirstItem + 1;
+  const showEnd = totalRequests === 0 ? 0 : Math.min(indexOfLastItem, totalRequests);
 
   const openDetails = (request) => {
     setSelectedRequest(request);
@@ -130,6 +184,21 @@ export default function LeadsManager() {
         request.id === requestId ? { ...request, status: nextStatus } : request,
       ),
     );
+  };
+
+  const handleSearchChange = (event) => {
+    setSearchTerm(event.target.value);
+    setCurrentPage(1);
+  };
+
+  const handleStatusFilterChange = (nextStatus) => {
+    setFilterStatus(nextStatus);
+    setCurrentPage(1);
+  };
+
+  const handleTypeFilterChange = (nextType) => {
+    setFilterType(nextType);
+    setCurrentPage(1);
   };
 
   const handleWhatsApp = (request) => {
@@ -170,13 +239,45 @@ export default function LeadsManager() {
             ))}
           </section>
 
+          <div className={styles.filterBar} aria-label="Filtros de solicitações">
+            <div className={styles.filterFieldSearch}>
+              <Input
+                icon={Search}
+                label="Buscar cliente"
+                placeholder="Digite o nome do cliente"
+                value={searchTerm}
+                onChange={handleSearchChange}
+              />
+            </div>
+
+            <div className={styles.filterFieldSelect}>
+              <Select
+                compact
+                label="Status"
+                options={statusOptions}
+                value={filterStatus}
+                onChange={handleStatusFilterChange}
+              />
+            </div>
+
+            <div className={styles.filterFieldSelect}>
+              <Select
+                compact
+                label="Tipo"
+                options={typeOptions}
+                value={filterType}
+                onChange={handleTypeFilterChange}
+              />
+            </div>
+          </div>
+
           <section className={styles.tableCard} aria-label="Tabela de solicitações">
             <div className={styles.tableHeadBar}>
               <div>
                 <p className={styles.tableKicker}>Leitura e triagem</p>
                 <h2 className={styles.tableTitle}>Solicitações recentes</h2>
               </div>
-              <p className={styles.tableMeta}>{requests.length} itens</p>
+              <p className={styles.tableMeta}>{totalRequests} itens filtrados</p>
             </div>
 
             <div className={styles.tableWrap}>
@@ -192,7 +293,7 @@ export default function LeadsManager() {
                   </tr>
                 </thead>
                 <tbody>
-                  {requests.map((request) => (
+                  {visibleRequests.map((request) => (
                     <tr key={request.id}>
                       <td>
                         <div className={styles.dateCell}>{request.date}</div>
@@ -252,6 +353,38 @@ export default function LeadsManager() {
                 </tbody>
               </table>
             </div>
+
+            <footer className={paginationStyles.paginationFooter}>
+              <p className={paginationStyles.paginationSummary}>
+                Mostrando {showStart} a {showEnd} de {totalRequests} solicitações
+              </p>
+
+              <div className={paginationStyles.paginationControls}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className={paginationStyles.paginationButton}
+                  onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                  disabled={safeCurrentPage === 1}
+                >
+                  Anterior
+                </Button>
+
+                <span className={paginationStyles.paginationPageIndicator}>
+                  Página {safeCurrentPage} de {totalPages}
+                </span>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  className={paginationStyles.paginationButton}
+                  onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                  disabled={safeCurrentPage === totalPages}
+                >
+                  Próxima
+                </Button>
+              </div>
+            </footer>
           </section>
         </div>
       </main>
