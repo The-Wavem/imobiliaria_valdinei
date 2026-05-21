@@ -434,6 +434,58 @@
   gap: 0.75rem;
 }
 
+.descriptionGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.textareaField {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.textareaLabel {
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.textareaControl {
+  width: 100%;
+  min-height: 200px;
+  max-height: 400px;
+  resize: vertical;
+  padding: 1rem 1.1rem;
+  border: 1px solid rgba(20, 20, 60, 0.14);
+  border-radius: 16px;
+  background: #ffffff;
+  color: var(--color-text-main);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 0.98rem;
+  line-height: 1.6;
+  outline: none;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.textareaControl::placeholder {
+  color: rgba(102, 102, 102, 0.8);
+}
+
+.textareaField:hover .textareaControl {
+  border-color: rgba(199, 156, 49, 0.48);
+}
+
+.textareaField:focus-within .textareaControl {
+  border-color: var(--color-brand-primary);
+  box-shadow: 0 0 0 4px rgba(199, 156, 49, 0.14);
+}
+
 .featureCard {
   display: flex;
   justify-content: space-between;
@@ -809,6 +861,10 @@
 
   .featureGrid {
     grid-template-columns: 1fr;
+  }
+
+  .descriptionGroup {
+    gap: 1rem;
   }
 
   .modalFooter {

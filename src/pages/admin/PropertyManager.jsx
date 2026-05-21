@@ -25,6 +25,7 @@ import styles from "./PropertyManager.module.css";
 
 const tabOptions = [
   { id: "basic", label: "Básico" },
+  { id: "description", label: "Descrição" },
   { id: "location", label: "Localização" },
   { id: "features", label: "Características" },
   { id: "media", label: "Mídias" },
@@ -161,6 +162,8 @@ const emptyForm = {
   imageUrl: "",
   photos: [],
   features: [],
+  summary: "",
+  description: "",
 };
 
 const currencyFormatter = new Intl.NumberFormat("pt-BR", {
@@ -181,24 +184,49 @@ function normalizeForm(property = emptyForm) {
   return {
     ...emptyForm,
     ...property,
-    price: property.price !== undefined && property.price !== null ? String(property.price) : "",
-    condo: property.condo !== undefined && property.condo !== null ? String(property.condo) : "",
-    iptu: property.iptu !== undefined && property.iptu !== null ? String(property.iptu) : "",
-    area: property.area !== undefined && property.area !== null ? String(property.area) : "",
-    bedrooms: property.bedrooms !== undefined && property.bedrooms !== null ? String(property.bedrooms) : "",
-    bathrooms: property.bathrooms !== undefined && property.bathrooms !== null ? String(property.bathrooms) : "",
+    price:
+      property.price !== undefined && property.price !== null
+        ? String(property.price)
+        : "",
+    condo:
+      property.condo !== undefined && property.condo !== null
+        ? String(property.condo)
+        : "",
+    iptu:
+      property.iptu !== undefined && property.iptu !== null
+        ? String(property.iptu)
+        : "",
+    area:
+      property.area !== undefined && property.area !== null
+        ? String(property.area)
+        : "",
+    bedrooms:
+      property.bedrooms !== undefined && property.bedrooms !== null
+        ? String(property.bedrooms)
+        : "",
+    bathrooms:
+      property.bathrooms !== undefined && property.bathrooms !== null
+        ? String(property.bathrooms)
+        : "",
     parkingSpaces:
       property.parkingSpaces !== undefined && property.parkingSpaces !== null
         ? String(property.parkingSpaces)
         : "",
     photos: property.photos || (property.imageUrl ? [property.imageUrl] : []),
     features: property.features || [],
+    summary: property.summary || "",
+    description: property.description || "",
   };
 }
 
 export default function PropertyManager() {
   const [properties, setProperties] = useState(initialProperties);
-  const [availableTypes, setAvailableTypes] = useState(["Casa", "Apartamento", "Comercial", "Cobertura"]);
+  const [availableTypes, setAvailableTypes] = useState([
+    "Casa",
+    "Apartamento",
+    "Comercial",
+    "Cobertura",
+  ]);
   const [availableFeatures, setAvailableFeatures] = useState([
     "Piscina",
     "Churrasqueira",
@@ -222,17 +250,28 @@ export default function PropertyManager() {
   const [newPhotoUrl, setNewPhotoUrl] = useState("");
 
   const typeOptions = useMemo(
-    () => [{ label: "Selecione", value: "" }, ...availableTypes.map((item) => ({ label: item, value: item }))],
+    () => [
+      { label: "Selecione", value: "" },
+      ...availableTypes.map((item) => ({ label: item, value: item })),
+    ],
     [availableTypes],
   );
 
   const metrics = useMemo(() => {
     const activeCount = properties.filter((property) => property.active).length;
-    const rentCount = properties.filter((property) => property.category === "Alugar").length;
-    const buyCount = properties.filter((property) => property.category === "Comprar").length;
+    const rentCount = properties.filter(
+      (property) => property.category === "Alugar",
+    ).length;
+    const buyCount = properties.filter(
+      (property) => property.category === "Comprar",
+    ).length;
 
     return [
-      { label: "Imóveis ativos", value: activeCount, hint: "Publicados na vitrine" },
+      {
+        label: "Imóveis ativos",
+        value: activeCount,
+        hint: "Publicados na vitrine",
+      },
       { label: "Para alugar", value: rentCount, hint: "Carteira de locação" },
       { label: "Para vender", value: buyCount, hint: "Carteira de venda" },
     ];
@@ -307,7 +346,9 @@ export default function PropertyManager() {
   };
 
   const handleDeleteType = (typeToRemove) => {
-    setAvailableTypes((currentValue) => currentValue.filter((item) => item !== typeToRemove));
+    setAvailableTypes((currentValue) =>
+      currentValue.filter((item) => item !== typeToRemove),
+    );
 
     setFormData((currentValue) => ({
       ...currentValue,
@@ -325,13 +366,16 @@ export default function PropertyManager() {
     setFormData((currentValue) => ({
       ...currentValue,
       photos: [...currentValue.photos, value],
-      imageUrl: currentValue.photos.length === 0 ? value : currentValue.imageUrl,
+      imageUrl:
+        currentValue.photos.length === 0 ? value : currentValue.imageUrl,
     }));
   };
 
   const removePhoto = (photoIndex) => {
     setFormData((currentValue) => {
-      const nextPhotos = currentValue.photos.filter((_, index) => index !== photoIndex);
+      const nextPhotos = currentValue.photos.filter(
+        (_, index) => index !== photoIndex,
+      );
 
       return {
         ...currentValue,
@@ -355,24 +399,32 @@ export default function PropertyManager() {
   };
 
   const handleDeleteFeature = (featureToRemove) => {
-    setAvailableFeatures((currentValue) => currentValue.filter((item) => item !== featureToRemove));
+    setAvailableFeatures((currentValue) =>
+      currentValue.filter((item) => item !== featureToRemove),
+    );
 
     setFormData((currentValue) => ({
       ...currentValue,
-      features: currentValue.features.filter((item) => item !== featureToRemove),
+      features: currentValue.features.filter(
+        (item) => item !== featureToRemove,
+      ),
     }));
   };
 
   const handleStatusToggle = (propertyId) => {
     setProperties((currentValue) =>
       currentValue.map((property) =>
-        property.id === propertyId ? { ...property, active: !property.active } : property,
+        property.id === propertyId
+          ? { ...property, active: !property.active }
+          : property,
       ),
     );
   };
 
   const handleDelete = (propertyId) => {
-    const propertyToDelete = properties.find((property) => property.id === propertyId);
+    const propertyToDelete = properties.find(
+      (property) => property.id === propertyId,
+    );
     const confirmed = window.confirm(
       propertyToDelete
         ? `Excluir o imóvel ${propertyToDelete.code} - ${propertyToDelete.title}?`
@@ -383,15 +435,25 @@ export default function PropertyManager() {
       return;
     }
 
-    setProperties((currentValue) => currentValue.filter((property) => property.id !== propertyId));
+    setProperties((currentValue) =>
+      currentValue.filter((property) => property.id !== propertyId),
+    );
   };
 
   const handleSubmit = () => {
-    const nextId = properties.reduce((highestId, property) => Math.max(highestId, property.id), 0) + 1;
+    const nextId =
+      properties.reduce(
+        (highestId, property) => Math.max(highestId, property.id),
+        0,
+      ) + 1;
     const payload = {
       id: modalMode === "edit" && editingId ? editingId : nextId,
       title: formData.title.trim(),
-      code: formData.code.trim() || createPropertyCode(modalMode === "edit" && editingId ? editingId : nextId),
+      code:
+        formData.code.trim() ||
+        createPropertyCode(
+          modalMode === "edit" && editingId ? editingId : nextId,
+        ),
       category: formData.category,
       type: formData.type.trim() || "Imóvel",
       price: Number(formData.price || 0),
@@ -407,13 +469,17 @@ export default function PropertyManager() {
       thumbnail: formData.photos[0] || formData.imageUrl.trim() || "",
       photos: formData.photos,
       features: formData.features,
+      summary: formData.summary.trim(),
+      description: formData.description.trim(),
       active: true,
     };
 
     setProperties((currentValue) => {
       if (modalMode === "edit") {
         return currentValue.map((property) =>
-          property.id === editingId ? { ...property, ...payload, active: property.active } : property,
+          property.id === editingId
+            ? { ...property, ...payload, active: property.active }
+            : property,
         );
       }
 
@@ -434,17 +500,25 @@ export default function PropertyManager() {
               <p className={styles.kicker}>Gerenciamento de imóveis</p>
               <h1 className={styles.title}>Lista premium e cadastro rápido</h1>
               <p className={styles.subtitle}>
-                Gerencie o estoque com uma visão clara de publicação, tipo, preço e status de vitrine.
+                Gerencie o estoque com uma visão clara de publicação, tipo,
+                preço e status de vitrine.
               </p>
             </div>
 
-            <Button variant="primary" className={styles.addButton} onClick={openCreateModal}>
+            <Button
+              variant="primary"
+              className={styles.addButton}
+              onClick={openCreateModal}
+            >
               <Plus size={18} />
               <span>Adicionar Novo Imóvel</span>
             </Button>
           </header>
 
-          <section className={styles.metricsBar} aria-label="Micro-métricas do estoque">
+          <section
+            className={styles.metricsBar}
+            aria-label="Micro-métricas do estoque"
+          >
             {metrics.map((metric) => (
               <article key={metric.label} className={styles.metricCard}>
                 <span className={styles.metricValue}>{metric.value}</span>
@@ -456,13 +530,18 @@ export default function PropertyManager() {
             ))}
           </section>
 
-          <section className={styles.tableCard} aria-label="Tabela de imóveis cadastrados">
+          <section
+            className={styles.tableCard}
+            aria-label="Tabela de imóveis cadastrados"
+          >
             <div className={styles.tableHeadBar}>
               <div>
                 <p className={styles.tableKicker}>Cadastro e controle</p>
                 <h2 className={styles.tableTitle}>Imóveis cadastrados</h2>
               </div>
-              <p className={styles.tableMeta}>{properties.length} itens na lista</p>
+              <p className={styles.tableMeta}>
+                {properties.length} itens na lista
+              </p>
             </div>
 
             <div className={styles.tableWrap}>
@@ -481,7 +560,10 @@ export default function PropertyManager() {
                     <tr key={property.id}>
                       <td>
                         <div className={styles.thumbnail}>
-                          <img src={property.photos?.[0] || property.thumbnail} alt={property.title} />
+                          <img
+                            src={property.photos?.[0] || property.thumbnail}
+                            alt={property.title}
+                          />
                         </div>
                       </td>
                       <td>
@@ -497,7 +579,9 @@ export default function PropertyManager() {
                         </div>
                       </td>
                       <td>
-                        <div className={styles.priceCell}>{formatCurrency(property.price)}</div>
+                        <div className={styles.priceCell}>
+                          {formatCurrency(property.price)}
+                        </div>
                       </td>
                       <td>
                         <div className={styles.actionsCell}>
@@ -527,7 +611,11 @@ export default function PropertyManager() {
                             onClick={() => handleStatusToggle(property.id)}
                             aria-label={`${property.active ? "Desativar" : "Ativar"} ${property.title}`}
                           >
-                            {property.active ? <ToggleRight size={16} /> : <ToggleLeft size={16} />}
+                            {property.active ? (
+                              <ToggleRight size={16} />
+                            ) : (
+                              <ToggleLeft size={16} />
+                            )}
                             <span>{property.active ? "Ativo" : "Inativo"}</span>
                           </Button>
                         </div>
@@ -547,7 +635,10 @@ export default function PropertyManager() {
         title={modalMode === "create" ? "Adicionar imóvel" : "Editar imóvel"}
       >
         <div className={styles.modalContent}>
-          <nav className={styles.tabs} aria-label="Navegação das abas do formulário">
+          <nav
+            className={styles.tabs}
+            aria-label="Navegação das abas do formulário"
+          >
             {tabOptions.map((tab) => (
               <button
                 key={tab.id}
@@ -567,14 +658,18 @@ export default function PropertyManager() {
                   label="Título"
                   placeholder="Ex: Casa térrea com piscina"
                   value={formData.title}
-                  onChange={(event) => handleFieldChange("title", event.target.value)}
+                  onChange={(event) =>
+                    handleFieldChange("title", event.target.value)
+                  }
                 />
 
                 <Input
                   label="Código"
                   placeholder="Ex: IV-1204"
                   value={formData.code}
-                  onChange={(event) => handleFieldChange("code", event.target.value)}
+                  onChange={(event) =>
+                    handleFieldChange("code", event.target.value)
+                  }
                 />
 
                 <Input
@@ -582,7 +677,9 @@ export default function PropertyManager() {
                   type="number"
                   placeholder="0"
                   value={formData.price}
-                  onChange={(event) => handleFieldChange("price", event.target.value)}
+                  onChange={(event) =>
+                    handleFieldChange("price", event.target.value)
+                  }
                 />
 
                 <Input
@@ -590,7 +687,9 @@ export default function PropertyManager() {
                   type="number"
                   placeholder="0"
                   value={formData.condo}
-                  onChange={(event) => handleFieldChange("condo", event.target.value)}
+                  onChange={(event) =>
+                    handleFieldChange("condo", event.target.value)
+                  }
                 />
 
                 <Input
@@ -598,7 +697,9 @@ export default function PropertyManager() {
                   type="number"
                   placeholder="0"
                   value={formData.iptu}
-                  onChange={(event) => handleFieldChange("iptu", event.target.value)}
+                  onChange={(event) =>
+                    handleFieldChange("iptu", event.target.value)
+                  }
                 />
 
                 <div className={styles.dynamicSelectRow}>
@@ -693,14 +794,18 @@ export default function PropertyManager() {
                   icon={MapPin}
                   placeholder="Rua, avenida, número"
                   value={formData.address}
-                  onChange={(event) => handleFieldChange("address", event.target.value)}
+                  onChange={(event) =>
+                    handleFieldChange("address", event.target.value)
+                  }
                 />
 
                 <Input
                   label="Bairro"
                   placeholder="Nome do bairro"
                   value={formData.neighborhood}
-                  onChange={(event) => handleFieldChange("neighborhood", event.target.value)}
+                  onChange={(event) =>
+                    handleFieldChange("neighborhood", event.target.value)
+                  }
                 />
 
                 <Input
@@ -709,7 +814,9 @@ export default function PropertyManager() {
                   type="number"
                   placeholder="0"
                   value={formData.area}
-                  onChange={(event) => handleFieldChange("area", event.target.value)}
+                  onChange={(event) =>
+                    handleFieldChange("area", event.target.value)
+                  }
                 />
 
                 <Input
@@ -718,7 +825,9 @@ export default function PropertyManager() {
                   type="number"
                   placeholder="0"
                   value={formData.bedrooms}
-                  onChange={(event) => handleFieldChange("bedrooms", event.target.value)}
+                  onChange={(event) =>
+                    handleFieldChange("bedrooms", event.target.value)
+                  }
                 />
 
                 <Input
@@ -727,7 +836,9 @@ export default function PropertyManager() {
                   type="number"
                   placeholder="0"
                   value={formData.bathrooms}
-                  onChange={(event) => handleFieldChange("bathrooms", event.target.value)}
+                  onChange={(event) =>
+                    handleFieldChange("bathrooms", event.target.value)
+                  }
                 />
 
                 <Input
@@ -736,7 +847,9 @@ export default function PropertyManager() {
                   type="number"
                   placeholder="0"
                   value={formData.parkingSpaces}
-                  onChange={(event) => handleFieldChange("parkingSpaces", event.target.value)}
+                  onChange={(event) =>
+                    handleFieldChange("parkingSpaces", event.target.value)
+                  }
                 />
               </div>
             </section>
@@ -747,10 +860,13 @@ export default function PropertyManager() {
               <div className={styles.featureIntro}>
                 <div>
                   <p className={styles.featureKicker}>Comodidades</p>
-                  <h3 className={styles.featureTitle}>Selecione as características do imóvel</h3>
+                  <h3 className={styles.featureTitle}>
+                    Selecione as características do imóvel
+                  </h3>
                 </div>
                 <p className={styles.featureDescription}>
-                  Organize os diferenciais e adicione a mídia principal para a vitrine pública.
+                  Organize os diferenciais e adicione a mídia principal para a
+                  vitrine pública.
                 </p>
               </div>
 
@@ -773,15 +889,17 @@ export default function PropertyManager() {
                       return;
                     }
 
-                      setAvailableFeatures((currentValue) =>
-                      currentValue.includes(value) ? currentValue : [...currentValue, value],
+                    setAvailableFeatures((currentValue) =>
+                      currentValue.includes(value)
+                        ? currentValue
+                        : [...currentValue, value],
                     );
 
                     setFormData((currentValue) => ({
                       ...currentValue,
-                        features: currentValue.features.includes(value)
-                          ? currentValue.features
-                          : [...currentValue.features, value],
+                      features: currentValue.features.includes(value)
+                        ? currentValue.features
+                        : [...currentValue.features, value],
                     }));
 
                     setNewFeature("");
@@ -791,29 +909,29 @@ export default function PropertyManager() {
                 </Button>
               </div>
 
-                <div className={styles.featureGrid}>
-                  {availableFeatures.map((featureItem) => (
-                    <div key={featureItem} className={styles.featureCard}>
-                      <label className={styles.featureCheckLabel}>
-                        <input
-                          type="checkbox"
-                          checked={formData.features.includes(featureItem)}
-                          onChange={() => toggleAmenity(featureItem)}
-                        />
-                        <span>{featureItem}</span>
-                      </label>
+              <div className={styles.featureGrid}>
+                {availableFeatures.map((featureItem) => (
+                  <div key={featureItem} className={styles.featureCard}>
+                    <label className={styles.featureCheckLabel}>
+                      <input
+                        type="checkbox"
+                        checked={formData.features.includes(featureItem)}
+                        onChange={() => toggleAmenity(featureItem)}
+                      />
+                      <span>{featureItem}</span>
+                    </label>
 
-                      <button
-                        type="button"
-                        className={styles.featureDeleteButton}
-                        onClick={() => handleDeleteFeature(featureItem)}
-                        aria-label={`Remover característica ${featureItem}`}
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
+                    <button
+                      type="button"
+                      className={styles.featureDeleteButton}
+                      onClick={() => handleDeleteFeature(featureItem)}
+                      aria-label={`Remover característica ${featureItem}`}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
             </section>
           ) : null}
 
@@ -825,7 +943,10 @@ export default function PropertyManager() {
                 </div>
                 <div className={styles.mediaDropzoneText}>
                   <strong>Adicione fotos ou vídeos do imóvel</strong>
-                  <span>Você pode inserir URLs ou simular a seleção de arquivos com o botão abaixo.</span>
+                  <span>
+                    Você pode inserir URLs ou simular a seleção de arquivos com
+                    o botão abaixo.
+                  </span>
                 </div>
 
                 <div className={styles.mediaDropzoneActions}>
@@ -860,10 +981,18 @@ export default function PropertyManager() {
               <div className={styles.galleryShell}>
                 <div className={styles.galleryGrid}>
                   {formData.photos.map((photoUrl, index) => (
-                    <div key={`${photoUrl}-${index}`} className={styles.thumbnailCard}>
-                      <img src={photoUrl} alt={`Mídia ${index + 1} do imóvel`} />
+                    <div
+                      key={`${photoUrl}-${index}`}
+                      className={styles.thumbnailCard}
+                    >
+                      <img
+                        src={photoUrl}
+                        alt={`Mídia ${index + 1} do imóvel`}
+                      />
 
-                      {index === 0 ? <span className={styles.coverBadge}>Capa</span> : null}
+                      {index === 0 ? (
+                        <span className={styles.coverBadge}>Capa</span>
+                      ) : null}
 
                       <button
                         type="button"
@@ -880,11 +1009,48 @@ export default function PropertyManager() {
             </section>
           ) : null}
 
+          {activeTab === "description" ? (
+            <section className={styles.tabPanel}>
+              <div className={styles.descriptionGroup}>
+                <Input
+                  label="Resumo Rápido"
+                  placeholder="Ex: Lindo sobrado triplex com sol da manhã"
+                  value={formData.summary}
+                  onChange={(event) =>
+                    handleFieldChange("summary", event.target.value)
+                  }
+                />
+
+                <label className={styles.textareaField}>
+                  <span className={styles.textareaLabel}>
+                    Descrição Completa
+                  </span>
+                  <textarea
+                    className={styles.textareaControl}
+                    placeholder="Descreva o imóvel com detalhes, diferenciais, posicionamento solar, acabamentos e contexto de uso."
+                    value={formData.description}
+                    onChange={(event) =>
+                      handleFieldChange("description", event.target.value)
+                    }
+                  />
+                </label>
+              </div>
+            </section>
+          ) : null}
+
           <footer className={styles.modalFooter}>
-            <Button variant="outline" className={styles.modalButton} onClick={closeModal}>
+            <Button
+              variant="outline"
+              className={styles.modalButton}
+              onClick={closeModal}
+            >
               Cancelar
             </Button>
-            <Button variant="primary" className={styles.modalButton} onClick={handleSubmit}>
+            <Button
+              variant="primary"
+              className={styles.modalButton}
+              onClick={handleSubmit}
+            >
               <Save size={16} />
               <span>Salvar Imóvel</span>
             </Button>
