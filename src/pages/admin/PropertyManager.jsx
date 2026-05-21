@@ -30,6 +30,12 @@ const tabOptions = [
   { id: "media", label: "Mídias" },
 ];
 
+const categoryOptions = [
+  { label: "Selecione", value: "" },
+  { label: "Alugar", value: "Alugar" },
+  { label: "Comprar", value: "Comprar" },
+];
+
 const initialProperties = [
   {
     id: 1,
@@ -56,7 +62,7 @@ const initialProperties = [
       "https://images.unsplash.com/photo-1572120360610-d971b9d7767c?auto=format&fit=crop&w=1200&q=80",
       "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1200&q=80",
     ],
-    amenities: ["Piscina", "Churrasqueira", "Ar-condicionado"],
+    features: ["Piscina", "Churrasqueira", "Ar-condicionado"],
   },
   {
     id: 2,
@@ -82,7 +88,7 @@ const initialProperties = [
       "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1200&q=80",
       "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=80",
     ],
-    amenities: ["Mobiliado", "Elevador", "Portaria 24h"],
+    features: ["Mobiliado", "Elevador", "Portaria 24h"],
   },
   {
     id: 3,
@@ -108,7 +114,7 @@ const initialProperties = [
       "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=80",
       "https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&w=1200&q=80",
     ],
-    amenities: ["Portaria 24h", "Varanda gourmet"],
+    features: ["Portaria 24h", "Varanda gourmet"],
   },
   {
     id: 4,
@@ -134,7 +140,7 @@ const initialProperties = [
       "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80",
       "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1200&q=80",
     ],
-    amenities: ["Academia", "Piscina", "Elevador", "Pet friendly"],
+    features: ["Academia", "Piscina", "Elevador", "Pet friendly"],
   },
 ];
 
@@ -154,7 +160,7 @@ const emptyForm = {
   parkingSpaces: "",
   imageUrl: "",
   photos: [],
-  amenities: [],
+  features: [],
 };
 
 const currencyFormatter = new Intl.NumberFormat("pt-BR", {
@@ -186,15 +192,14 @@ function normalizeForm(property = emptyForm) {
         ? String(property.parkingSpaces)
         : "",
     photos: property.photos || (property.imageUrl ? [property.imageUrl] : []),
-    amenities: property.amenities || [],
+    features: property.features || [],
   };
 }
 
 export default function PropertyManager() {
   const [properties, setProperties] = useState(initialProperties);
-  const [categories, setCategories] = useState(["Alugar", "Comprar"]);
-  const [types, setTypes] = useState(["Casa", "Apartamento", "Comercial", "Cobertura"]);
-  const [features, setFeatures] = useState([
+  const [availableTypes, setAvailableTypes] = useState(["Casa", "Apartamento", "Comercial", "Cobertura"]);
+  const [availableFeatures, setAvailableFeatures] = useState([
     "Piscina",
     "Churrasqueira",
     "Academia",
@@ -211,21 +216,14 @@ export default function PropertyManager() {
   const [activeTab, setActiveTab] = useState("basic");
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState(emptyForm);
-  const [isAddingCategory, setIsAddingCategory] = useState(false);
-  const [newCategory, setNewCategory] = useState("");
   const [isAddingType, setIsAddingType] = useState(false);
   const [newType, setNewType] = useState("");
   const [newFeature, setNewFeature] = useState("");
   const [newPhotoUrl, setNewPhotoUrl] = useState("");
 
-  const categoryOptions = useMemo(
-    () => [{ label: "Selecione", value: "" }, ...categories.map((item) => ({ label: item, value: item }))],
-    [categories],
-  );
-
   const typeOptions = useMemo(
-    () => [{ label: "Selecione", value: "" }, ...types.map((item) => ({ label: item, value: item }))],
-    [types],
+    () => [{ label: "Selecione", value: "" }, ...availableTypes.map((item) => ({ label: item, value: item }))],
+    [availableTypes],
   );
 
   const metrics = useMemo(() => {
@@ -245,9 +243,7 @@ export default function PropertyManager() {
     setEditingId(null);
     setFormData(normalizeForm(emptyForm));
     setActiveTab("basic");
-    setIsAddingCategory(false);
     setIsAddingType(false);
-    setNewCategory("");
     setNewType("");
     setNewFeature("");
     setNewPhotoUrl("");
@@ -264,9 +260,7 @@ export default function PropertyManager() {
       }),
     );
     setActiveTab("basic");
-    setIsAddingCategory(false);
     setIsAddingType(false);
-    setNewCategory("");
     setNewType("");
     setNewFeature("");
     setNewPhotoUrl("");
@@ -284,46 +278,14 @@ export default function PropertyManager() {
     }));
   };
 
-  const startAddingCategory = () => {
-    setIsAddingType(false);
-    setNewType("");
-    setIsAddingCategory(true);
-    setNewCategory("");
-  };
-
   const startAddingType = () => {
-    setIsAddingCategory(false);
-    setNewCategory("");
     setIsAddingType(true);
     setNewType("");
-  };
-
-  const cancelAddingCategory = () => {
-    setIsAddingCategory(false);
-    setNewCategory("");
   };
 
   const cancelAddingType = () => {
     setIsAddingType(false);
     setNewType("");
-  };
-
-  const confirmNewCategory = () => {
-    const value = newCategory.trim();
-
-    if (!value) {
-      return;
-    }
-
-    setCategories((currentValue) =>
-      currentValue.includes(value) ? currentValue : [...currentValue, value],
-    );
-    setFormData((currentValue) => ({
-      ...currentValue,
-      category: value,
-    }));
-    setIsAddingCategory(false);
-    setNewCategory("");
   };
 
   const confirmNewType = () => {
@@ -333,13 +295,24 @@ export default function PropertyManager() {
       return;
     }
 
-    setTypes((currentValue) => (currentValue.includes(value) ? currentValue : [...currentValue, value]));
+    setAvailableTypes((currentValue) =>
+      currentValue.includes(value) ? currentValue : [...currentValue, value],
+    );
     setFormData((currentValue) => ({
       ...currentValue,
       type: value,
     }));
     setIsAddingType(false);
     setNewType("");
+  };
+
+  const handleDeleteType = (typeToRemove) => {
+    setAvailableTypes((currentValue) => currentValue.filter((item) => item !== typeToRemove));
+
+    setFormData((currentValue) => ({
+      ...currentValue,
+      type: currentValue.type === typeToRemove ? "" : currentValue.type,
+    }));
   };
 
   const addPhoto = (urlValue) => {
@@ -370,15 +343,24 @@ export default function PropertyManager() {
 
   const toggleAmenity = (amenity) => {
     setFormData((currentValue) => {
-      const selected = currentValue.amenities.includes(amenity)
-        ? currentValue.amenities.filter((item) => item !== amenity)
-        : [...currentValue.amenities, amenity];
+      const selected = currentValue.features.includes(amenity)
+        ? currentValue.features.filter((item) => item !== amenity)
+        : [...currentValue.features, amenity];
 
       return {
         ...currentValue,
-        amenities: selected,
+        features: selected,
       };
     });
+  };
+
+  const handleDeleteFeature = (featureToRemove) => {
+    setAvailableFeatures((currentValue) => currentValue.filter((item) => item !== featureToRemove));
+
+    setFormData((currentValue) => ({
+      ...currentValue,
+      features: currentValue.features.filter((item) => item !== featureToRemove),
+    }));
   };
 
   const handleStatusToggle = (propertyId) => {
@@ -424,7 +406,7 @@ export default function PropertyManager() {
       imageUrl: formData.imageUrl.trim(),
       thumbnail: formData.photos[0] || formData.imageUrl.trim() || "",
       photos: formData.photos,
-      amenities: formData.amenities,
+      features: formData.features,
       active: true,
     };
 
@@ -621,34 +603,61 @@ export default function PropertyManager() {
 
                 <div className={styles.dynamicSelectRow}>
                   <div className={styles.dynamicSelectGroup}>
+                    <Select
+                      label="Categoria"
+                      options={categoryOptions}
+                      value={formData.category}
+                      onChange={(value) => handleFieldChange("category", value)}
+                    />
+                  </div>
+
+                  <div className={styles.dynamicSelectGroup}>
                     {isAddingType ? (
-                      <div className={styles.inlineEditRow}>
-                        <Input
-                          label="Novo tipo"
-                          placeholder="Ex: Cobertura duplex"
-                          value={newType}
-                          onChange={(event) => setNewType(event.target.value)}
-                          className={styles.inlineInput}
-                        />
-                        <div className={styles.inlineActionGroup}>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            className={styles.inlineIconButton}
-                            onClick={confirmNewType}
-                            aria-label="Confirmar novo tipo"
-                          >
-                            <Check size={16} />
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            className={styles.inlineIconButton}
-                            onClick={cancelAddingType}
-                            aria-label="Cancelar novo tipo"
-                          >
-                            <X size={16} />
-                          </Button>
+                      <div className={styles.typeEditorBox}>
+                        <div className={styles.typeBadgeList}>
+                          {availableTypes.map((typeItem) => (
+                            <span key={typeItem} className={styles.typeBadge}>
+                              <span>{typeItem}</span>
+                              <button
+                                type="button"
+                                className={styles.typeBadgeRemoveButton}
+                                onClick={() => handleDeleteType(typeItem)}
+                                aria-label={`Remover tipo ${typeItem}`}
+                              >
+                                <X size={12} />
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+
+                        <div className={styles.inlineEditRow}>
+                          <Input
+                            label="Novo tipo"
+                            placeholder="Ex: Cobertura duplex"
+                            value={newType}
+                            onChange={(event) => setNewType(event.target.value)}
+                            className={styles.inlineInput}
+                          />
+                          <div className={styles.inlineActionGroup}>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className={styles.inlineIconButton}
+                              onClick={confirmNewType}
+                              aria-label="Confirmar novo tipo"
+                            >
+                              <Check size={16} />
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className={styles.inlineIconButton}
+                              onClick={cancelAddingType}
+                              aria-label="Cancelar novo tipo"
+                            >
+                              <X size={16} />
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     ) : (
@@ -665,58 +674,6 @@ export default function PropertyManager() {
                           className={styles.inlineAddButton}
                           onClick={startAddingType}
                           aria-label="Adicionar novo tipo"
-                        >
-                          <Plus size={16} />
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className={styles.dynamicSelectGroup}>
-                    {isAddingCategory ? (
-                      <div className={styles.inlineEditRow}>
-                        <Input
-                          label="Nova categoria"
-                          placeholder="Ex: Lançamento"
-                          value={newCategory}
-                          onChange={(event) => setNewCategory(event.target.value)}
-                          className={styles.inlineInput}
-                        />
-                        <div className={styles.inlineActionGroup}>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            className={styles.inlineIconButton}
-                            onClick={confirmNewCategory}
-                            aria-label="Confirmar nova categoria"
-                          >
-                            <Check size={16} />
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            className={styles.inlineIconButton}
-                            onClick={cancelAddingCategory}
-                            aria-label="Cancelar nova categoria"
-                          >
-                            <X size={16} />
-                          </Button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className={styles.selectRow}>
-                        <Select
-                          label="Categoria"
-                          options={categoryOptions}
-                          value={formData.category}
-                          onChange={(value) => handleFieldChange("category", value)}
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className={styles.inlineAddButton}
-                          onClick={startAddingCategory}
-                          aria-label="Adicionar nova categoria"
                         >
                           <Plus size={16} />
                         </Button>
@@ -816,15 +773,15 @@ export default function PropertyManager() {
                       return;
                     }
 
-                    setFeatures((currentValue) =>
+                      setAvailableFeatures((currentValue) =>
                       currentValue.includes(value) ? currentValue : [...currentValue, value],
                     );
 
                     setFormData((currentValue) => ({
                       ...currentValue,
-                      amenities: currentValue.amenities.includes(value)
-                        ? currentValue.amenities
-                        : [...currentValue.amenities, value],
+                        features: currentValue.features.includes(value)
+                          ? currentValue.features
+                          : [...currentValue.features, value],
                     }));
 
                     setNewFeature("");
@@ -833,6 +790,30 @@ export default function PropertyManager() {
                   Adicionar
                 </Button>
               </div>
+
+                <div className={styles.featureGrid}>
+                  {availableFeatures.map((featureItem) => (
+                    <div key={featureItem} className={styles.featureCard}>
+                      <label className={styles.featureCheckLabel}>
+                        <input
+                          type="checkbox"
+                          checked={formData.features.includes(featureItem)}
+                          onChange={() => toggleAmenity(featureItem)}
+                        />
+                        <span>{featureItem}</span>
+                      </label>
+
+                      <button
+                        type="button"
+                        className={styles.featureDeleteButton}
+                        onClick={() => handleDeleteFeature(featureItem)}
+                        aria-label={`Remover característica ${featureItem}`}
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
             </section>
           ) : null}
 
@@ -895,33 +876,6 @@ export default function PropertyManager() {
                     </div>
                   ))}
                 </div>
-              </div>
-            </section>
-          ) : null}
-
-          {activeTab === "features" ? (
-            <section className={styles.tabPanel}>
-              <div className={styles.featureIntro}>
-                <div>
-                  <p className={styles.featureKicker}>Comodidades</p>
-                  <h3 className={styles.featureTitle}>Selecione as características do imóvel</h3>
-                </div>
-                <p className={styles.featureDescription}>
-                  Organize os diferenciais do imóvel antes de publicar.
-                </p>
-              </div>
-
-              <div className={styles.checkboxGrid}>
-                {features.map((amenity) => (
-                  <label key={amenity} className={styles.checkboxCard}>
-                    <input
-                      type="checkbox"
-                      checked={formData.amenities.includes(amenity)}
-                      onChange={() => toggleAmenity(amenity)}
-                    />
-                    <span>{amenity}</span>
-                  </label>
-                ))}
               </div>
             </section>
           ) : null}
