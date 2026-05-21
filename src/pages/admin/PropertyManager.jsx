@@ -2,6 +2,8 @@ import { useMemo, useState } from "react";
 import {
   Bath,
   BedDouble,
+  Check,
+  X,
   ImagePlus,
   MapPin,
   Pencil,
@@ -21,25 +23,6 @@ import Input from "@components/ui/Input/Input.jsx";
 import Select from "@components/ui/Select/Select.jsx";
 import styles from "./PropertyManager.module.css";
 
-const amenityOptions = [
-  "Piscina",
-  "Churrasqueira",
-  "Academia",
-  "Varanda gourmet",
-  "Portaria 24h",
-  "Playground",
-  "Elevador",
-  "Ar-condicionado",
-  "Mobiliado",
-  "Pet friendly",
-];
-
-const categoryOptions = [
-  { label: "Selecione", value: "" },
-  { label: "Alugar", value: "rent" },
-  { label: "Comprar", value: "buy" },
-];
-
 const tabOptions = [
   { id: "basic", label: "Básico" },
   { id: "location", label: "Localização" },
@@ -51,7 +34,7 @@ const initialProperties = [
     id: 1,
     title: "Casa térrea com piscina",
     code: "IV-1024",
-    category: "buy",
+    category: "Comprar",
     type: "Casa",
     price: 980000,
     condo: 420,
@@ -73,7 +56,7 @@ const initialProperties = [
     id: 2,
     title: "Apartamento mobiliado no centro",
     code: "IV-1041",
-    category: "rent",
+    category: "Alugar",
     type: "Apartamento",
     price: 3500,
     condo: 650,
@@ -95,7 +78,7 @@ const initialProperties = [
     id: 3,
     title: "Sobrado comercial com vitrine",
     code: "IV-1078",
-    category: "buy",
+    category: "Comprar",
     type: "Comercial",
     price: 1250000,
     condo: 0,
@@ -117,7 +100,7 @@ const initialProperties = [
     id: 4,
     title: "Cobertura com terraço panorâmico",
     code: "IV-1103",
-    category: "rent",
+    category: "Alugar",
     type: "Cobertura",
     price: 7800,
     condo: 1180,
@@ -189,16 +172,45 @@ function normalizeForm(property = emptyForm) {
 
 export default function PropertyManager() {
   const [properties, setProperties] = useState(initialProperties);
+  const [categories, setCategories] = useState(["Alugar", "Comprar"]);
+  const [types, setTypes] = useState(["Casa", "Apartamento", "Comercial", "Cobertura"]);
+  const [features, setFeatures] = useState([
+    "Piscina",
+    "Churrasqueira",
+    "Academia",
+    "Varanda gourmet",
+    "Portaria 24h",
+    "Playground",
+    "Elevador",
+    "Ar-condicionado",
+    "Mobiliado",
+    "Pet friendly",
+  ]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState("create");
   const [activeTab, setActiveTab] = useState("basic");
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState(emptyForm);
+  const [isAddingCategory, setIsAddingCategory] = useState(false);
+  const [newCategory, setNewCategory] = useState("");
+  const [isAddingType, setIsAddingType] = useState(false);
+  const [newType, setNewType] = useState("");
+  const [newFeature, setNewFeature] = useState("");
+
+  const categoryOptions = useMemo(
+    () => [{ label: "Selecione", value: "" }, ...categories.map((item) => ({ label: item, value: item }))],
+    [categories],
+  );
+
+  const typeOptions = useMemo(
+    () => [{ label: "Selecione", value: "" }, ...types.map((item) => ({ label: item, value: item }))],
+    [types],
+  );
 
   const metrics = useMemo(() => {
     const activeCount = properties.filter((property) => property.active).length;
-    const rentCount = properties.filter((property) => property.category === "rent").length;
-    const buyCount = properties.filter((property) => property.category === "buy").length;
+    const rentCount = properties.filter((property) => property.category === "Alugar").length;
+    const buyCount = properties.filter((property) => property.category === "Comprar").length;
 
     return [
       { label: "Imóveis ativos", value: activeCount, hint: "Publicados na vitrine" },
@@ -212,6 +224,11 @@ export default function PropertyManager() {
     setEditingId(null);
     setFormData(normalizeForm(emptyForm));
     setActiveTab("basic");
+    setIsAddingCategory(false);
+    setIsAddingType(false);
+    setNewCategory("");
+    setNewType("");
+    setNewFeature("");
     setIsModalOpen(true);
   };
 
@@ -225,6 +242,11 @@ export default function PropertyManager() {
       }),
     );
     setActiveTab("basic");
+    setIsAddingCategory(false);
+    setIsAddingType(false);
+    setNewCategory("");
+    setNewType("");
+    setNewFeature("");
     setIsModalOpen(true);
   };
 
@@ -237,6 +259,64 @@ export default function PropertyManager() {
       ...currentValue,
       [field]: value,
     }));
+  };
+
+  const startAddingCategory = () => {
+    setIsAddingType(false);
+    setNewType("");
+    setIsAddingCategory(true);
+    setNewCategory("");
+  };
+
+  const startAddingType = () => {
+    setIsAddingCategory(false);
+    setNewCategory("");
+    setIsAddingType(true);
+    setNewType("");
+  };
+
+  const cancelAddingCategory = () => {
+    setIsAddingCategory(false);
+    setNewCategory("");
+  };
+
+  const cancelAddingType = () => {
+    setIsAddingType(false);
+    setNewType("");
+  };
+
+  const confirmNewCategory = () => {
+    const value = newCategory.trim();
+
+    if (!value) {
+      return;
+    }
+
+    setCategories((currentValue) =>
+      currentValue.includes(value) ? currentValue : [...currentValue, value],
+    );
+    setFormData((currentValue) => ({
+      ...currentValue,
+      category: value,
+    }));
+    setIsAddingCategory(false);
+    setNewCategory("");
+  };
+
+  const confirmNewType = () => {
+    const value = newType.trim();
+
+    if (!value) {
+      return;
+    }
+
+    setTypes((currentValue) => (currentValue.includes(value) ? currentValue : [...currentValue, value]));
+    setFormData((currentValue) => ({
+      ...currentValue,
+      type: value,
+    }));
+    setIsAddingType(false);
+    setNewType("");
   };
 
   const toggleAmenity = (amenity) => {
@@ -381,7 +461,7 @@ export default function PropertyManager() {
                       <td>
                         <div className={styles.propertyMeta}>
                           <span>{property.type}</span>
-                          <small>{property.category === "rent" ? "Alugar" : "Comprar"}</small>
+                          <small>{property.category}</small>
                         </div>
                       </td>
                       <td>
@@ -489,20 +569,110 @@ export default function PropertyManager() {
                   onChange={(event) => handleFieldChange("iptu", event.target.value)}
                 />
 
-                <Input
-                  label="Tipo"
-                  placeholder="Casa, apartamento, cobertura..."
-                  value={formData.type}
-                  onChange={(event) => handleFieldChange("type", event.target.value)}
-                />
+                <div className={styles.dynamicSelectRow}>
+                  <div className={styles.dynamicSelectGroup}>
+                    {isAddingType ? (
+                      <div className={styles.inlineEditRow}>
+                        <Input
+                          label="Novo tipo"
+                          placeholder="Ex: Cobertura duplex"
+                          value={newType}
+                          onChange={(event) => setNewType(event.target.value)}
+                          className={styles.inlineInput}
+                        />
+                        <div className={styles.inlineActionGroup}>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className={styles.inlineIconButton}
+                            onClick={confirmNewType}
+                            aria-label="Confirmar novo tipo"
+                          >
+                            <Check size={16} />
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className={styles.inlineIconButton}
+                            onClick={cancelAddingType}
+                            aria-label="Cancelar novo tipo"
+                          >
+                            <X size={16} />
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className={styles.selectRow}>
+                        <Select
+                          label="Tipo"
+                          options={typeOptions}
+                          value={formData.type}
+                          onChange={(value) => handleFieldChange("type", value)}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className={styles.inlineAddButton}
+                          onClick={startAddingType}
+                          aria-label="Adicionar novo tipo"
+                        >
+                          <Plus size={16} />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
 
-                <div className={styles.selectField}>
-                  <Select
-                    label="Categoria"
-                    options={categoryOptions}
-                    value={formData.category}
-                    onChange={(value) => handleFieldChange("category", value)}
-                  />
+                  <div className={styles.dynamicSelectGroup}>
+                    {isAddingCategory ? (
+                      <div className={styles.inlineEditRow}>
+                        <Input
+                          label="Nova categoria"
+                          placeholder="Ex: Lançamento"
+                          value={newCategory}
+                          onChange={(event) => setNewCategory(event.target.value)}
+                          className={styles.inlineInput}
+                        />
+                        <div className={styles.inlineActionGroup}>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className={styles.inlineIconButton}
+                            onClick={confirmNewCategory}
+                            aria-label="Confirmar nova categoria"
+                          >
+                            <Check size={16} />
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className={styles.inlineIconButton}
+                            onClick={cancelAddingCategory}
+                            aria-label="Cancelar nova categoria"
+                          >
+                            <X size={16} />
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className={styles.selectRow}>
+                        <Select
+                          label="Categoria"
+                          options={categoryOptions}
+                          value={formData.category}
+                          onChange={(value) => handleFieldChange("category", value)}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className={styles.inlineAddButton}
+                          onClick={startAddingCategory}
+                          aria-label="Adicionar nova categoria"
+                        >
+                          <Plus size={16} />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </section>
@@ -577,8 +747,45 @@ export default function PropertyManager() {
                 </p>
               </div>
 
+              <div className={styles.featureToolbar}>
+                <Input
+                  label="Nova característica"
+                  placeholder="Ex: Piso Aquecido"
+                  value={newFeature}
+                  onChange={(event) => setNewFeature(event.target.value)}
+                  className={styles.featureToolbarInput}
+                />
+                <Button
+                  type="button"
+                  variant="primary"
+                  className={styles.featureToolbarButton}
+                  onClick={() => {
+                    const value = newFeature.trim();
+
+                    if (!value) {
+                      return;
+                    }
+
+                    setFeatures((currentValue) =>
+                      currentValue.includes(value) ? currentValue : [...currentValue, value],
+                    );
+
+                    setFormData((currentValue) => ({
+                      ...currentValue,
+                      amenities: currentValue.amenities.includes(value)
+                        ? currentValue.amenities
+                        : [...currentValue.amenities, value],
+                    }));
+
+                    setNewFeature("");
+                  }}
+                >
+                  Adicionar
+                </Button>
+              </div>
+
               <div className={styles.checkboxGrid}>
-                {amenityOptions.map((amenity) => (
+                {features.map((amenity) => (
                   <label key={amenity} className={styles.checkboxCard}>
                     <input
                       type="checkbox"

@@ -311,6 +311,74 @@
   gap: 1rem;
 }
 
+.dynamicSelectRow {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 1rem;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.dynamicSelectGroup {
+  flex: 1 1 18rem;
+  min-width: 0;
+}
+
+.selectRow,
+.inlineEditRow {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-end;
+}
+
+.selectRow > :first-child,
+.inlineEditRow > :first-child {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.inlineInput {
+  width: 100%;
+}
+
+.inlineAddButton,
+.inlineIconButton {
+  min-width: 3rem;
+  min-height: 3.45rem;
+  padding: 0.75rem !important;
+  border-radius: var(--radius-md) !important;
+  flex-shrink: 0;
+}
+
+.inlineAddButton {
+  border-color: rgba(199, 156, 49, 0.35) !important;
+  color: var(--color-brand-primary) !important;
+}
+
+.inlineActionGroup {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-end;
+}
+
+.featureToolbar {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.featureToolbarInput {
+  flex: 1 1 16rem;
+  min-width: 0;
+}
+
+.featureToolbarButton {
+  min-height: 3.45rem;
+  padding-inline: 1.1rem;
+  white-space: nowrap;
+}
+
 .selectField {
   display: grid;
   align-content: start;
@@ -478,6 +546,27 @@
   .checkboxGrid,
   .previewGrid {
     grid-template-columns: 1fr;
+  }
+
+  .dynamicSelectRow,
+  .featureToolbar,
+  .selectRow,
+  .inlineEditRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dynamicSelectGroup {
+    width: 100%;
+  }
+
+  .inlineActionGroup {
+    width: 100%;
+  }
+
+  .inlineAddButton,
+  .inlineIconButton {
+    width: 100%;
   }
 
   .modalFooter {
