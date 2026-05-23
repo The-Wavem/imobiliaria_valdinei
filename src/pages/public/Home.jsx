@@ -1,14 +1,21 @@
+import { useNavigate } from "react-router-dom";
 import Hero from "@sections/home/Hero";
 import FeaturedProperties from "@sections/home/FeaturedProperties";
 import Stats from "@sections/home/Stats";
 import Contact from "@sections/home/Contact";
 
 export default function Home() {
+  const navigate = useNavigate();
+
+  const handlePropertyClick = (propertyId) => {
+    navigate(`/imovel/${propertyId}`);
+  };
+
   return (
     <main>
       <Hero />
       <Stats />
-      <FeaturedProperties />
+      <FeaturedProperties onPropertyClick={handlePropertyClick} />
       <Contact />
     </main>
   );
