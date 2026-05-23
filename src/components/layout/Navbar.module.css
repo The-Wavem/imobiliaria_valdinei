@@ -2,7 +2,7 @@
   position: sticky;
   top: 0;
   z-index: 30;
-  background: #14143cf5;
+  background: #14143C;
   backdrop-filter: blur(16px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
@@ -23,6 +23,11 @@
   gap: 12px;
   text-decoration: none;
   color: var(--color-surface);
+}
+
+.logo_navbar {
+  width: 44px;
+  height: 44px;
 }
 
 .brandMark {
