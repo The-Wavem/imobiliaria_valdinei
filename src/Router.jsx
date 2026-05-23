@@ -1,4 +1,5 @@
 import React from "react";
+import { Navigate, Route, Routes } from "react-router";
 import PublicLayout from "@/components/layout/PublicLayout";
 import PrivateLayout from "@/components/layout/PrivateLayout";
 import Home from "@/pages/public/Home";
