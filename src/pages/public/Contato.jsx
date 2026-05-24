@@ -7,8 +7,8 @@ export default function Contato() {
   }, []);
 
   return (
-    <main>
+    <>
       <ContatoSection />
-    </main>
+    </>
   );
 }
