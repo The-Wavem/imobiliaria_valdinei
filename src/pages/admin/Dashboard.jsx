@@ -88,11 +88,12 @@ const interestData = [
   { name: "Alto Padrão", value: 12 },
 ];
 
-const regionData = [
-  { name: "Centro", value: 36 },
-  { name: "Zona Sul", value: 28 },
-  { name: "Jardim Europa", value: 24 },
-  { name: "Alphaville", value: 18 },
+const bairrosData = [
+  { bairro: "Água Verde", acessos: 145 },
+  { bairro: "Batel", acessos: 110 },
+  { bairro: "Araucária (Centro)", acessos: 95 },
+  { bairro: "Bigorrilho", acessos: 80 },
+  { bairro: "Ecoville", acessos: 65 },
 ];
 
 const chartPalette = ["var(--color-brand-primary)", "rgba(20, 20, 60, 0.9)", "rgba(71, 85, 105, 0.95)", "rgba(148, 163, 184, 0.95)"];
@@ -196,58 +197,87 @@ export default function Dashboard() {
             })}
           </section>
 
-          <section className={styles.chartsGrid} aria-label="Gráficos do dashboard">
-            <article className={`${styles.chartCard} ${styles.chartCardWide}`}>
-              <div className={styles.chartHeader}>
-                <div>
-                  <p className={styles.chartKicker}>Desempenho</p>
-                  <h2 className={styles.chartTitle}>Captação de leads e visitas</h2>
+          <section className={styles.chartsLayout} aria-label="Gráficos do dashboard">
+            <div className={styles.chartsPrimaryGrid}>
+              <article className={`${styles.chartCard} ${styles.chartCardWide}`}>
+                <div className={styles.chartHeader}>
+                  <div>
+                    <p className={styles.chartKicker}>Desempenho</p>
+                    <h2 className={styles.chartTitle}>Captação de leads e visitas</h2>
+                  </div>
+                  <p className={styles.chartDescription}>Visão consolidada de {periodLabel.toLowerCase()}.</p>
                 </div>
-                <p className={styles.chartDescription}>Visão consolidada de {periodLabel.toLowerCase()}.</p>
-              </div>
 
-              <div className={styles.chartBody}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={performanceData}>
-                    <defs>
-                      <linearGradient id="colorVisitas" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="var(--color-brand-primary)" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="var(--color-brand-primary)" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
-                    <XAxis dataKey="period" axisLine={false} tickLine={false} tick={axisTickStyle} />
-                    <YAxis axisLine={false} tickLine={false} tick={axisTickStyle} />
-                    <Tooltip
-                      cursor={{ fill: "rgba(199, 156, 49, 0.06)" }}
-                      contentStyle={tooltipContentStyle}
-                      labelStyle={tooltipLabelStyle}
-                      itemStyle={tooltipItemStyle}
-                    />
-                    <Legend verticalAlign="top" height={28} wrapperStyle={{ fontFamily: "var(--font-sans)" }} />
-                    <Area
-                      type="monotone"
-                      dataKey="leads"
-                      name="Leads"
-                      stroke="var(--color-brand-primary)"
-                      strokeWidth={3}
-                      fill="url(#colorVisitas)"
-                      dot={false}
-                      activeDot={{ r: 6 }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="visits"
-                      name="Visitas"
-                      stroke="var(--color-brand-secondary)"
-                      strokeWidth={3}
-                      dot={{ r: 4, strokeWidth: 2, fill: "#ffffff" }}
-                      activeDot={{ r: 7 }}
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            </article>
+                <div className={styles.chartBody}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={performanceData}>
+                      <defs>
+                        <linearGradient id="colorVisitas" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="var(--color-brand-primary)" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="var(--color-brand-primary)" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
+                      <XAxis dataKey="period" axisLine={false} tickLine={false} tick={axisTickStyle} />
+                      <YAxis axisLine={false} tickLine={false} tick={axisTickStyle} />
+                      <Tooltip
+                        cursor={{ fill: "rgba(199, 156, 49, 0.06)" }}
+                        contentStyle={tooltipContentStyle}
+                        labelStyle={tooltipLabelStyle}
+                        itemStyle={tooltipItemStyle}
+                      />
+                      <Legend verticalAlign="top" height={28} wrapperStyle={{ fontFamily: "var(--font-sans)" }} />
+                      <Area
+                        type="monotone"
+                        dataKey="leads"
+                        name="Leads"
+                        stroke="var(--color-brand-primary)"
+                        strokeWidth={3}
+                        fill="url(#colorVisitas)"
+                        dot={false}
+                        activeDot={{ r: 6 }}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="visits"
+                        name="Visitas"
+                        stroke="var(--color-brand-secondary)"
+                        strokeWidth={3}
+                        dot={{ r: 4, strokeWidth: 2, fill: "#ffffff" }}
+                        activeDot={{ r: 7 }}
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </article>
+
+              <article className={styles.chartCard}>
+                <div className={styles.chartHeader}>
+                  <div>
+                    <p className={styles.chartKicker}>Inteligência de Mercado</p>
+                    <h2 className={styles.chartTitle}>Bairros mais buscados</h2>
+                  </div>
+                  <p className={styles.chartDescription}>Onde a intenção de clique está mais forte.</p>
+                </div>
+
+                <div className={styles.chartBody}>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={bairrosData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
+                      <XAxis dataKey="bairro" axisLine={false} tickLine={false} tick={axisTickStyle} />
+                      <YAxis axisLine={false} tickLine={false} tick={axisTickStyle} />
+                      <Tooltip
+                        cursor={{ fill: "rgba(199, 156, 49, 0.06)" }}
+                        contentStyle={tooltipContentStyle}
+                        labelStyle={tooltipLabelStyle}
+                        itemStyle={tooltipItemStyle}
+                      />
+                      <Bar dataKey="acessos" fill="var(--color-brand-primary)" radius={[4, 4, 0, 0]} barSize={34} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </article>
+            </div>
 
             <article className={styles.chartCard}>
               <div className={styles.chartHeader}>
@@ -280,33 +310,6 @@ export default function Dashboard() {
                     />
                     <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontFamily: "var(--font-sans)" }} />
                   </PieChart>
-                </ResponsiveContainer>
-              </div>
-            </article>
-
-            <article className={styles.chartCard}>
-              <div className={styles.chartHeader}>
-                <div>
-                  <p className={styles.chartKicker}>Regiões</p>
-                  <h2 className={styles.chartTitle}>Bairros mais procurados</h2>
-                </div>
-                <p className={styles.chartDescription}>Volume de buscas por localização.</p>
-              </div>
-
-              <div className={styles.chartBody}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={regionData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={axisTickStyle} />
-                    <YAxis axisLine={false} tickLine={false} tick={axisTickStyle} />
-                    <Tooltip
-                      cursor={{ fill: "rgba(199, 156, 49, 0.06)" }}
-                      contentStyle={tooltipContentStyle}
-                      labelStyle={tooltipLabelStyle}
-                      itemStyle={tooltipItemStyle}
-                    />
-                    <Bar dataKey="value" fill="var(--color-brand-primary)" radius={[8, 8, 0, 0]} barSize={34} />
-                  </BarChart>
                 </ResponsiveContainer>
               </div>
             </article>
