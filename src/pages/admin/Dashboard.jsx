@@ -1,4 +1,5 @@
 import { useLocation } from "react-router-dom";
+import { useMemo, useState } from "react";
 import {
   Area,
   AreaChart,
@@ -17,6 +18,7 @@ import {
 } from "recharts";
 import { CalendarDays, ArrowUpRight, Home, TrendingUp, Users } from "lucide-react";
 import AdminSidebar from "@components/layout/AdminSidebar";
+import Select from "@components/ui/Select/Select.jsx";
 import styles from "./Dashboard.module.css";
 
 const metricCards = [
@@ -46,15 +48,38 @@ const metricCards = [
   },
 ];
 
-const performanceData = [
-  { month: "Jan", leads: 26, visits: 10 },
-  { month: "Fev", leads: 32, visits: 14 },
-  { month: "Mar", leads: 29, visits: 15 },
-  { month: "Abr", leads: 41, visits: 19 },
-  { month: "Mai", leads: 38, visits: 17 },
-  { month: "Jun", leads: 45, visits: 21 },
-  { month: "Jul", leads: 51, visits: 24 },
+const periodOptions = [
+  { label: "Últimos 7 dias", value: "7d" },
+  { label: "Últimos 30 dias", value: "30d" },
+  { label: "Este Ano", value: "year" },
 ];
+
+const performanceDataByPeriod = {
+  "7d": [
+    { period: "Seg", leads: 12, visits: 5 },
+    { period: "Ter", leads: 14, visits: 6 },
+    { period: "Qua", leads: 10, visits: 4 },
+    { period: "Qui", leads: 18, visits: 8 },
+    { period: "Sex", leads: 16, visits: 7 },
+    { period: "Sáb", leads: 9, visits: 3 },
+    { period: "Dom", leads: 11, visits: 4 },
+  ],
+  "30d": [
+    { period: "Sem 1", leads: 26, visits: 10 },
+    { period: "Sem 2", leads: 32, visits: 14 },
+    { period: "Sem 3", leads: 29, visits: 12 },
+    { period: "Sem 4", leads: 41, visits: 19 },
+  ],
+  year: [
+    { period: "Jan", leads: 26, visits: 10 },
+    { period: "Fev", leads: 32, visits: 14 },
+    { period: "Mar", leads: 29, visits: 15 },
+    { period: "Abr", leads: 41, visits: 19 },
+    { period: "Mai", leads: 38, visits: 17 },
+    { period: "Jun", leads: 45, visits: 21 },
+    { period: "Jul", leads: 51, visits: 24 },
+  ],
+};
 
 const interestData = [
   { name: "Residencial", value: 46 },
@@ -73,15 +98,44 @@ const regionData = [
 const chartPalette = ["var(--color-brand-primary)", "rgba(20, 20, 60, 0.9)", "rgba(71, 85, 105, 0.95)", "rgba(148, 163, 184, 0.95)"];
 
 const routeLabels = {
-  "/admin/dashboard": "Visão Geral",
+  "/admin/dashboard": "Dashboard",
   "/admin/imoveis": "Imóveis",
   "/admin/leads": "Leads",
   "/admin/visitas": "Visitas",
 };
 
+const axisTickStyle = {
+  fill: "var(--color-text-muted)",
+  fontFamily: "var(--font-sans)",
+  fontSize: 12,
+};
+
+const tooltipContentStyle = {
+  borderRadius: "14px",
+  border: "1px solid rgba(15, 23, 42, 0.08)",
+  boxShadow: "0 18px 40px rgba(15, 23, 42, 0.12)",
+  backgroundColor: "rgba(255, 255, 255, 0.98)",
+  fontFamily: "var(--font-sans)",
+  color: "var(--color-text-main)",
+};
+
+const tooltipLabelStyle = {
+  color: "var(--color-brand-secondary)",
+  fontWeight: 700,
+  fontFamily: "var(--font-sans)",
+};
+
+const tooltipItemStyle = {
+  color: "var(--color-text-muted)",
+  fontFamily: "var(--font-sans)",
+};
+
 export default function Dashboard() {
   const { pathname } = useLocation();
+  const [period, setPeriod] = useState("7d");
   const title = routeLabels[pathname] ?? routeLabels["/admin/dashboard"];
+  const periodLabel = periodOptions.find((option) => option.value === period)?.label ?? "Últimos 7 dias";
+  const performanceData = useMemo(() => performanceDataByPeriod[period] ?? performanceDataByPeriod["7d"], [period]);
 
   return (
     <div className={styles.layout}>
@@ -100,6 +154,17 @@ export default function Dashboard() {
             </div>
 
             <div className={styles.headerActions}>
+              <div className={styles.periodSelectWrap}>
+                <Select
+                  compact
+                  label="Período"
+                  options={periodOptions}
+                  value={period}
+                  onChange={setPeriod}
+                  className={styles.periodSelect}
+                />
+              </div>
+
               <button type="button" className={styles.secondaryButton}>
                 Exportar relatório
               </button>
@@ -138,37 +203,35 @@ export default function Dashboard() {
                   <p className={styles.chartKicker}>Desempenho</p>
                   <h2 className={styles.chartTitle}>Captação de leads e visitas</h2>
                 </div>
-                <p className={styles.chartDescription}>Crescimento mensal da operação comercial.</p>
+                <p className={styles.chartDescription}>Visão consolidada de {periodLabel.toLowerCase()}.</p>
               </div>
 
               <div className={styles.chartBody}>
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={performanceData}>
                     <defs>
-                      <linearGradient id="performanceGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="var(--color-brand-primary)" stopOpacity={0.34} />
-                        <stop offset="100%" stopColor="var(--color-brand-primary)" stopOpacity={0.04} />
+                      <linearGradient id="colorVisitas" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="var(--color-brand-primary)" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="var(--color-brand-primary)" stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="4 4" vertical={false} />
-                    <XAxis dataKey="month" axisLine={false} tickLine={false} />
-                    <YAxis axisLine={false} tickLine={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
+                    <XAxis dataKey="period" axisLine={false} tickLine={false} tick={axisTickStyle} />
+                    <YAxis axisLine={false} tickLine={false} tick={axisTickStyle} />
                     <Tooltip
-                      cursor={{ fill: "rgba(199, 156, 49, 0.08)" }}
-                      contentStyle={{
-                        borderRadius: "14px",
-                        border: "1px solid rgba(15, 23, 42, 0.08)",
-                        boxShadow: "0 18px 40px rgba(15, 23, 42, 0.12)",
-                      }}
+                      cursor={{ fill: "rgba(199, 156, 49, 0.06)" }}
+                      contentStyle={tooltipContentStyle}
+                      labelStyle={tooltipLabelStyle}
+                      itemStyle={tooltipItemStyle}
                     />
-                    <Legend verticalAlign="top" height={28} />
+                    <Legend verticalAlign="top" height={28} wrapperStyle={{ fontFamily: "var(--font-sans)" }} />
                     <Area
                       type="monotone"
                       dataKey="leads"
                       name="Leads"
                       stroke="var(--color-brand-primary)"
                       strokeWidth={3}
-                      fill="url(#performanceGradient)"
+                      fill="url(#colorVisitas)"
                       dot={false}
                       activeDot={{ r: 6 }}
                     />
@@ -211,13 +274,11 @@ export default function Dashboard() {
                       ))}
                     </Pie>
                     <Tooltip
-                      contentStyle={{
-                        borderRadius: "14px",
-                        border: "1px solid rgba(15, 23, 42, 0.08)",
-                        boxShadow: "0 18px 40px rgba(15, 23, 42, 0.12)",
-                      }}
+                      contentStyle={tooltipContentStyle}
+                      labelStyle={tooltipLabelStyle}
+                      itemStyle={tooltipItemStyle}
                     />
-                    <Legend verticalAlign="bottom" height={36} />
+                    <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontFamily: "var(--font-sans)" }} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
@@ -235,16 +296,14 @@ export default function Dashboard() {
               <div className={styles.chartBody}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={regionData}>
-                    <CartesianGrid strokeDasharray="4 4" vertical={false} />
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} />
-                    <YAxis axisLine={false} tickLine={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={axisTickStyle} />
+                    <YAxis axisLine={false} tickLine={false} tick={axisTickStyle} />
                     <Tooltip
-                      cursor={{ fill: "rgba(199, 156, 49, 0.08)" }}
-                      contentStyle={{
-                        borderRadius: "14px",
-                        border: "1px solid rgba(15, 23, 42, 0.08)",
-                        boxShadow: "0 18px 40px rgba(15, 23, 42, 0.12)",
-                      }}
+                      cursor={{ fill: "rgba(199, 156, 49, 0.06)" }}
+                      contentStyle={tooltipContentStyle}
+                      labelStyle={tooltipLabelStyle}
+                      itemStyle={tooltipItemStyle}
                     />
                     <Bar dataKey="value" fill="var(--color-brand-primary)" radius={[8, 8, 0, 0]} barSize={34} />
                   </BarChart>
