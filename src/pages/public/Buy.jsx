@@ -1,62 +1,44 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Footer from "@components/layout/Footer.jsx";
 import FilterBar from "@components/ui/FilterBar/FilterBar.jsx";
 import CategoryHero from "@sections/listing/CategoryHero.jsx";
 import PropertyGrid from "@sections/listing/PropertyGrid.jsx";
-
-const properties = [
-  {
-    id: "buy-1",
-    title: "Apartamento Garden no Batel",
-    location: "Batel, Curitiba",
-    price: 1450000,
-    type: "Apartamento",
-    category: "Comprar",
-    beds: 3,
-    baths: 2,
-    parking: 2,
-    area: 142,
-    amenities: ["Mobiliado", "Elevador"],
-    image: "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&q=80&w=1200",
-  },
-  {
-    id: "buy-2",
-    title: "Casa moderna em condomínio fechado",
-    location: "Santa Felicidade, Curitiba",
-    price: 890000,
-    type: "Casa",
-    category: "Comprar",
-    beds: 4,
-    baths: 3,
-    parking: 3,
-    area: 210,
-    amenities: ["Piscina", "Churrasqueira"],
-    image: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&q=80&w=1200",
-  },
-  {
-    id: "buy-3",
-    title: "Terreno residencial em localização estratégica",
-    location: "Portão, Curitiba",
-    price: 620000,
-    type: "Terreno",
-    category: "Comprar",
-    beds: 0,
-    baths: 0,
-    parking: 0,
-    area: 360,
-    amenities: [],
-    image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&q=80&w=1200",
-  },
-];
+import { fetchPublishedProperties } from "@services/properties";
 
 export default function Buy() {
   const [filters, setFilters] = useState({});
+  const [properties, setProperties] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
   const handlePropertyClick = (propertyId) => {
     navigate(`/imovel/${propertyId}`);
   };
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadProperties = async () => {
+      try {
+        const items = await fetchPublishedProperties();
+
+        if (isMounted) {
+          setProperties(items.filter((property) => property.category.toLowerCase() === "comprar"));
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadProperties();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const filteredProperties = useMemo(() => {
     return properties.filter((property) => {
@@ -107,7 +89,12 @@ export default function Buy() {
         onSearch={setFilters}
         onAdvancedFiltersApply={setFilters}
       />
-      <PropertyGrid properties={filteredProperties} title="Imóveis para Comprar" onPropertyClick={handlePropertyClick} />
+      <PropertyGrid
+        properties={filteredProperties}
+        title="Imóveis para Comprar"
+        onPropertyClick={handlePropertyClick}
+        loading={isLoading}
+      />
       <Footer />
     </div>
   );
