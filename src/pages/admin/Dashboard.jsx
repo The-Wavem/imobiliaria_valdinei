@@ -1,5 +1,5 @@
 import { useLocation } from "react-router-dom";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Area,
   AreaChart,
@@ -16,7 +16,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { CalendarDays, ArrowUpRight, Home, TrendingUp, Users } from "lucide-react";
+import { BarChart2, CalendarDays, ArrowUpRight, Home, TrendingUp, Users } from "lucide-react";
 import AdminSidebar from "@components/layout/AdminSidebar";
 import Select from "@components/ui/Select/Select.jsx";
 import styles from "./Dashboard.module.css";
@@ -88,14 +88,6 @@ const interestData = [
   { name: "Alto Padrão", value: 12 },
 ];
 
-const bairrosData = [
-  { bairro: "Água Verde", acessos: 145 },
-  { bairro: "Batel", acessos: 110 },
-  { bairro: "Araucária (Centro)", acessos: 95 },
-  { bairro: "Bigorrilho", acessos: 80 },
-  { bairro: "Ecoville", acessos: 65 },
-];
-
 const chartPalette = ["var(--color-brand-primary)", "rgba(20, 20, 60, 0.9)", "rgba(71, 85, 105, 0.95)", "rgba(148, 163, 184, 0.95)"];
 
 const routeLabels = {
@@ -134,9 +126,26 @@ const tooltipItemStyle = {
 export default function Dashboard() {
   const { pathname } = useLocation();
   const [period, setPeriod] = useState("7d");
+  const [bairrosData, setBairrosData] = useState([]);
   const title = routeLabels[pathname] ?? routeLabels["/admin/dashboard"];
   const periodLabel = periodOptions.find((option) => option.value === period)?.label ?? "Últimos 7 dias";
   const performanceData = useMemo(() => performanceDataByPeriod[period] ?? performanceDataByPeriod["7d"], [period]);
+
+  useEffect(() => {
+    try {
+      const rawValue = window.localStorage.getItem("@valdinei:bairros");
+      const stats = rawValue ? JSON.parse(rawValue) : {};
+
+      const nextBairrosData = Object.entries(stats)
+        .map(([bairro, acessos]) => ({ bairro, acessos: Number(acessos) || 0 }))
+        .sort((leftItem, rightItem) => rightItem.acessos - leftItem.acessos)
+        .slice(0, 5);
+
+      setBairrosData(nextBairrosData);
+    } catch {
+      setBairrosData([]);
+    }
+  }, []);
 
   return (
     <div className={styles.layout}>
@@ -261,20 +270,27 @@ export default function Dashboard() {
                 </div>
 
                 <div className={styles.chartBody}>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={bairrosData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
-                      <XAxis dataKey="bairro" axisLine={false} tickLine={false} tick={axisTickStyle} />
-                      <YAxis axisLine={false} tickLine={false} tick={axisTickStyle} />
-                      <Tooltip
-                        cursor={{ fill: "rgba(199, 156, 49, 0.06)" }}
-                        contentStyle={tooltipContentStyle}
-                        labelStyle={tooltipLabelStyle}
-                        itemStyle={tooltipItemStyle}
-                      />
-                      <Bar dataKey="acessos" fill="var(--color-brand-primary)" radius={[4, 4, 0, 0]} barSize={34} />
-                    </BarChart>
-                  </ResponsiveContainer>
+                  {bairrosData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={bairrosData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
+                        <XAxis dataKey="bairro" axisLine={false} tickLine={false} tick={axisTickStyle} />
+                        <YAxis axisLine={false} tickLine={false} tick={axisTickStyle} />
+                        <Tooltip
+                          cursor={{ fill: "rgba(199, 156, 49, 0.06)" }}
+                          contentStyle={tooltipContentStyle}
+                          labelStyle={tooltipLabelStyle}
+                          itemStyle={tooltipItemStyle}
+                        />
+                        <Bar dataKey="acessos" fill="var(--color-brand-primary)" radius={[4, 4, 0, 0]} barSize={34} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className={styles.emptyState}>
+                      <BarChart2 size={44} strokeWidth={1.5} />
+                      <p>Nenhum acesso registrado nesta região recentemente.</p>
+                    </div>
+                  )}
                 </div>
               </article>
             </div>

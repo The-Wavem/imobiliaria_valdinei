@@ -239,6 +239,23 @@
   min-height: 20rem;
 }
 
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 250px;
+  gap: 0.9rem;
+  color: var(--color-text-muted);
+  text-align: center;
+  font-weight: 400;
+  font-style: italic;
+}
+
+.emptyState svg {
+  color: rgba(199, 156, 49, 0.45);
+}
+
 .chartCard :global(.recharts-cartesian-grid line) {
   stroke: #f1f5f9;
 }
