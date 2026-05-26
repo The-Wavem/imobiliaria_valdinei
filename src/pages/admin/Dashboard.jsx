@@ -1,13 +1,12 @@
 import { useLocation } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import {
-  Area,
-  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
   Cell,
   Legend,
+  LabelList,
   Pie,
   PieChart,
   ResponsiveContainer,
@@ -98,6 +97,13 @@ const tooltipItemStyle = {
   fontFamily: "var(--font-sans)",
 };
 
+const trafficTotalLabelStyle = {
+  fill: "var(--color-brand-secondary)",
+  fontFamily: "var(--font-sans)",
+  fontSize: 12,
+  fontWeight: 700,
+};
+
 const monthLabels = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
 function padNumber(value) {
@@ -110,6 +116,10 @@ function toISODate(date) {
 
 function formatDailyLabel(date) {
   return `${padNumber(date.getDate())}-${monthLabels[date.getMonth()]}`;
+}
+
+function formatPercent(value) {
+  return `${value.toFixed(1).replace(".", ",")}%`;
 }
 
 function normalizeAccessRecord(record) {
@@ -280,7 +290,30 @@ export default function Dashboard() {
     return buildYearSeries(normalizedAccessHistory);
   }, [normalizedAccessHistory, period]);
 
-  const accessBreakdownData = accessChartData;
+  const trafficSummary = useMemo(() => {
+    const totals = accessChartData.reduce(
+      (accumulator, item) => {
+        accumulator.newClients += item.newClients || 0;
+        accumulator.frequentClients += item.frequentClients || 0;
+        accumulator.total += item.total || 0;
+        return accumulator;
+      },
+      { total: 0, newClients: 0, frequentClients: 0 }
+    );
+
+    const totalTracked = totals.newClients + totals.frequentClients;
+    const newShare = totalTracked > 0 ? (totals.newClients / totalTracked) * 100 : 0;
+    const frequentShare = totalTracked > 0 ? (totals.frequentClients / totalTracked) * 100 : 0;
+    const averagePerDay = accessChartData.length > 0 ? totals.total / accessChartData.length : 0;
+
+    return {
+      ...totals,
+      totalTracked,
+      newShare,
+      frequentShare,
+      averagePerDay,
+    };
+  }, [accessChartData]);
 
   return (
     <div className={styles.layout}>
@@ -347,96 +380,103 @@ export default function Dashboard() {
                 <div className={styles.chartHeader}>
                   <div>
                     <p className={styles.chartKicker}>Tráfego</p>
-                    <h2 className={styles.chartTitle}>Acessos diários ao site</h2>
+                    <h2 className={styles.chartTitle}>Novos x recorrentes</h2>
                   </div>
-                  <p className={styles.chartDescription}>Visão consolidada de {periodLabel.toLowerCase()}.</p>
+                  <p className={styles.chartDescription}>
+                    Acessos únicos e recorrentes que aceitaram cookies em {periodLabel.toLowerCase()}.
+                  </p>
                 </div>
 
-                <div className={styles.chartBody}>
+                <div className={styles.trafficLayout}>
                   {accessChartData.length > 0 ? (
-                    <ResponsiveContainer width="100%" height={320}>
-                      <AreaChart data={accessChartData}>
-                        <defs>
-                          <linearGradient id="colorVisitas" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="var(--color-brand-primary)" stopOpacity={0.3} />
-                            <stop offset="95%" stopColor="var(--color-brand-primary)" stopOpacity={0} />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
-                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={axisTickStyle} />
-                        <YAxis axisLine={false} tickLine={false} tick={axisTickStyle} />
-                        <Tooltip
-                          cursor={{ fill: "rgba(199, 156, 49, 0.06)" }}
-                          contentStyle={tooltipContentStyle}
-                          labelStyle={tooltipLabelStyle}
-                          itemStyle={tooltipItemStyle}
-                        />
-                        <Area
-                          type="monotone"
-                          dataKey="total"
-                          name="Acessos"
-                          stroke="var(--color-brand-primary)"
-                          strokeWidth={3}
-                          fill="url(#colorVisitas)"
-                          dot={{ r: 3, fill: "var(--color-brand-primary)", strokeWidth: 0 }}
-                          activeDot={{ r: 6 }}
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
+                    <>
+                      <div className={styles.trafficChart}>
+                        <ResponsiveContainer width="100%" height={360}>
+                          <BarChart data={accessChartData} margin={{ top: 24, right: 18, left: 0, bottom: 8 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
+                            <XAxis dataKey="name" axisLine={false} tickLine={false} tick={axisTickStyle} />
+                            <YAxis axisLine={false} tickLine={false} tick={axisTickStyle} />
+                            <Tooltip
+                              cursor={{ fill: "rgba(199, 156, 49, 0.06)" }}
+                              contentStyle={tooltipContentStyle}
+                              labelStyle={tooltipLabelStyle}
+                              itemStyle={tooltipItemStyle}
+                            />
+                            <Legend verticalAlign="top" height={28} wrapperStyle={{ fontFamily: "var(--font-sans)" }} />
+                            <Bar
+                              dataKey="newClients"
+                              name="Novos / únicos"
+                              stackId="traffic"
+                              fill="var(--color-brand-primary)"
+                              radius={[4, 4, 0, 0]}
+                              barSize={28}
+                            >
+                              <LabelList content={({ x, y, width, payload }) => {
+                                const total = payload?.total ?? 0;
+
+                                return (
+                                  <text
+                                    x={(x || 0) + ((width || 0) / 2)}
+                                    y={(y || 0) - 8}
+                                    textAnchor="middle"
+                                    style={trafficTotalLabelStyle}
+                                  >
+                                    {total}
+                                  </text>
+                                );
+                              }} />
+                            </Bar>
+                            <Bar
+                              dataKey="frequentClients"
+                              name="Recorrentes"
+                              stackId="traffic"
+                              fill="rgba(20, 20, 60, 0.9)"
+                              radius={[4, 4, 0, 0]}
+                              barSize={28}
+                            />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+
+                      <aside className={styles.trafficSummary}>
+                        <div className={styles.summaryHeader}>
+                          <p className={styles.summaryKicker}>Resumo executivo</p>
+                          <h3 className={styles.summaryTitle}>Distribuição do período</h3>
+                        </div>
+
+                        <div className={styles.summaryStatCard}>
+                          <span className={styles.summaryStatLabel}>Total de acessos</span>
+                          <strong className={styles.summaryStatValue}>{trafficSummary.total}</strong>
+                          <span className={styles.summaryStatHint}>
+                            Média de {trafficSummary.averagePerDay.toFixed(1).replace(".", ",")} acessos por dia
+                          </span>
+                        </div>
+
+                        <div className={styles.summarySplitList}>
+                          <div className={styles.summarySplitItem}>
+                            <div className={styles.summarySplitRow}>
+                              <span className={styles.summarySwatchNew} />
+                              <span>Novos / únicos</span>
+                            </div>
+                            <strong>{formatPercent(trafficSummary.newShare)}</strong>
+                            <span>{trafficSummary.newClients} acessos</span>
+                          </div>
+
+                          <div className={styles.summarySplitItem}>
+                            <div className={styles.summarySplitRow}>
+                              <span className={styles.summarySwatchRecurring} />
+                              <span>Recorrentes</span>
+                            </div>
+                            <strong>{formatPercent(trafficSummary.frequentShare)}</strong>
+                            <span>{trafficSummary.frequentClients} acessos</span>
+                          </div>
+                        </div>
+                      </aside>
+                    </>
                   ) : (
                     <div className={styles.emptyState}>
                       <BarChart2 size={44} strokeWidth={1.5} />
-                      <p>Nenhum acesso foi registrado ainda.</p>
-                    </div>
-                  )}
-                </div>
-              </article>
-
-              <article className={styles.chartCard}>
-                <div className={styles.chartHeader}>
-                  <div>
-                    <p className={styles.chartKicker}>Audiência</p>
-                    <h2 className={styles.chartTitle}>Clientes novos x frequentes</h2>
-                  </div>
-                  <p className={styles.chartDescription}>Separação dos acessos por perfil do cliente.</p>
-                </div>
-
-                <div className={styles.chartBody}>
-                  {accessBreakdownData.length > 0 ? (
-                    <ResponsiveContainer width="100%" height={300}>
-                      <BarChart data={accessBreakdownData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
-                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={axisTickStyle} />
-                        <YAxis axisLine={false} tickLine={false} tick={axisTickStyle} />
-                        <Tooltip
-                          cursor={{ fill: "rgba(199, 156, 49, 0.06)" }}
-                          contentStyle={tooltipContentStyle}
-                          labelStyle={tooltipLabelStyle}
-                          itemStyle={tooltipItemStyle}
-                        />
-                        <Legend verticalAlign="top" height={28} wrapperStyle={{ fontFamily: "var(--font-sans)" }} />
-                        <Bar
-                          dataKey="newClients"
-                          name="Novos"
-                          stackId="clients"
-                          fill="var(--color-brand-primary)"
-                          radius={[4, 4, 0, 0]}
-                          barSize={34}
-                        />
-                        <Bar
-                          dataKey="frequentClients"
-                          name="Frequentes"
-                          stackId="clients"
-                          fill="rgba(20, 20, 60, 0.9)"
-                          radius={[4, 4, 0, 0]}
-                          barSize={34}
-                        />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <div className={styles.emptyState}>
-                      <Users size={44} strokeWidth={1.5} />
-                      <p>Sem acessos suficientes para separar clientes novos e frequentes.</p>
+                      <p>Nenhum acesso foi registrado ainda para comparar novos e recorrentes.</p>
                     </div>
                   )}
                 </div>

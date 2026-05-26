@@ -19,12 +19,18 @@ export default function CookieConsent() {
     }
   }, []);
 
-  const handleChoice = (choice) => {
+  const handleAccept = () => {
     try {
-      window.localStorage.setItem(CONSENT_KEY, choice);
-      if (choice === "accepted") {
-        trackPageAccess();
-      }
+      window.localStorage.setItem(CONSENT_KEY, "accepted");
+      trackPageAccess();
+    } finally {
+      setIsVisible(false);
+    }
+  };
+
+  const handleReject = () => {
+    try {
+      window.localStorage.setItem(CONSENT_KEY, "denied");
     } finally {
       setIsVisible(false);
     }
@@ -43,10 +49,10 @@ export default function CookieConsent() {
         </p>
 
         <div className={styles.actions}>
-          <Button variant="primary" type="button" onClick={() => handleChoice("accepted")}>
+          <Button variant="primary" type="button" onClick={handleAccept}>
             Aceitar
           </Button>
-          <Button variant="outline" type="button" onClick={() => handleChoice("denied")}>
+          <Button variant="outline" type="button" onClick={handleReject}>
             Recusar
           </Button>
         </div>

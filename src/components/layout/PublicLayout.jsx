@@ -5,12 +5,21 @@ import Footer from "./Footer";
 import CookieConsent from "@components/ui/CookieConsent/CookieConsent.jsx";
 import { trackPageAccess } from "@utils/analytics";
 
+let lastTrackedPageViewSignature = null;
+
 export default function PublicLayout() {
-  const { pathname } = useLocation();
+  const location = useLocation();
 
   useEffect(() => {
-    trackPageAccess();
-  }, [pathname]);
+    const signature = `${location.pathname}::${location.key || "default"}`;
+
+    if (lastTrackedPageViewSignature === signature) {
+      return;
+    }
+
+    lastTrackedPageViewSignature = signature;
+    trackPageAccess(location.pathname);
+  }, [location.pathname]);
 
   return (
     <>

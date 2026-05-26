@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import { motion as motionFactory } from "framer-motion";
 import styles from "./PropertyDetail.module.css";
 import { trackBairroView } from "@utils/analytics";
@@ -38,6 +38,8 @@ const sidebarVariants = {
 const MotionMain = motionFactory.main;
 const MotionSection = motionFactory.section;
 const MotionDiv = motionFactory.div;
+
+let lastTrackedPropertySignature = null;
 
 const dummyProperties = [
   {
@@ -118,6 +120,7 @@ const dummyProperties = [
 
 export default function PropertyDetail() {
   const { id } = useParams();
+  const location = useLocation();
   const [isVisitModalOpen, setIsVisitModalOpen] = useState(false);
 
   const property = useMemo(() => {
@@ -126,9 +129,16 @@ export default function PropertyDetail() {
 
   useEffect(() => {
     if (property?.bairro) {
+      const signature = `${property.id || id}::${location.key || "default"}`;
+
+      if (lastTrackedPropertySignature === signature) {
+        return;
+      }
+
+      lastTrackedPropertySignature = signature;
       trackBairroView(property.bairro);
     }
-  }, [property]);
+  }, [property, id, location.key]);
 
   return (
     <div className={styles.page}>

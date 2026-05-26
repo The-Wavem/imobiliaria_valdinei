@@ -3,7 +3,6 @@ const CONSENT_STORAGE_KEY = "@valdinei:consent_status";
 const ACCESS_HISTORY_STORAGE_KEY = "@valdinei:access_history";
 const VISITOR_PROFILE_STORAGE_KEY = "@valdinei:visitor_profile";
 export const FILTERS_STORAGE_KEY = "@valdinei:filters";
-const SESSION_LOGGED_KEY = "session_logged";
 const ANALYTICS_UPDATED_EVENT = "valdinei:analytics-update";
 
 function readJsonObject(storageKey) {
@@ -153,7 +152,7 @@ export function trackBairroView(bairro) {
   }
 }
 
-export function trackPageAccess() {
+export function trackPageAccess(path = typeof window !== "undefined" ? window.location.pathname : "/") {
   if (typeof window === "undefined") {
     return;
   }
@@ -163,11 +162,7 @@ export function trackPageAccess() {
       return;
     }
 
-    if (window.sessionStorage.getItem(SESSION_LOGGED_KEY)) {
-      return;
-    }
-
-    const today = new Date().toISOString().split("T")[0];
+    const today = new Date().toLocaleDateString("en-CA");
     const history = readJsonObject(ACCESS_HISTORY_STORAGE_KEY);
     const visitorProfile = readJsonObject(VISITOR_PROFILE_STORAGE_KEY);
     const visitorId = visitorProfile.id || createVisitorId();
@@ -193,8 +188,7 @@ export function trackPageAccess() {
     history[today] = todayRecord;
     writeJsonObject(VISITOR_PROFILE_STORAGE_KEY, nextVisitorProfile);
     writeJsonObject(ACCESS_HISTORY_STORAGE_KEY, history);
-    window.sessionStorage.setItem(SESSION_LOGGED_KEY, today);
-    emitAnalyticsUpdate({ type: "access", date: today });
+    emitAnalyticsUpdate({ type: "access", date: today, path });
   } catch {
     // Ignora falhas de storage para não bloquear a navegação.
   }
