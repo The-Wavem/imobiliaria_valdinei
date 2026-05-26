@@ -8,7 +8,6 @@ import {
   CartesianGrid,
   Cell,
   Legend,
-  Line,
   Pie,
   PieChart,
   ResponsiveContainer,
@@ -54,32 +53,15 @@ const periodOptions = [
   { label: "Este Ano", value: "year" },
 ];
 
-const performanceDataByPeriod = {
-  "7d": [
-    { period: "Seg", leads: 12, visits: 5 },
-    { period: "Ter", leads: 14, visits: 6 },
-    { period: "Qua", leads: 10, visits: 4 },
-    { period: "Qui", leads: 18, visits: 8 },
-    { period: "Sex", leads: 16, visits: 7 },
-    { period: "Sáb", leads: 9, visits: 3 },
-    { period: "Dom", leads: 11, visits: 4 },
-  ],
-  "30d": [
-    { period: "Sem 1", leads: 26, visits: 10 },
-    { period: "Sem 2", leads: 32, visits: 14 },
-    { period: "Sem 3", leads: 29, visits: 12 },
-    { period: "Sem 4", leads: 41, visits: 19 },
-  ],
-  year: [
-    { period: "Jan", leads: 26, visits: 10 },
-    { period: "Fev", leads: 32, visits: 14 },
-    { period: "Mar", leads: 29, visits: 15 },
-    { period: "Abr", leads: 41, visits: 19 },
-    { period: "Mai", leads: 38, visits: 17 },
-    { period: "Jun", leads: 45, visits: 21 },
-    { period: "Jul", leads: 51, visits: 24 },
-  ],
-};
+const fallbackAccessData = [
+  { name: "20-Mai", acessos: 12 },
+  { name: "21-Mai", acessos: 15 },
+  { name: "22-Mai", acessos: 14 },
+  { name: "23-Mai", acessos: 18 },
+  { name: "24-Mai", acessos: 17 },
+  { name: "25-Mai", acessos: 21 },
+  { name: "26-Mai", acessos: 19 },
+];
 
 const interestData = [
   { name: "Residencial", value: 46 },
@@ -123,13 +105,115 @@ const tooltipItemStyle = {
   fontFamily: "var(--font-sans)",
 };
 
+const monthLabels = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+
+function padNumber(value) {
+  return String(value).padStart(2, "0");
+}
+
+function toISODate(date) {
+  return `${date.getFullYear()}-${padNumber(date.getMonth() + 1)}-${padNumber(date.getDate())}`;
+}
+
+function formatDailyLabel(date) {
+  return `${padNumber(date.getDate())}-${monthLabels[date.getMonth()]}`;
+}
+
+function formatAccessLabel(dateValue) {
+  const [year = "", month = "", day = ""] = String(dateValue || "").split("-");
+
+  if (!year || !month || !day) {
+    return dateValue;
+  }
+
+  const monthIndex = Number(month) - 1;
+  const monthLabel = monthLabels[monthIndex] || month;
+  return `${day}-${monthLabel}`;
+}
+
+function buildDailySeries(totalDays, historyMap) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return Array.from({ length: totalDays }, (_, index) => {
+    const currentDate = new Date(today);
+    currentDate.setDate(today.getDate() - (totalDays - 1 - index));
+    const key = toISODate(currentDate);
+
+    return {
+      date: key,
+      name: formatDailyLabel(currentDate),
+      acessos: Number(historyMap[key]) || 0,
+    };
+  });
+}
+
+function buildYearSeries(historyMap) {
+  const currentYear = new Date().getFullYear();
+  const nextMonthTotals = Array.from({ length: 12 }, () => 0);
+
+  Object.entries(historyMap).forEach(([dateKey, acessos]) => {
+    if (!dateKey.startsWith(`${currentYear}-`)) {
+      return;
+    }
+
+    const monthIndex = Number(dateKey.slice(5, 7)) - 1;
+
+    if (monthIndex >= 0 && monthIndex < 12) {
+      nextMonthTotals[monthIndex] += Number(acessos) || 0;
+    }
+  });
+
+  return nextMonthTotals.map((acessos, index) => ({
+    date: `${currentYear}-${padNumber(index + 1)}-01`,
+    name: monthLabels[index],
+    acessos,
+  }));
+}
+
 export default function Dashboard() {
   const { pathname } = useLocation();
   const [period, setPeriod] = useState("7d");
+  const [accessData, setAccessData] = useState([]);
   const [bairrosData, setBairrosData] = useState([]);
   const title = routeLabels[pathname] ?? routeLabels["/admin/dashboard"];
   const periodLabel = periodOptions.find((option) => option.value === period)?.label ?? "Últimos 7 dias";
-  const performanceData = useMemo(() => performanceDataByPeriod[period] ?? performanceDataByPeriod["7d"], [period]);
+
+  useEffect(() => {
+    try {
+      const rawValue = window.localStorage.getItem("@valdinei:access_history");
+      const history = rawValue ? JSON.parse(rawValue) : {};
+
+      const nextAccessData = Object.entries(history)
+        .map(([date, acessos]) => ({
+          name: formatAccessLabel(date),
+          acessos: Number(acessos) || 0,
+          date,
+        }))
+        .sort((leftItem, rightItem) => leftItem.date.localeCompare(rightItem.date));
+
+      setAccessData(nextAccessData);
+    } catch {
+      setAccessData([]);
+    }
+  }, []);
+
+  const accessChartData = useMemo(() => {
+    const historyMap = accessData.reduce((accumulator, item) => {
+      accumulator[item.date] = item.acessos;
+      return accumulator;
+    }, {});
+
+    if (period === "7d") {
+      return accessData.length > 0 ? buildDailySeries(7, historyMap) : fallbackAccessData;
+    }
+
+    if (period === "30d") {
+      return accessData.length > 0 ? buildDailySeries(30, historyMap) : fallbackAccessData;
+    }
+
+    return accessData.length > 0 ? buildYearSeries(historyMap) : fallbackAccessData;
+  }, [accessData, period]);
 
   useEffect(() => {
     try {
@@ -211,15 +295,15 @@ export default function Dashboard() {
               <article className={`${styles.chartCard} ${styles.chartCardWide}`}>
                 <div className={styles.chartHeader}>
                   <div>
-                    <p className={styles.chartKicker}>Desempenho</p>
-                    <h2 className={styles.chartTitle}>Captação de leads e visitas</h2>
+                    <p className={styles.chartKicker}>Tráfego</p>
+                    <h2 className={styles.chartTitle}>Acessos diários ao site</h2>
                   </div>
                   <p className={styles.chartDescription}>Visão consolidada de {periodLabel.toLowerCase()}.</p>
                 </div>
 
                 <div className={styles.chartBody}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={performanceData}>
+                  <ResponsiveContainer width="100%" height={320}>
+                    <AreaChart data={accessChartData}>
                       <defs>
                         <linearGradient id="colorVisitas" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="5%" stopColor="var(--color-brand-primary)" stopOpacity={0.3} />
@@ -227,7 +311,7 @@ export default function Dashboard() {
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
-                      <XAxis dataKey="period" axisLine={false} tickLine={false} tick={axisTickStyle} />
+                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={axisTickStyle} />
                       <YAxis axisLine={false} tickLine={false} tick={axisTickStyle} />
                       <Tooltip
                         cursor={{ fill: "rgba(199, 156, 49, 0.06)" }}
@@ -235,25 +319,15 @@ export default function Dashboard() {
                         labelStyle={tooltipLabelStyle}
                         itemStyle={tooltipItemStyle}
                       />
-                      <Legend verticalAlign="top" height={28} wrapperStyle={{ fontFamily: "var(--font-sans)" }} />
                       <Area
                         type="monotone"
-                        dataKey="leads"
-                        name="Leads"
+                        dataKey="acessos"
+                        name="Acessos"
                         stroke="var(--color-brand-primary)"
                         strokeWidth={3}
                         fill="url(#colorVisitas)"
-                        dot={false}
+                        dot={{ r: 3, fill: "var(--color-brand-primary)", strokeWidth: 0 }}
                         activeDot={{ r: 6 }}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="visits"
-                        name="Visitas"
-                        stroke="var(--color-brand-secondary)"
-                        strokeWidth={3}
-                        dot={{ r: 4, strokeWidth: 2, fill: "#ffffff" }}
-                        activeDot={{ r: 7 }}
                       />
                     </AreaChart>
                   </ResponsiveContainer>
