@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Bath,
   BedDouble,
@@ -37,7 +37,7 @@ const categoryOptions = [
   { label: "Comprar", value: "Comprar" },
 ];
 
-const initialProperties = [
+export const initialProperties = [
   {
     id: 1,
     title: "Casa térrea com piscina",
@@ -172,6 +172,27 @@ const currencyFormatter = new Intl.NumberFormat("pt-BR", {
   maximumFractionDigits: 0,
 });
 
+const PROPERTIES_STORAGE_KEY = "@valdinei:properties";
+
+function readStoredProperties() {
+  if (typeof window === "undefined") {
+    return initialProperties;
+  }
+
+  try {
+    const rawValue = window.localStorage.getItem(PROPERTIES_STORAGE_KEY);
+
+    if (!rawValue) {
+      return initialProperties;
+    }
+
+    const parsedValue = JSON.parse(rawValue);
+    return Array.isArray(parsedValue) ? parsedValue : initialProperties;
+  } catch {
+    return initialProperties;
+  }
+}
+
 function formatCurrency(value) {
   return currencyFormatter.format(Number(value || 0));
 }
@@ -220,7 +241,7 @@ function normalizeForm(property = emptyForm) {
 }
 
 export default function PropertyManager() {
-  const [properties, setProperties] = useState(initialProperties);
+  const [properties, setProperties] = useState(() => readStoredProperties());
   const [availableTypes, setAvailableTypes] = useState([
     "Casa",
     "Apartamento",
@@ -248,6 +269,15 @@ export default function PropertyManager() {
   const [newType, setNewType] = useState("");
   const [newFeature, setNewFeature] = useState("");
   const [newPhotoUrl, setNewPhotoUrl] = useState("");
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    window.localStorage.setItem(PROPERTIES_STORAGE_KEY, JSON.stringify(properties));
+    window.dispatchEvent(new CustomEvent("valdinei:analytics-update", { detail: { type: "properties" } }));
+  }, [properties]);
 
   const typeOptions = useMemo(
     () => [

@@ -4,11 +4,8 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
-  Cell,
   Legend,
   LabelList,
-  Pie,
-  PieChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -18,34 +15,9 @@ import { BarChart2, CalendarDays, ArrowUpRight, Home, TrendingUp, Users } from "
 import AdminSidebar from "@components/layout/AdminSidebar";
 import Select from "@components/ui/Select/Select.jsx";
 import { FILTERS_STORAGE_KEY } from "@utils/analytics";
+import { initialProperties } from "@pages/admin/PropertyManager.jsx";
+import { initialRequests } from "@pages/admin/LeadsManager.jsx";
 import styles from "./Dashboard.module.css";
-
-const metricCards = [
-  {
-    label: "Total de Leads",
-    value: "248",
-    detail: "+18% no mês",
-    icon: Users,
-  },
-  {
-    label: "Visitas Agendadas",
-    value: "64",
-    detail: "+8% na semana",
-    icon: CalendarDays,
-  },
-  {
-    label: "Imóveis Ativos",
-    value: "31",
-    detail: "12 novos anúncios",
-    icon: Home,
-  },
-  {
-    label: "Taxa de Conversão",
-    value: "12,4%",
-    detail: "+1,2 p.p.",
-    icon: TrendingUp,
-  },
-];
 
 const periodOptions = [
   { label: "Últimos 7 dias", value: "7d" },
@@ -54,15 +26,8 @@ const periodOptions = [
 ];
 
 const ACCESS_HISTORY_STORAGE_KEY = "@valdinei:access_history";
-
-const interestData = [
-  { name: "Residencial", value: 46 },
-  { name: "Comercial", value: 24 },
-  { name: "Lançamentos", value: 18 },
-  { name: "Alto Padrão", value: 12 },
-];
-
-const chartPalette = ["var(--color-brand-primary)", "rgba(20, 20, 60, 0.9)", "rgba(71, 85, 105, 0.95)", "rgba(148, 163, 184, 0.95)"];
+const PROPERTIES_STORAGE_KEY = "@valdinei:properties";
+const LEADS_STORAGE_KEY = "@valdinei:leads";
 
 const routeLabels = {
   "/admin/dashboard": "Dashboard",
@@ -104,6 +69,7 @@ const trafficTotalLabelStyle = {
   fontWeight: 700,
 };
 
+const numberFormatter = new Intl.NumberFormat("pt-BR");
 const monthLabels = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
 function padNumber(value) {
@@ -207,6 +173,11 @@ function readJsonFromLocalStorage(storageKey, fallbackValue) {
   }
 }
 
+function readJsonArrayFromLocalStorage(storageKey, fallbackValue) {
+  const value = readJsonFromLocalStorage(storageKey, fallbackValue);
+  return Array.isArray(value) ? value : fallbackValue;
+}
+
 function loadBairrosData() {
   const stats = readJsonFromLocalStorage("@valdinei:bairros", {});
 
@@ -220,6 +191,14 @@ function loadAccessHistory() {
   return readJsonFromLocalStorage(ACCESS_HISTORY_STORAGE_KEY, {});
 }
 
+function loadProperties() {
+  return readJsonArrayFromLocalStorage(PROPERTIES_STORAGE_KEY, initialProperties);
+}
+
+function loadRequests() {
+  return readJsonArrayFromLocalStorage(LEADS_STORAGE_KEY, initialRequests);
+}
+
 function loadFilterUsage() {
   const stats = readJsonFromLocalStorage(FILTERS_STORAGE_KEY, {});
 
@@ -230,19 +209,43 @@ function loadFilterUsage() {
     .slice(0, 7);
 }
 
+function sumPageViews(history) {
+  return Object.values(history).reduce((total, record) => total + normalizeAccessRecord(record).total, 0);
+}
+
+function formatMetricValue(value) {
+  return numberFormatter.format(value);
+}
+
+function formatRate(value) {
+  return `${value.toFixed(1).replace(".", ",")}%`;
+}
+
 export default function Dashboard() {
   const { pathname } = useLocation();
   const [period, setPeriod] = useState("7d");
   const [accessHistory, setAccessHistory] = useState(() => loadAccessHistory());
   const [bairrosData, setBairrosData] = useState(() => loadBairrosData());
   const [filtersData, setFiltersData] = useState(() => loadFilterUsage());
+  const [totalAccess, setTotalAccess] = useState(() => sumPageViews(loadAccessHistory()));
+  const [totalProperties, setTotalProperties] = useState(() => loadProperties().length);
+  const [pendingLeads, setPendingLeads] = useState(() => loadRequests().filter((request) => request.status === "Novo").length);
+  const [totalLeads, setTotalLeads] = useState(() => loadRequests().length);
   const title = routeLabels[pathname] ?? routeLabels["/admin/dashboard"];
   const periodLabel = periodOptions.find((option) => option.value === period)?.label ?? "Últimos 7 dias";
 
   const reloadAnalyticsData = () => {
-    setAccessHistory(loadAccessHistory());
+    const nextAccessHistory = loadAccessHistory();
+    const nextProperties = loadProperties();
+    const nextRequests = loadRequests();
+
+    setAccessHistory(nextAccessHistory);
     setBairrosData(loadBairrosData());
     setFiltersData(loadFilterUsage());
+    setTotalAccess(sumPageViews(nextAccessHistory));
+    setTotalProperties(nextProperties.length);
+    setPendingLeads(nextRequests.filter((request) => request.status === "Novo").length);
+    setTotalLeads(nextRequests.length);
   };
 
   useEffect(() => {
@@ -251,7 +254,13 @@ export default function Dashboard() {
     };
 
     const handleStorageUpdate = (event) => {
-      if (event.key === ACCESS_HISTORY_STORAGE_KEY || event.key === "@valdinei:bairros" || event.key === FILTERS_STORAGE_KEY) {
+      if (
+        event.key === ACCESS_HISTORY_STORAGE_KEY ||
+        event.key === "@valdinei:bairros" ||
+        event.key === FILTERS_STORAGE_KEY ||
+        event.key === PROPERTIES_STORAGE_KEY ||
+        event.key === LEADS_STORAGE_KEY
+      ) {
         reloadAnalyticsData();
       }
     };
@@ -315,6 +324,41 @@ export default function Dashboard() {
     };
   }, [accessChartData]);
 
+  const metricCards = useMemo(() => {
+    const conversionRate = totalAccess > 0 ? (totalLeads / totalAccess) * 100 : 0;
+
+    return [
+      {
+        label: "Total de Acessos",
+        value: formatMetricValue(totalAccess),
+        detail: "Page views registradas",
+        icon: Users,
+        badge: "Site",
+      },
+      {
+        label: "Total de Imóveis",
+        value: formatMetricValue(totalProperties),
+        detail: "Estoques cadastrados",
+        icon: Home,
+        badge: "Estoque",
+      },
+      {
+        label: "Solicitações Pendentes",
+        value: formatMetricValue(pendingLeads),
+        detail: "Leads com status Novo",
+        icon: CalendarDays,
+        badge: "Triagem",
+      },
+      {
+        label: "Taxa de Conversão",
+        value: formatRate(conversionRate),
+        detail: `${formatMetricValue(totalLeads)} leads no funil`,
+        icon: TrendingUp,
+        badge: "Funil",
+      },
+    ];
+  }, [pendingLeads, totalAccess, totalLeads, totalProperties]);
+
   return (
     <div className={styles.layout}>
       <AdminSidebar />
@@ -326,8 +370,7 @@ export default function Dashboard() {
               <p className={styles.kicker}>Painel administrativo</p>
               <h1 className={styles.title}>{title}</h1>
               <p className={styles.subtitle}>
-                Acompanhe os principais indicadores da Imobiliária Valdinei em uma visão clara e
-                objetiva.
+                Acompanhe os principais indicadores da Imobiliária Valdinei em uma visão clara e objetiva.
               </p>
             </div>
 
@@ -363,7 +406,7 @@ export default function Dashboard() {
                     <div className={styles.metricIcon} aria-hidden="true">
                       <Icon size={22} />
                     </div>
-                    <span className={styles.metricBadge}>+4,5%</span>
+                    <span className={styles.metricBadge}>{card.badge}</span>
                   </div>
 
                   <p className={styles.metricLabel}>{card.label}</p>
@@ -375,48 +418,48 @@ export default function Dashboard() {
           </section>
 
           <section className={styles.chartsLayout} aria-label="Gráficos do dashboard">
-            <div className={styles.chartsPrimaryGrid}>
-              <article className={`${styles.chartCard} ${styles.chartCardWide}`}>
-                <div className={styles.chartHeader}>
-                  <div>
-                    <p className={styles.chartKicker}>Tráfego</p>
-                    <h2 className={styles.chartTitle}>Novos x recorrentes</h2>
-                  </div>
-                  <p className={styles.chartDescription}>
-                    Acessos únicos e recorrentes que aceitaram cookies em {periodLabel.toLowerCase()}.
-                  </p>
+            <article className={`${styles.chartCard} ${styles.mainChartCard}`}>
+              <div className={styles.chartHeader}>
+                <div>
+                  <p className={styles.chartKicker}>Tráfego</p>
+                  <h2 className={styles.chartTitle}>Acessos Diários</h2>
                 </div>
+                <p className={styles.chartDescription}>
+                  Acessos únicos e recorrentes que aceitaram cookies em {periodLabel.toLowerCase()}.
+                </p>
+              </div>
 
-                <div className={styles.trafficLayout}>
-                  {accessChartData.length > 0 ? (
-                    <>
-                      <div className={styles.trafficChart}>
-                        <ResponsiveContainer width="100%" height={360}>
-                          <BarChart data={accessChartData} margin={{ top: 24, right: 18, left: 0, bottom: 8 }}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
-                            <XAxis dataKey="name" axisLine={false} tickLine={false} tick={axisTickStyle} />
-                            <YAxis axisLine={false} tickLine={false} tick={axisTickStyle} />
-                            <Tooltip
-                              cursor={{ fill: "rgba(199, 156, 49, 0.06)" }}
-                              contentStyle={tooltipContentStyle}
-                              labelStyle={tooltipLabelStyle}
-                              itemStyle={tooltipItemStyle}
-                            />
-                            <Legend verticalAlign="top" height={28} wrapperStyle={{ fontFamily: "var(--font-sans)" }} />
-                            <Bar
-                              dataKey="newClients"
-                              name="Novos / únicos"
-                              stackId="traffic"
-                              fill="var(--color-brand-primary)"
-                              radius={[4, 4, 0, 0]}
-                              barSize={28}
-                            >
-                              <LabelList content={({ x, y, width, payload }) => {
+              <div className={styles.trafficLayout}>
+                {accessChartData.length > 0 ? (
+                  <>
+                    <div className={styles.trafficChart}>
+                      <ResponsiveContainer width="100%" height={360}>
+                        <BarChart data={accessChartData} margin={{ top: 24, right: 18, left: 0, bottom: 8 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
+                          <XAxis dataKey="name" axisLine={false} tickLine={false} tick={axisTickStyle} />
+                          <YAxis axisLine={false} tickLine={false} tick={axisTickStyle} />
+                          <Tooltip
+                            cursor={{ fill: "rgba(199, 156, 49, 0.06)" }}
+                            contentStyle={tooltipContentStyle}
+                            labelStyle={tooltipLabelStyle}
+                            itemStyle={tooltipItemStyle}
+                          />
+                          <Legend verticalAlign="top" height={28} wrapperStyle={{ fontFamily: "var(--font-sans)" }} />
+                          <Bar
+                            dataKey="newClients"
+                            name="Novos / únicos"
+                            stackId="traffic"
+                            fill="var(--color-brand-primary)"
+                            radius={[4, 4, 0, 0]}
+                            barSize={28}
+                          >
+                            <LabelList
+                              content={({ x, y, width, payload }) => {
                                 const total = payload?.total ?? 0;
 
                                 return (
                                   <text
-                                    x={(x || 0) + ((width || 0) / 2)}
+                                    x={(x || 0) + (width || 0) / 2}
                                     y={(y || 0) - 8}
                                     textAnchor="middle"
                                     style={trafficTotalLabelStyle}
@@ -424,176 +467,141 @@ export default function Dashboard() {
                                     {total}
                                   </text>
                                 );
-                              }} />
-                            </Bar>
-                            <Bar
-                              dataKey="frequentClients"
-                              name="Recorrentes"
-                              stackId="traffic"
-                              fill="rgba(20, 20, 60, 0.9)"
-                              radius={[4, 4, 0, 0]}
-                              barSize={28}
+                              }}
                             />
-                          </BarChart>
-                        </ResponsiveContainer>
+                          </Bar>
+                          <Bar
+                            dataKey="frequentClients"
+                            name="Recorrentes"
+                            stackId="traffic"
+                            fill="rgba(20, 20, 60, 0.9)"
+                            radius={[4, 4, 0, 0]}
+                            barSize={28}
+                          />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+
+                    <aside className={styles.trafficSummary}>
+                      <div className={styles.summaryHeader}>
+                        <p className={styles.summaryKicker}>Resumo executivo</p>
+                        <h3 className={styles.summaryTitle}>Distribuição do período</h3>
                       </div>
 
-                      <aside className={styles.trafficSummary}>
-                        <div className={styles.summaryHeader}>
-                          <p className={styles.summaryKicker}>Resumo executivo</p>
-                          <h3 className={styles.summaryTitle}>Distribuição do período</h3>
-                        </div>
+                      <div className={styles.summaryStatCard}>
+                        <span className={styles.summaryStatLabel}>Total de acessos</span>
+                        <strong className={styles.summaryStatValue}>{trafficSummary.total}</strong>
+                        <span className={styles.summaryStatHint}>
+                          Média de {trafficSummary.averagePerDay.toFixed(1).replace(".", ",")} acessos por dia
+                        </span>
+                      </div>
 
-                        <div className={styles.summaryStatCard}>
-                          <span className={styles.summaryStatLabel}>Total de acessos</span>
-                          <strong className={styles.summaryStatValue}>{trafficSummary.total}</strong>
-                          <span className={styles.summaryStatHint}>
-                            Média de {trafficSummary.averagePerDay.toFixed(1).replace(".", ",")} acessos por dia
-                          </span>
-                        </div>
-
-                        <div className={styles.summarySplitList}>
-                          <div className={styles.summarySplitItem}>
-                            <div className={styles.summarySplitRow}>
-                              <span className={styles.summarySwatchNew} />
-                              <span>Novos / únicos</span>
-                            </div>
-                            <strong>{formatPercent(trafficSummary.newShare)}</strong>
-                            <span>{trafficSummary.newClients} acessos</span>
+                      <div className={styles.summarySplitList}>
+                        <div className={styles.summarySplitItem}>
+                          <div className={styles.summarySplitRow}>
+                            <span className={styles.summarySwatchNew} />
+                            <span>Novos / únicos</span>
                           </div>
-
-                          <div className={styles.summarySplitItem}>
-                            <div className={styles.summarySplitRow}>
-                              <span className={styles.summarySwatchRecurring} />
-                              <span>Recorrentes</span>
-                            </div>
-                            <strong>{formatPercent(trafficSummary.frequentShare)}</strong>
-                            <span>{trafficSummary.frequentClients} acessos</span>
-                          </div>
+                          <strong>{formatPercent(trafficSummary.newShare)}</strong>
+                          <span>{trafficSummary.newClients} acessos</span>
                         </div>
-                      </aside>
-                    </>
+
+                        <div className={styles.summarySplitItem}>
+                          <div className={styles.summarySplitRow}>
+                            <span className={styles.summarySwatchRecurring} />
+                            <span>Recorrentes</span>
+                          </div>
+                          <strong>{formatPercent(trafficSummary.frequentShare)}</strong>
+                          <span>{trafficSummary.frequentClients} acessos</span>
+                        </div>
+                      </div>
+                    </aside>
+                  </>
+                ) : (
+                  <div className={styles.emptyState}>
+                    <BarChart2 size={44} strokeWidth={1.5} />
+                    <p>Nenhum acesso foi registrado ainda para comparar novos e recorrentes.</p>
+                  </div>
+                )}
+              </div>
+            </article>
+
+            <div className={styles.bottomChartsContainer}>
+              <article className={styles.chartCard}>
+                <div className={styles.chartHeader}>
+                  <div>
+                    <p className={styles.chartKicker}>Inteligência de Mercado</p>
+                    <h2 className={styles.chartTitle}>Bairros mais buscados</h2>
+                  </div>
+                  <p className={styles.chartDescription}>Onde a intenção de clique está mais forte.</p>
+                </div>
+
+                <div className={styles.chartBody}>
+                  {bairrosData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={bairrosData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
+                        <XAxis dataKey="bairro" axisLine={false} tickLine={false} tick={axisTickStyle} />
+                        <YAxis axisLine={false} tickLine={false} tick={axisTickStyle} />
+                        <Tooltip
+                          cursor={{ fill: "rgba(199, 156, 49, 0.06)" }}
+                          contentStyle={tooltipContentStyle}
+                          labelStyle={tooltipLabelStyle}
+                          itemStyle={tooltipItemStyle}
+                        />
+                        <Bar dataKey="acessos" fill="var(--color-brand-primary)" radius={[4, 4, 0, 0]} barSize={34} />
+                      </BarChart>
+                    </ResponsiveContainer>
                   ) : (
                     <div className={styles.emptyState}>
                       <BarChart2 size={44} strokeWidth={1.5} />
-                      <p>Nenhum acesso foi registrado ainda para comparar novos e recorrentes.</p>
+                      <p>Nenhum acesso registrado nesta região recentemente.</p>
+                    </div>
+                  )}
+                </div>
+              </article>
+
+              <article className={styles.chartCard}>
+                <div className={styles.chartHeader}>
+                  <div>
+                    <p className={styles.chartKicker}>Inteligência de Filtros</p>
+                    <h2 className={styles.chartTitle}>Perfil de busca mais desejado</h2>
+                  </div>
+                  <p className={styles.chartDescription}>Os filtros mais acionados nas páginas públicas.</p>
+                </div>
+
+                <div className={styles.chartBody}>
+                  {filtersData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={320}>
+                      <BarChart data={filtersData} layout="vertical" margin={{ top: 8, right: 18, left: 12, bottom: 8 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" horizontal={false} />
+                        <XAxis type="number" axisLine={false} tickLine={false} tick={axisTickStyle} />
+                        <YAxis
+                          type="category"
+                          dataKey="name"
+                          axisLine={false}
+                          tickLine={false}
+                          tick={axisTickStyle}
+                          width={170}
+                        />
+                        <Tooltip
+                          cursor={{ fill: "rgba(199, 156, 49, 0.06)" }}
+                          contentStyle={tooltipContentStyle}
+                          labelStyle={tooltipLabelStyle}
+                          itemStyle={tooltipItemStyle}
+                        />
+                        <Bar dataKey="value" name="Seleções" fill="var(--color-brand-primary)" radius={[0, 8, 8, 0]} barSize={22} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className={styles.emptyState}>
+                      <BarChart2 size={44} strokeWidth={1.5} />
+                      <p>Ainda não há filtros suficientes para montar essa leitura.</p>
                     </div>
                   )}
                 </div>
               </article>
             </div>
-
-            <div className={styles.chartsSecondaryGrid}>
-              <article className={styles.chartCard}>
-              <div className={styles.chartHeader}>
-                <div>
-                  <p className={styles.chartKicker}>Inteligência de Mercado</p>
-                  <h2 className={styles.chartTitle}>Bairros mais buscados</h2>
-                </div>
-                <p className={styles.chartDescription}>Onde a intenção de clique está mais forte.</p>
-              </div>
-
-              <div className={styles.chartBody}>
-                {bairrosData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={bairrosData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
-                      <XAxis dataKey="bairro" axisLine={false} tickLine={false} tick={axisTickStyle} />
-                      <YAxis axisLine={false} tickLine={false} tick={axisTickStyle} />
-                      <Tooltip
-                        cursor={{ fill: "rgba(199, 156, 49, 0.06)" }}
-                        contentStyle={tooltipContentStyle}
-                        labelStyle={tooltipLabelStyle}
-                        itemStyle={tooltipItemStyle}
-                      />
-                      <Bar dataKey="acessos" fill="var(--color-brand-primary)" radius={[4, 4, 0, 0]} barSize={34} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className={styles.emptyState}>
-                    <BarChart2 size={44} strokeWidth={1.5} />
-                    <p>Nenhum acesso registrado nesta região recentemente.</p>
-                  </div>
-                )}
-              </div>
-            </article>
-
-              <article className={styles.chartCard}>
-                <div className={styles.chartHeader}>
-                  <div>
-                    <p className={styles.chartKicker}>Interesse</p>
-                    <h2 className={styles.chartTitle}>Distribuição de procura</h2>
-                  </div>
-                  <p className={styles.chartDescription}>Perfil dos leads captados recentemente.</p>
-                </div>
-
-                <div className={styles.chartBody}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={interestData}
-                        dataKey="value"
-                        nameKey="name"
-                        innerRadius={62}
-                        outerRadius={100}
-                        paddingAngle={4}
-                      >
-                        {interestData.map((entry, index) => (
-                          <Cell key={entry.name} fill={chartPalette[index % chartPalette.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip
-                        contentStyle={tooltipContentStyle}
-                        labelStyle={tooltipLabelStyle}
-                        itemStyle={tooltipItemStyle}
-                      />
-                      <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontFamily: "var(--font-sans)" }} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-              </article>
-            </div>
-
-            <article className={`${styles.chartCard} ${styles.fullWidthCard}`}>
-              <div className={styles.chartHeader}>
-                <div>
-                  <p className={styles.chartKicker}>Inteligência de Filtros</p>
-                  <h2 className={styles.chartTitle}>Perfil de busca mais desejado</h2>
-                </div>
-                <p className={styles.chartDescription}>Os filtros mais acionados nas páginas públicas.</p>
-              </div>
-
-              <div className={styles.chartBody}>
-                {filtersData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={320}>
-                    <BarChart data={filtersData} layout="vertical" margin={{ top: 8, right: 18, left: 12, bottom: 8 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" horizontal={false} />
-                      <XAxis type="number" axisLine={false} tickLine={false} tick={axisTickStyle} />
-                      <YAxis
-                        type="category"
-                        dataKey="name"
-                        axisLine={false}
-                        tickLine={false}
-                        tick={axisTickStyle}
-                        width={170}
-                      />
-                      <Tooltip
-                        cursor={{ fill: "rgba(199, 156, 49, 0.06)" }}
-                        contentStyle={tooltipContentStyle}
-                        labelStyle={tooltipLabelStyle}
-                        itemStyle={tooltipItemStyle}
-                      />
-                      <Bar dataKey="value" name="Seleções" fill="var(--color-brand-primary)" radius={[0, 8, 8, 0]} barSize={22} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className={styles.emptyState}>
-                    <BarChart2 size={44} strokeWidth={1.5} />
-                    <p>Ainda não há filtros suficientes para montar essa leitura.</p>
-                  </div>
-                )}
-              </div>
-            </article>
           </section>
         </div>
       </main>
