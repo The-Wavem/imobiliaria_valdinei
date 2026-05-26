@@ -18,6 +18,7 @@ import {
 import { BarChart2, CalendarDays, ArrowUpRight, Home, TrendingUp, Users } from "lucide-react";
 import AdminSidebar from "@components/layout/AdminSidebar";
 import Select from "@components/ui/Select/Select.jsx";
+import { FILTERS_STORAGE_KEY } from "@utils/analytics";
 import styles from "./Dashboard.module.css";
 
 const metricCards = [
@@ -53,15 +54,7 @@ const periodOptions = [
   { label: "Este Ano", value: "year" },
 ];
 
-const fallbackAccessData = [
-  { name: "20-Mai", acessos: 12 },
-  { name: "21-Mai", acessos: 15 },
-  { name: "22-Mai", acessos: 14 },
-  { name: "23-Mai", acessos: 18 },
-  { name: "24-Mai", acessos: 17 },
-  { name: "25-Mai", acessos: 21 },
-  { name: "26-Mai", acessos: 19 },
-];
+const ACCESS_HISTORY_STORAGE_KEY = "@valdinei:access_history";
 
 const interestData = [
   { name: "Residencial", value: 46 },
@@ -119,16 +112,28 @@ function formatDailyLabel(date) {
   return `${padNumber(date.getDate())}-${monthLabels[date.getMonth()]}`;
 }
 
-function formatAccessLabel(dateValue) {
-  const [year = "", month = "", day = ""] = String(dateValue || "").split("-");
-
-  if (!year || !month || !day) {
-    return dateValue;
+function normalizeAccessRecord(record) {
+  if (typeof record === "number") {
+    return {
+      total: record,
+      newClients: 0,
+      frequentClients: 0,
+    };
   }
 
-  const monthIndex = Number(month) - 1;
-  const monthLabel = monthLabels[monthIndex] || month;
-  return `${day}-${monthLabel}`;
+  if (!record || typeof record !== "object") {
+    return {
+      total: 0,
+      newClients: 0,
+      frequentClients: 0,
+    };
+  }
+
+  return {
+    total: Number(record.total ?? record.acessos ?? 0) || 0,
+    newClients: Number(record.newClients ?? record.novos ?? 0) || 0,
+    frequentClients: Number(record.frequentClients ?? record.frequentes ?? 0) || 0,
+  };
 }
 
 function buildDailySeries(totalDays, historyMap) {
@@ -139,18 +144,21 @@ function buildDailySeries(totalDays, historyMap) {
     const currentDate = new Date(today);
     currentDate.setDate(today.getDate() - (totalDays - 1 - index));
     const key = toISODate(currentDate);
+    const record = normalizeAccessRecord(historyMap[key]);
 
     return {
       date: key,
       name: formatDailyLabel(currentDate),
-      acessos: Number(historyMap[key]) || 0,
+      total: record.total,
+      newClients: record.newClients,
+      frequentClients: record.frequentClients,
     };
   });
 }
 
 function buildYearSeries(historyMap) {
   const currentYear = new Date().getFullYear();
-  const nextMonthTotals = Array.from({ length: 12 }, () => 0);
+  const nextMonthTotals = Array.from({ length: 12 }, () => ({ total: 0, newClients: 0, frequentClients: 0 }));
 
   Object.entries(historyMap).forEach(([dateKey, acessos]) => {
     if (!dateKey.startsWith(`${currentYear}-`)) {
@@ -160,76 +168,119 @@ function buildYearSeries(historyMap) {
     const monthIndex = Number(dateKey.slice(5, 7)) - 1;
 
     if (monthIndex >= 0 && monthIndex < 12) {
-      nextMonthTotals[monthIndex] += Number(acessos) || 0;
+      const record = normalizeAccessRecord(acessos);
+      nextMonthTotals[monthIndex].total += record.total;
+      nextMonthTotals[monthIndex].newClients += record.newClients;
+      nextMonthTotals[monthIndex].frequentClients += record.frequentClients;
     }
   });
 
-  return nextMonthTotals.map((acessos, index) => ({
+  return nextMonthTotals.map((record, index) => ({
     date: `${currentYear}-${padNumber(index + 1)}-01`,
     name: monthLabels[index],
-    acessos,
+    total: record.total,
+    newClients: record.newClients,
+    frequentClients: record.frequentClients,
   }));
+}
+
+function readJsonFromLocalStorage(storageKey, fallbackValue) {
+  if (typeof window === "undefined") {
+    return fallbackValue;
+  }
+
+  try {
+    const rawValue = window.localStorage.getItem(storageKey);
+    return rawValue ? JSON.parse(rawValue) : fallbackValue;
+  } catch {
+    return fallbackValue;
+  }
+}
+
+function loadBairrosData() {
+  const stats = readJsonFromLocalStorage("@valdinei:bairros", {});
+
+  return Object.entries(stats)
+    .map(([bairro, acessos]) => ({ bairro, acessos: Number(acessos) || 0 }))
+    .sort((leftItem, rightItem) => rightItem.acessos - leftItem.acessos)
+    .slice(0, 5);
+}
+
+function loadAccessHistory() {
+  return readJsonFromLocalStorage(ACCESS_HISTORY_STORAGE_KEY, {});
+}
+
+function loadFilterUsage() {
+  const stats = readJsonFromLocalStorage(FILTERS_STORAGE_KEY, {});
+
+  return Object.entries(stats)
+    .map(([name, value]) => ({ name, value: Number(value) || 0 }))
+    .filter((item) => item.value > 0)
+    .sort((leftItem, rightItem) => rightItem.value - leftItem.value)
+    .slice(0, 7);
 }
 
 export default function Dashboard() {
   const { pathname } = useLocation();
   const [period, setPeriod] = useState("7d");
-  const [accessData, setAccessData] = useState([]);
-  const [bairrosData, setBairrosData] = useState([]);
+  const [accessHistory, setAccessHistory] = useState(() => loadAccessHistory());
+  const [bairrosData, setBairrosData] = useState(() => loadBairrosData());
+  const [filtersData, setFiltersData] = useState(() => loadFilterUsage());
   const title = routeLabels[pathname] ?? routeLabels["/admin/dashboard"];
   const periodLabel = periodOptions.find((option) => option.value === period)?.label ?? "Últimos 7 dias";
 
+  const reloadAnalyticsData = () => {
+    setAccessHistory(loadAccessHistory());
+    setBairrosData(loadBairrosData());
+    setFiltersData(loadFilterUsage());
+  };
+
   useEffect(() => {
-    try {
-      const rawValue = window.localStorage.getItem("@valdinei:access_history");
-      const history = rawValue ? JSON.parse(rawValue) : {};
+    const handleAnalyticsUpdate = () => {
+      reloadAnalyticsData();
+    };
 
-      const nextAccessData = Object.entries(history)
-        .map(([date, acessos]) => ({
-          name: formatAccessLabel(date),
-          acessos: Number(acessos) || 0,
-          date,
-        }))
-        .sort((leftItem, rightItem) => leftItem.date.localeCompare(rightItem.date));
+    const handleStorageUpdate = (event) => {
+      if (event.key === ACCESS_HISTORY_STORAGE_KEY || event.key === "@valdinei:bairros" || event.key === FILTERS_STORAGE_KEY) {
+        reloadAnalyticsData();
+      }
+    };
 
-      setAccessData(nextAccessData);
-    } catch {
-      setAccessData([]);
-    }
+    window.addEventListener("valdinei:analytics-update", handleAnalyticsUpdate);
+    window.addEventListener("storage", handleStorageUpdate);
+
+    return () => {
+      window.removeEventListener("valdinei:analytics-update", handleAnalyticsUpdate);
+      window.removeEventListener("storage", handleStorageUpdate);
+    };
   }, []);
 
-  const accessChartData = useMemo(() => {
-    const historyMap = accessData.reduce((accumulator, item) => {
-      accumulator[item.date] = item.acessos;
+  const normalizedAccessHistory = useMemo(() => {
+    return Object.entries(accessHistory).reduce((accumulator, [date, record]) => {
+      accumulator[date] = normalizeAccessRecord(record);
       return accumulator;
     }, {});
+  }, [accessHistory]);
+
+  const accessChartData = useMemo(() => {
+    const hasAccessHistory = Object.keys(normalizedAccessHistory).length > 0;
+
+    if (!hasAccessHistory) {
+      return [];
+    }
 
     if (period === "7d") {
-      return accessData.length > 0 ? buildDailySeries(7, historyMap) : fallbackAccessData;
+      return buildDailySeries(7, normalizedAccessHistory);
     }
 
     if (period === "30d") {
-      return accessData.length > 0 ? buildDailySeries(30, historyMap) : fallbackAccessData;
+      return buildDailySeries(30, normalizedAccessHistory);
     }
 
-    return accessData.length > 0 ? buildYearSeries(historyMap) : fallbackAccessData;
-  }, [accessData, period]);
+    return buildYearSeries(normalizedAccessHistory);
+  }, [normalizedAccessHistory, period]);
 
-  useEffect(() => {
-    try {
-      const rawValue = window.localStorage.getItem("@valdinei:bairros");
-      const stats = rawValue ? JSON.parse(rawValue) : {};
-
-      const nextBairrosData = Object.entries(stats)
-        .map(([bairro, acessos]) => ({ bairro, acessos: Number(acessos) || 0 }))
-        .sort((leftItem, rightItem) => rightItem.acessos - leftItem.acessos)
-        .slice(0, 5);
-
-      setBairrosData(nextBairrosData);
-    } catch {
-      setBairrosData([]);
-    }
-  }, []);
+  const accessBreakdownData = accessChartData;
 
   return (
     <div className={styles.layout}>
@@ -302,53 +353,17 @@ export default function Dashboard() {
                 </div>
 
                 <div className={styles.chartBody}>
-                  <ResponsiveContainer width="100%" height={320}>
-                    <AreaChart data={accessChartData}>
-                      <defs>
-                        <linearGradient id="colorVisitas" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="var(--color-brand-primary)" stopOpacity={0.3} />
-                          <stop offset="95%" stopColor="var(--color-brand-primary)" stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
-                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={axisTickStyle} />
-                      <YAxis axisLine={false} tickLine={false} tick={axisTickStyle} />
-                      <Tooltip
-                        cursor={{ fill: "rgba(199, 156, 49, 0.06)" }}
-                        contentStyle={tooltipContentStyle}
-                        labelStyle={tooltipLabelStyle}
-                        itemStyle={tooltipItemStyle}
-                      />
-                      <Area
-                        type="monotone"
-                        dataKey="acessos"
-                        name="Acessos"
-                        stroke="var(--color-brand-primary)"
-                        strokeWidth={3}
-                        fill="url(#colorVisitas)"
-                        dot={{ r: 3, fill: "var(--color-brand-primary)", strokeWidth: 0 }}
-                        activeDot={{ r: 6 }}
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-              </article>
-
-              <article className={styles.chartCard}>
-                <div className={styles.chartHeader}>
-                  <div>
-                    <p className={styles.chartKicker}>Inteligência de Mercado</p>
-                    <h2 className={styles.chartTitle}>Bairros mais buscados</h2>
-                  </div>
-                  <p className={styles.chartDescription}>Onde a intenção de clique está mais forte.</p>
-                </div>
-
-                <div className={styles.chartBody}>
-                  {bairrosData.length > 0 ? (
-                    <ResponsiveContainer width="100%" height={300}>
-                      <BarChart data={bairrosData}>
+                  {accessChartData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={320}>
+                      <AreaChart data={accessChartData}>
+                        <defs>
+                          <linearGradient id="colorVisitas" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="var(--color-brand-primary)" stopOpacity={0.3} />
+                            <stop offset="95%" stopColor="var(--color-brand-primary)" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
                         <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
-                        <XAxis dataKey="bairro" axisLine={false} tickLine={false} tick={axisTickStyle} />
+                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={axisTickStyle} />
                         <YAxis axisLine={false} tickLine={false} tick={axisTickStyle} />
                         <Tooltip
                           cursor={{ fill: "rgba(199, 156, 49, 0.06)" }}
@@ -356,51 +371,187 @@ export default function Dashboard() {
                           labelStyle={tooltipLabelStyle}
                           itemStyle={tooltipItemStyle}
                         />
-                        <Bar dataKey="acessos" fill="var(--color-brand-primary)" radius={[4, 4, 0, 0]} barSize={34} />
-                      </BarChart>
+                        <Area
+                          type="monotone"
+                          dataKey="total"
+                          name="Acessos"
+                          stroke="var(--color-brand-primary)"
+                          strokeWidth={3}
+                          fill="url(#colorVisitas)"
+                          dot={{ r: 3, fill: "var(--color-brand-primary)", strokeWidth: 0 }}
+                          activeDot={{ r: 6 }}
+                        />
+                      </AreaChart>
                     </ResponsiveContainer>
                   ) : (
                     <div className={styles.emptyState}>
                       <BarChart2 size={44} strokeWidth={1.5} />
-                      <p>Nenhum acesso registrado nesta região recentemente.</p>
+                      <p>Nenhum acesso foi registrado ainda.</p>
+                    </div>
+                  )}
+                </div>
+              </article>
+
+              <article className={styles.chartCard}>
+                <div className={styles.chartHeader}>
+                  <div>
+                    <p className={styles.chartKicker}>Audiência</p>
+                    <h2 className={styles.chartTitle}>Clientes novos x frequentes</h2>
+                  </div>
+                  <p className={styles.chartDescription}>Separação dos acessos por perfil do cliente.</p>
+                </div>
+
+                <div className={styles.chartBody}>
+                  {accessBreakdownData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={accessBreakdownData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
+                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={axisTickStyle} />
+                        <YAxis axisLine={false} tickLine={false} tick={axisTickStyle} />
+                        <Tooltip
+                          cursor={{ fill: "rgba(199, 156, 49, 0.06)" }}
+                          contentStyle={tooltipContentStyle}
+                          labelStyle={tooltipLabelStyle}
+                          itemStyle={tooltipItemStyle}
+                        />
+                        <Legend verticalAlign="top" height={28} wrapperStyle={{ fontFamily: "var(--font-sans)" }} />
+                        <Bar
+                          dataKey="newClients"
+                          name="Novos"
+                          stackId="clients"
+                          fill="var(--color-brand-primary)"
+                          radius={[4, 4, 0, 0]}
+                          barSize={34}
+                        />
+                        <Bar
+                          dataKey="frequentClients"
+                          name="Frequentes"
+                          stackId="clients"
+                          fill="rgba(20, 20, 60, 0.9)"
+                          radius={[4, 4, 0, 0]}
+                          barSize={34}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className={styles.emptyState}>
+                      <Users size={44} strokeWidth={1.5} />
+                      <p>Sem acessos suficientes para separar clientes novos e frequentes.</p>
                     </div>
                   )}
                 </div>
               </article>
             </div>
 
-            <article className={styles.chartCard}>
+            <div className={styles.chartsSecondaryGrid}>
+              <article className={styles.chartCard}>
               <div className={styles.chartHeader}>
                 <div>
-                  <p className={styles.chartKicker}>Interesse</p>
-                  <h2 className={styles.chartTitle}>Distribuição de procura</h2>
+                  <p className={styles.chartKicker}>Inteligência de Mercado</p>
+                  <h2 className={styles.chartTitle}>Bairros mais buscados</h2>
                 </div>
-                <p className={styles.chartDescription}>Perfil dos leads captados recentemente.</p>
+                <p className={styles.chartDescription}>Onde a intenção de clique está mais forte.</p>
               </div>
 
               <div className={styles.chartBody}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={interestData}
-                      dataKey="value"
-                      nameKey="name"
-                      innerRadius={62}
-                      outerRadius={100}
-                      paddingAngle={4}
-                    >
-                      {interestData.map((entry, index) => (
-                        <Cell key={entry.name} fill={chartPalette[index % chartPalette.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      contentStyle={tooltipContentStyle}
-                      labelStyle={tooltipLabelStyle}
-                      itemStyle={tooltipItemStyle}
-                    />
-                    <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontFamily: "var(--font-sans)" }} />
-                  </PieChart>
-                </ResponsiveContainer>
+                {bairrosData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={bairrosData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
+                      <XAxis dataKey="bairro" axisLine={false} tickLine={false} tick={axisTickStyle} />
+                      <YAxis axisLine={false} tickLine={false} tick={axisTickStyle} />
+                      <Tooltip
+                        cursor={{ fill: "rgba(199, 156, 49, 0.06)" }}
+                        contentStyle={tooltipContentStyle}
+                        labelStyle={tooltipLabelStyle}
+                        itemStyle={tooltipItemStyle}
+                      />
+                      <Bar dataKey="acessos" fill="var(--color-brand-primary)" radius={[4, 4, 0, 0]} barSize={34} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className={styles.emptyState}>
+                    <BarChart2 size={44} strokeWidth={1.5} />
+                    <p>Nenhum acesso registrado nesta região recentemente.</p>
+                  </div>
+                )}
+              </div>
+            </article>
+
+              <article className={styles.chartCard}>
+                <div className={styles.chartHeader}>
+                  <div>
+                    <p className={styles.chartKicker}>Interesse</p>
+                    <h2 className={styles.chartTitle}>Distribuição de procura</h2>
+                  </div>
+                  <p className={styles.chartDescription}>Perfil dos leads captados recentemente.</p>
+                </div>
+
+                <div className={styles.chartBody}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={interestData}
+                        dataKey="value"
+                        nameKey="name"
+                        innerRadius={62}
+                        outerRadius={100}
+                        paddingAngle={4}
+                      >
+                        {interestData.map((entry, index) => (
+                          <Cell key={entry.name} fill={chartPalette[index % chartPalette.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        contentStyle={tooltipContentStyle}
+                        labelStyle={tooltipLabelStyle}
+                        itemStyle={tooltipItemStyle}
+                      />
+                      <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontFamily: "var(--font-sans)" }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </article>
+            </div>
+
+            <article className={`${styles.chartCard} ${styles.fullWidthCard}`}>
+              <div className={styles.chartHeader}>
+                <div>
+                  <p className={styles.chartKicker}>Inteligência de Filtros</p>
+                  <h2 className={styles.chartTitle}>Perfil de busca mais desejado</h2>
+                </div>
+                <p className={styles.chartDescription}>Os filtros mais acionados nas páginas públicas.</p>
+              </div>
+
+              <div className={styles.chartBody}>
+                {filtersData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={320}>
+                    <BarChart data={filtersData} layout="vertical" margin={{ top: 8, right: 18, left: 12, bottom: 8 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" horizontal={false} />
+                      <XAxis type="number" axisLine={false} tickLine={false} tick={axisTickStyle} />
+                      <YAxis
+                        type="category"
+                        dataKey="name"
+                        axisLine={false}
+                        tickLine={false}
+                        tick={axisTickStyle}
+                        width={170}
+                      />
+                      <Tooltip
+                        cursor={{ fill: "rgba(199, 156, 49, 0.06)" }}
+                        contentStyle={tooltipContentStyle}
+                        labelStyle={tooltipLabelStyle}
+                        itemStyle={tooltipItemStyle}
+                      />
+                      <Bar dataKey="value" name="Seleções" fill="var(--color-brand-primary)" radius={[0, 8, 8, 0]} barSize={22} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className={styles.emptyState}>
+                    <BarChart2 size={44} strokeWidth={1.5} />
+                    <p>Ainda não há filtros suficientes para montar essa leitura.</p>
+                  </div>
+                )}
               </div>
             </article>
           </section>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Button from "@components/ui/Button/Button.jsx";
+import { trackPageAccess } from "@utils/analytics";
 import styles from "./CookieConsent.module.css";
 
 const CONSENT_KEY = "@valdinei:consent_status";
@@ -21,6 +22,9 @@ export default function CookieConsent() {
   const handleChoice = (choice) => {
     try {
       window.localStorage.setItem(CONSENT_KEY, choice);
+      if (choice === "accepted") {
+        trackPageAccess();
+      }
     } finally {
       setIsVisible(false);
     }
