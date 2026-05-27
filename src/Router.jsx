@@ -12,6 +12,7 @@ import LeadsManager from "@pages/admin/LeadsManager";
 import Favorito from "@/pages/public/Favorito";
 import Contato from "@/pages/public/Contato";
 import Sobre from "@/pages/public/Sobre";
+import Services from "@/pages/public/Services";
 
 export default function Router() {
   return (
@@ -23,6 +24,7 @@ export default function Router() {
           <Route path="/alugar" element={<Rent />} />
           <Route path="/comprar" element={<Buy />} />
           <Route path="/sobre" element={<Sobre />} />
+          <Route path="/servicos" element={<Services />} />
           <Route path="/imovel/:id" element={<PropertyDetail />} />  
       </Route>
 
