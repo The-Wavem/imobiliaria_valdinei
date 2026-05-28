@@ -12,7 +12,7 @@ export default function PropertyGrid({ properties, title, onPropertyClick }) {
       <section className={styles.emptySection}>
         <div className={styles.emptyCard}>
           <h3>Carregando imóveis</h3>
-          <p>Aguarde um momento enquanto buscamos os dados no Firestore.</p>
+          <p>Aguarde um momento enquanto buscamos os imoveis.</p>
         </div>
       </section>
     );

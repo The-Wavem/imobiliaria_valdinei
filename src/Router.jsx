@@ -19,6 +19,7 @@ export default function Router() {
       <Route element={<PublicLayout />}>
           <Route index element={<Home />} />
           <Route path="contato" element={<Contato />} />
+          <Route path="servicos" element={<h1 style={{ textAlign: 'center', margin: '300px 0', fontSize: '24px' }}>Página em desenvolvimento!</h1>} />
           <Route path="favorito" element={<Favorito />} />
           <Route path="/alugar" element={<Rent />} />
           <Route path="/comprar" element={<Buy />} />
