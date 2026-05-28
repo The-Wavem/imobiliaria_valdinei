@@ -15,6 +15,8 @@ import ContactSidebar from "@sections/property-detail/ContactSidebar";
 import PropertyContactForm from "@sections/property-detail/PropertyContactForm";
 import VisitModal from "@sections/property-detail/VisitModal";
 
+import { fetchPropertyById } from "@services/properties";
+
 const pageVariants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { staggerChildren: 0.2 } },
@@ -122,11 +124,57 @@ export default function PropertyDetail() {
   const { id } = useParams();
   const location = useLocation();
   const [isVisitModalOpen, setIsVisitModalOpen] = useState(false);
+  const [property, setProperty] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const property = useMemo(() => {
-    return dummyProperties.find((p) => p.id === id) || dummyProperties[0];
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadProperty = async () => {
+      try {
+        const item = await fetchPropertyById(id);
+
+        if (isMounted) {
+          setProperty(item);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadProperty();
+
+    return () => {
+      isMounted = false;
+    };
   }, [id]);
 
+  if (isLoading) {
+    return (
+      <div className={styles.page}>
+        <div className={styles.container}>
+          <p>Carregando imóvel...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!property) {
+    return (
+      <div className={styles.page}>
+        <div className={styles.container}>
+          <div>
+            <h1>Imóvel não encontrado</h1>
+            <p>Esse imóvel não existe mais ou ainda não está publicado.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const galleryImages = property.images.length ? property.images : property.image ? [property.image] : [];
   useEffect(() => {
     if (property?.bairro) {
       const signature = `${property.id || id}::${location.key || "default"}`;
@@ -144,7 +192,7 @@ export default function PropertyDetail() {
     <div className={styles.page}>
       <Breadcrumb property={property} />
 
-      <PropertyGallery images={property.images} title={property.title} />
+      <PropertyGallery images={galleryImages} title={property.title} />
 
       <MotionMain className={styles.container} variants={pageVariants} initial="hidden" animate="visible">
         <MotionSection className={styles.left}>
