@@ -695,7 +695,7 @@ export default function PropertyManager() {
                             aria-label={`Excluir ${property.title}`}
                           >
                             <Trash2 size={16} />
-                            <span>Excluir</span>
+                            <span className={styles.statusText}>Excluir</span>
                           </Button>
 
                           <Button
@@ -709,7 +709,9 @@ export default function PropertyManager() {
                             ) : (
                               <ToggleLeft size={16} />
                             )}
-                            <span>{property.active ? "Ativo" : "Inativo"}</span>
+                            <span className={styles.statusText}>
+                              {property.active ? "Ativo" : "Inativo"}
+                            </span>
                           </Button>
                         </div>
                       </td>

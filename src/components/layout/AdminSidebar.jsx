@@ -69,7 +69,7 @@ export default function AdminSidebar() {
                 onClick={() => setIsOpen(false)}
               >
                 <Icon size={18} className={styles.navIcon} />
-                <span>{item.label}</span>
+                <span className={styles.navText}>{item.label}</span>
               </NavLink>
             );
           })}
@@ -78,7 +78,7 @@ export default function AdminSidebar() {
         <div className={styles.footer}>
           <button type="button" className={styles.footerButton}>
             <Settings size={18} />
-            <span>Configurações</span>
+            <span className={styles.navText}>Configurações</span>
           </button>
 
           <button type="button" className={`${styles.footerButton} ${styles.footerButtonDanger}`}>
