@@ -418,113 +418,115 @@ export default function Dashboard() {
           </section>
 
           <section className={styles.chartsLayout} aria-label="Gráficos do dashboard">
-            <article className={`${styles.chartCard} ${styles.mainChartCard}`}>
-              <div className={styles.chartHeader}>
-                <div>
-                  <p className={styles.chartKicker}>Tráfego</p>
-                  <h2 className={styles.chartTitle}>Acessos Diários</h2>
-                </div>
-                <p className={styles.chartDescription}>
-                  Acessos únicos e recorrentes que aceitaram cookies em {periodLabel.toLowerCase()}.
-                </p>
-              </div>
-
-              <div className={styles.trafficLayout}>
-                {accessChartData.length > 0 ? (
-                  <>
-                    <div className={styles.trafficChart}>
-                      <ResponsiveContainer width="100%" height={360}>
-                        <BarChart data={accessChartData} margin={{ top: 24, right: 18, left: 0, bottom: 8 }}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
-                          <XAxis dataKey="name" axisLine={false} tickLine={false} tick={axisTickStyle} />
-                          <YAxis axisLine={false} tickLine={false} tick={axisTickStyle} />
-                          <Tooltip
-                            cursor={{ fill: "rgba(199, 156, 49, 0.06)" }}
-                            contentStyle={tooltipContentStyle}
-                            labelStyle={tooltipLabelStyle}
-                            itemStyle={tooltipItemStyle}
-                          />
-                          <Legend verticalAlign="top" height={28} wrapperStyle={{ fontFamily: "var(--font-sans)" }} />
-                          <Bar
-                            dataKey="newClients"
-                            name="Novos / únicos"
-                            stackId="traffic"
-                            fill="var(--color-brand-primary)"
-                            radius={[4, 4, 0, 0]}
-                            barSize={28}
-                          >
-                            <LabelList
-                              content={({ x, y, width, payload }) => {
-                                const total = payload?.total ?? 0;
-
-                                return (
-                                  <text
-                                    x={(x || 0) + (width || 0) / 2}
-                                    y={(y || 0) - 8}
-                                    textAnchor="middle"
-                                    style={trafficTotalLabelStyle}
-                                  >
-                                    {total}
-                                  </text>
-                                );
-                              }}
-                            />
-                          </Bar>
-                          <Bar
-                            dataKey="frequentClients"
-                            name="Recorrentes"
-                            stackId="traffic"
-                            fill="rgba(20, 20, 60, 0.9)"
-                            radius={[4, 4, 0, 0]}
-                            barSize={28}
-                          />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
-
-                    <aside className={styles.trafficSummary}>
-                      <div className={styles.summaryHeader}>
-                        <p className={styles.summaryKicker}>Resumo executivo</p>
-                        <h3 className={styles.summaryTitle}>Distribuição do período</h3>
-                      </div>
-
-                      <div className={styles.summaryStatCard}>
-                        <span className={styles.summaryStatLabel}>Total de acessos</span>
-                        <strong className={styles.summaryStatValue}>{trafficSummary.total}</strong>
-                        <span className={styles.summaryStatHint}>
-                          Média de {trafficSummary.averagePerDay.toFixed(1).replace(".", ",")} acessos por dia
-                        </span>
-                      </div>
-
-                      <div className={styles.summarySplitList}>
-                        <div className={styles.summarySplitItem}>
-                          <div className={styles.summarySplitRow}>
-                            <span className={styles.summarySwatchNew} />
-                            <span>Novos / únicos</span>
-                          </div>
-                          <strong>{formatPercent(trafficSummary.newShare)}</strong>
-                          <span>{trafficSummary.newClients} acessos</span>
-                        </div>
-
-                        <div className={styles.summarySplitItem}>
-                          <div className={styles.summarySplitRow}>
-                            <span className={styles.summarySwatchRecurring} />
-                            <span>Recorrentes</span>
-                          </div>
-                          <strong>{formatPercent(trafficSummary.frequentShare)}</strong>
-                          <span>{trafficSummary.frequentClients} acessos</span>
-                        </div>
-                      </div>
-                    </aside>
-                  </>
-                ) : (
-                  <div className={styles.emptyState}>
-                    <BarChart2 size={44} strokeWidth={1.5} />
-                    <p>Nenhum acesso foi registrado ainda para comparar novos e recorrentes.</p>
+            <div className={styles.chartsPrimaryGrid}>
+              <article className={`${styles.chartCard} ${styles.mainChartCard}`}>
+                <div className={styles.chartHeader}>
+                  <div>
+                    <p className={styles.chartKicker}>Tráfego</p>
+                    <h2 className={styles.chartTitle}>Acessos Diários</h2>
                   </div>
-                )}
-              </div>
-            </article>
+                  <p className={styles.chartDescription}>
+                    Acessos únicos e recorrentes que aceitaram cookies em {periodLabel.toLowerCase()}.
+                  </p>
+                </div>
+
+                <div className={styles.trafficLayout}>
+                  {accessChartData.length > 0 ? (
+                    <>
+                      <div className={styles.trafficChart}>
+                        <ResponsiveContainer width="100%" height={360}>
+                          <BarChart data={accessChartData} margin={{ top: 24, right: 18, left: 0, bottom: 8 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
+                            <XAxis dataKey="name" axisLine={false} tickLine={false} tick={axisTickStyle} />
+                            <YAxis axisLine={false} tickLine={false} tick={axisTickStyle} />
+                            <Tooltip
+                              cursor={{ fill: "rgba(199, 156, 49, 0.06)" }}
+                              contentStyle={tooltipContentStyle}
+                              labelStyle={tooltipLabelStyle}
+                              itemStyle={tooltipItemStyle}
+                            />
+                            <Legend verticalAlign="top" height={28} wrapperStyle={{ fontFamily: "var(--font-sans)" }} />
+                            <Bar
+                              dataKey="newClients"
+                              name="Novos / únicos"
+                              stackId="traffic"
+                              fill="var(--color-brand-primary)"
+                              radius={[4, 4, 0, 0]}
+                              barSize={28}
+                            >
+                              <LabelList
+                                content={({ x, y, width, payload }) => {
+                                  const total = payload?.total ?? 0;
+
+                                  return (
+                                    <text
+                                      x={(x || 0) + (width || 0) / 2}
+                                      y={(y || 0) - 8}
+                                      textAnchor="middle"
+                                      style={trafficTotalLabelStyle}
+                                    >
+                                      {total}
+                                    </text>
+                                  );
+                                }}
+                              />
+                            </Bar>
+                            <Bar
+                              dataKey="frequentClients"
+                              name="Recorrentes"
+                              stackId="traffic"
+                              fill="rgba(20, 20, 60, 0.9)"
+                              radius={[4, 4, 0, 0]}
+                              barSize={28}
+                            />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+
+                      <aside className={styles.trafficSummary}>
+                        <div className={styles.summaryHeader}>
+                          <p className={styles.summaryKicker}>Resumo executivo</p>
+                          <h3 className={styles.summaryTitle}>Distribuição do período</h3>
+                        </div>
+
+                        <div className={styles.summaryStatCard}>
+                          <span className={styles.summaryStatLabel}>Total de acessos</span>
+                          <strong className={styles.summaryStatValue}>{trafficSummary.total}</strong>
+                          <span className={styles.summaryStatHint}>
+                            Média de {trafficSummary.averagePerDay.toFixed(1).replace(".", ",")} acessos por dia
+                          </span>
+                        </div>
+
+                        <div className={styles.summarySplitList}>
+                          <div className={styles.summarySplitItem}>
+                            <div className={styles.summarySplitRow}>
+                              <span className={styles.summarySwatchNew} />
+                              <span>Novos / únicos</span>
+                            </div>
+                            <strong>{formatPercent(trafficSummary.newShare)}</strong>
+                            <span>{trafficSummary.newClients} acessos</span>
+                          </div>
+
+                          <div className={styles.summarySplitItem}>
+                            <div className={styles.summarySplitRow}>
+                              <span className={styles.summarySwatchRecurring} />
+                              <span>Recorrentes</span>
+                            </div>
+                            <strong>{formatPercent(trafficSummary.frequentShare)}</strong>
+                            <span>{trafficSummary.frequentClients} acessos</span>
+                          </div>
+                        </div>
+                      </aside>
+                    </>
+                  ) : (
+                    <div className={styles.emptyState}>
+                      <BarChart2 size={44} strokeWidth={1.5} />
+                      <p>Nenhum acesso foi registrado ainda para comparar novos e recorrentes.</p>
+                    </div>
+                  )}
+                </div>
+              </article>
+            </div>
 
             <div className={styles.bottomChartsContainer}>
               <article className={styles.chartCard}>
@@ -564,8 +566,8 @@ export default function Dashboard() {
               <article className={styles.chartCard}>
                 <div className={styles.chartHeader}>
                   <div>
-                    <p className={styles.chartKicker}>Inteligência de Filtros</p>
-                    <h2 className={styles.chartTitle}>Perfil de busca mais desejado</h2>
+                    <p className={styles.chartKicker}>Interesse</p>
+                    <h2 className={styles.chartTitle}>Perfil de Busca</h2>
                   </div>
                   <p className={styles.chartDescription}>Os filtros mais acionados nas páginas públicas.</p>
                 </div>
