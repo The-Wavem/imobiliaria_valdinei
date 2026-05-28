@@ -1,4 +1,4 @@
-import { useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import {
   Bar,
@@ -389,10 +389,10 @@ export default function Dashboard() {
               <button type="button" className={styles.secondaryButton}>
                 Exportar relatório
               </button>
-              <button type="button" className={styles.primaryButton}>
+              <Link type="button" to="/admin/imoveis" className={styles.primaryButton}>
                 <ArrowUpRight size={18} />
                 <span>Novo imóvel</span>
-              </button>
+              </Link>
             </div>
           </header>
 
@@ -450,8 +450,8 @@ export default function Dashboard() {
                               dataKey="newClients"
                               name="Novos / únicos"
                               stackId="traffic"
-                              fill="var(--color-brand-primary)"
-                              radius={[4, 4, 0, 0]}
+                              fill="var(--color-primary)"
+                              radius={[0, 0, 0, 0]}
                               barSize={28}
                             >
                               <LabelList
@@ -532,7 +532,6 @@ export default function Dashboard() {
               <article className={styles.chartCard}>
                 <div className={styles.chartHeader}>
                   <div>
-                    <p className={styles.chartKicker}>Inteligência de Mercado</p>
                     <h2 className={styles.chartTitle}>Bairros mais buscados</h2>
                   </div>
                   <p className={styles.chartDescription}>Onde a intenção de clique está mais forte.</p>
@@ -551,7 +550,7 @@ export default function Dashboard() {
                           labelStyle={tooltipLabelStyle}
                           itemStyle={tooltipItemStyle}
                         />
-                        <Bar dataKey="acessos" fill="var(--color-brand-primary)" radius={[4, 4, 0, 0]} barSize={34} />
+                        <Bar dataKey="acessos" fill="var(--color-primary)" radius={[4, 4, 0, 0]} barSize={34} />
                       </BarChart>
                     </ResponsiveContainer>
                   ) : (
@@ -566,7 +565,6 @@ export default function Dashboard() {
               <article className={styles.chartCard}>
                 <div className={styles.chartHeader}>
                   <div>
-                    <p className={styles.chartKicker}>Interesse</p>
                     <h2 className={styles.chartTitle}>Perfil de Busca</h2>
                   </div>
                   <p className={styles.chartDescription}>Os filtros mais acionados nas páginas públicas.</p>
@@ -592,7 +590,7 @@ export default function Dashboard() {
                           labelStyle={tooltipLabelStyle}
                           itemStyle={tooltipItemStyle}
                         />
-                        <Bar dataKey="value" name="Seleções" fill="var(--color-brand-primary)" radius={[0, 8, 8, 0]} barSize={22} />
+                        <Bar dataKey="value" name="Seleções" fill="var(--color-primary)" radius={[0, 8, 8, 0]} barSize={22} />
                       </BarChart>
                     </ResponsiveContainer>
                   ) : (

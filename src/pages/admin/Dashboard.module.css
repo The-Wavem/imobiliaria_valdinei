@@ -114,8 +114,10 @@
 
 .primaryButton {
   background: var(--color-brand-primary);
-  color: #ffffff;
+  color: var(--color-secondary);
   box-shadow: 0 14px 34px rgba(199, 156, 49, 0.22);
+  border: 1px solid rgba(199, 156, 49, 0.24);
+  text-decoration: none;
 }
 
 .metricsGrid {
@@ -396,7 +398,7 @@
 }
 
 .summarySwatchNew {
-  background: var(--color-brand-primary);
+  background: var(--color-primary);
 }
 
 .summarySwatchRecurring {
