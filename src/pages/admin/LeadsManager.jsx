@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Eye, MessageCircle, Search } from "lucide-react";
 import AdminSidebar from "@components/layout/AdminSidebar";
 import Input from "@components/ui/Input/Input.jsx";
@@ -56,7 +56,7 @@ function getRequestStatusColor(status) {
   return requestStatusColor[status] || "novo";
 }
 
-const initialRequests = [
+export const initialRequests = [
   {
     id: 1,
     date: "21/05/2026 09:14",
@@ -152,8 +152,29 @@ function parseBrazilianDateTime(dateValue) {
   ).getTime();
 }
 
+const LEADS_STORAGE_KEY = "@valdinei:leads";
+
+function readStoredRequests() {
+  if (typeof window === "undefined") {
+    return initialRequests;
+  }
+
+  try {
+    const rawValue = window.localStorage.getItem(LEADS_STORAGE_KEY);
+
+    if (!rawValue) {
+      return initialRequests;
+    }
+
+    const parsedValue = JSON.parse(rawValue);
+    return Array.isArray(parsedValue) ? parsedValue : initialRequests;
+  } catch {
+    return initialRequests;
+  }
+}
+
 export default function LeadsManager() {
-  const [requests, setRequests] = useState(initialRequests);
+  const [requests, setRequests] = useState(() => readStoredRequests());
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -161,6 +182,15 @@ export default function LeadsManager() {
   const [filterType, setFilterType] = useState("Todos");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    window.localStorage.setItem(LEADS_STORAGE_KEY, JSON.stringify(requests));
+    window.dispatchEvent(new CustomEvent("valdinei:analytics-update", { detail: { type: "leads" } }));
+  }, [requests]);
 
   const metrics = useMemo(
     () =>
