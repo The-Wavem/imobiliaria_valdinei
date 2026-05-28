@@ -1,7 +1,8 @@
-import { useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useLocation, useParams } from "react-router-dom";
 import { motion as motionFactory } from "framer-motion";
 import styles from "./PropertyDetail.module.css";
+import { trackBairroView } from "@utils/analytics";
 
 import Breadcrumb from "@components/ui/Breadcrumb/Breadcrumb.jsx";
 import PropertyGallery from "@sections/property-detail/PropertyGallery";
@@ -38,12 +39,15 @@ const MotionMain = motionFactory.main;
 const MotionSection = motionFactory.section;
 const MotionDiv = motionFactory.div;
 
+let lastTrackedPropertySignature = null;
+
 const dummyProperties = [
   {
     id: "rent-1",
     category: "Alugar",
     code: "RNT-001",
     title: "Studio mobiliado próximo ao centro",
+    bairro: "Centro",
     location: "Centro, Curitiba",
     price: 3200,
     beds: 1,
@@ -63,6 +67,7 @@ const dummyProperties = [
     category: "Comprar",
     code: "BUY-001",
     title: "Apartamento Garden no Batel",
+    bairro: "Batel",
     location: "Batel, Curitiba",
     price: 1450000,
     beds: 3,
@@ -80,6 +85,7 @@ const dummyProperties = [
     category: "Comprar",
     code: "BUY-002",
     title: "Casa moderna em condomínio fechado",
+    bairro: "Santa Felicidade",
     location: "Santa Felicidade, Curitiba",
     price: 890000,
     beds: 4,
@@ -97,6 +103,7 @@ const dummyProperties = [
     category: "Alugar",
     code: "STU-001",
     title: "Studio mobiliado próximo ao centro",
+    bairro: "Centro",
     location: "Centro, Curitiba",
     price: 3200,
     beds: 1,
@@ -113,11 +120,25 @@ const dummyProperties = [
 
 export default function PropertyDetail() {
   const { id } = useParams();
+  const location = useLocation();
   const [isVisitModalOpen, setIsVisitModalOpen] = useState(false);
 
   const property = useMemo(() => {
     return dummyProperties.find((p) => p.id === id) || dummyProperties[0];
   }, [id]);
+
+  useEffect(() => {
+    if (property?.bairro) {
+      const signature = `${property.id || id}::${location.key || "default"}`;
+
+      if (lastTrackedPropertySignature === signature) {
+        return;
+      }
+
+      lastTrackedPropertySignature = signature;
+      trackBairroView(property.bairro);
+    }
+  }, [property, id, location.key]);
 
   return (
     <div className={styles.page}>

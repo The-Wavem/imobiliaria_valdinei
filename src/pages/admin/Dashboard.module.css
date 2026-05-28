@@ -2,7 +2,8 @@
   --admin-sidebar-width: 18.75rem;
   min-height: 100vh;
   background:
-    radial-gradient(circle at top left, rgba(199, 156, 49, 0.08), transparent 32%),
+    radial-gradient(circle at top left, rgba(199, 156, 49, 0.12), transparent 32%),
+    radial-gradient(circle at top right, rgba(199, 156, 49, 0.05), transparent 24%),
     linear-gradient(180deg, rgba(248, 249, 250, 0.92), var(--color-background));
 }
 
@@ -55,6 +56,28 @@
   align-items: center;
   gap: 0.75rem;
   flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.periodSelectWrap {
+  min-width: 14rem;
+}
+
+.periodSelect {
+  width: 14rem;
+  --select-border: rgba(199, 156, 49, 0.22);
+  --select-border-hover: var(--color-brand-primary);
+  --select-icon: var(--color-brand-primary);
+  --select-label: var(--color-brand-secondary);
+  --select-value: var(--color-brand-secondary);
+  --select-arrow: var(--color-brand-primary);
+  transition: all 0.3s ease;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+}
+
+.periodSelect:hover,
+.periodSelect:focus-within {
+  box-shadow: 0 0 0 4px rgba(199, 156, 49, 0.12), 0 12px 28px rgba(15, 23, 42, 0.08);
 }
 
 .secondaryButton,
@@ -91,8 +114,10 @@
 
 .primaryButton {
   background: var(--color-brand-primary);
-  color: #ffffff;
+  color: var(--color-secondary);
   box-shadow: 0 14px 34px rgba(199, 156, 49, 0.22);
+  border: 1px solid rgba(199, 156, 49, 0.24);
+  text-decoration: none;
 }
 
 .metricsGrid {
@@ -108,6 +133,13 @@
   border-radius: var(--radius-md);
   box-shadow: 0 18px 40px rgba(15, 23, 42, 0.05);
   padding: 1.25rem;
+  border-bottom: 3px solid var(--color-brand-primary);
+  transition: all 0.3s ease;
+}
+
+.metricCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 15px 35px -5px rgba(199, 156, 49, 0.15);
 }
 
 .metricCardTop {
@@ -123,8 +155,8 @@
   place-items: center;
   width: 3rem;
   height: 3rem;
-  border-radius: 1rem;
-  background: rgba(199, 156, 49, 0.12);
+  border-radius: 50%;
+  background: rgba(199, 156, 49, 0.08);
   color: var(--color-brand-primary);
 }
 
@@ -149,7 +181,7 @@
 
 .metricValue {
   margin: 0.4rem 0 0;
-  color: var(--color-brand-secondary);
+  color: var(--color-brand-primary);
   font-family: var(--font-display);
   font-size: clamp(1.85rem, 2.4vw, 2.45rem);
   line-height: 1;
@@ -162,27 +194,52 @@
   font-size: 0.875rem;
 }
 
-.chartsGrid {
+.chartsLayout {
+  display: grid;
+  gap: 2rem;
+}
+
+.chartsPrimaryGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+.bottomChartsContainer {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
-  align-items: stretch;
+  gap: 2rem;
+  align-items: start;
+  margin-top: 2rem;
 }
 
 .chartCard {
   display: flex;
   flex-direction: column;
   min-height: 25rem;
-  padding: 1.25rem;
-  background: var(--color-surface);
+  padding: 2rem;
+  background: #ffffff;
   border: 1px solid rgba(15, 23, 42, 0.06);
-  border-radius: calc(var(--radius-md) + 4px);
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.05);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.05);
+  border-bottom: 3px solid rgba(199, 156, 49, 0.38);
+  transition: all 0.3s ease;
 }
 
-.chartCardWide {
+.chartCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 15px 35px -5px rgba(199, 156, 49, 0.15);
+}
+
+.mainChartCard {
+  width: 100%;
   grid-column: 1 / -1;
-  min-height: 28rem;
+  min-height: 31rem;
+}
+
+.fullWidthCard {
+  min-height: 24rem;
 }
 
 .chartHeader {
@@ -223,12 +280,155 @@
   min-height: 20rem;
 }
 
+.trafficLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 2.2fr) minmax(18rem, 0.9fr);
+  gap: 1.5rem;
+  align-items: stretch;
+  min-height: 20rem;
+}
+
+.trafficChart {
+  min-width: 0;
+}
+
+.trafficSummary {
+  display: grid;
+  align-content: start;
+  gap: 1rem;
+  padding: 1rem 1rem 1.1rem;
+  border-radius: 20px;
+  background:
+    linear-gradient(180deg, rgba(199, 156, 49, 0.08), rgba(255, 255, 255, 0.98)),
+    #ffffff;
+  border: 1px solid rgba(199, 156, 49, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.summaryHeader {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.summaryKicker {
+  margin: 0;
+  color: var(--color-brand-primary);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.summaryTitle {
+  margin: 0;
+  color: var(--color-brand-secondary);
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  line-height: 1.2;
+}
+
+.summaryStatCard {
+  display: grid;
+  gap: 0.35rem;
+  padding: 1rem;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.05);
+}
+
+.summaryStatLabel {
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.summaryStatValue {
+  color: var(--color-brand-secondary);
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 2.8vw, 2.8rem);
+  line-height: 1;
+}
+
+.summaryStatHint {
+  color: var(--color-text-muted);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.summarySplitList {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.summarySplitItem {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.9rem 1rem;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.summarySplitItem strong {
+  color: var(--color-brand-secondary);
+  font-size: 1.05rem;
+}
+
+.summarySplitItem span:last-child {
+  color: var(--color-text-muted);
+  font-size: 0.84rem;
+}
+
+.summarySplitRow {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: var(--color-brand-secondary);
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.summarySwatchNew,
+.summarySwatchRecurring {
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 0.2rem;
+  flex-shrink: 0;
+}
+
+.summarySwatchNew {
+  background: var(--color-primary);
+}
+
+.summarySwatchRecurring {
+  background: rgba(20, 20, 60, 0.9);
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 250px;
+  gap: 0.9rem;
+  color: var(--color-text-muted);
+  text-align: center;
+  font-weight: 400;
+  font-style: italic;
+}
+
+.emptyState svg {
+  color: rgba(199, 156, 49, 0.45);
+}
+
 .chartCard :global(.recharts-cartesian-grid line) {
-  stroke: rgba(20, 20, 60, 0.08);
+  stroke: #f1f5f9;
 }
 
 .chartCard :global(.recharts-cartesian-axis-tick-value) {
   fill: var(--color-text-muted);
+  font-family: var(--font-sans);
   font-size: 0.75rem;
 }
 
@@ -247,17 +447,22 @@
   font-weight: 700;
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 1024px) {
   .metricsGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .chartsGrid {
+  .chartsPrimaryGrid,
+  .bottomChartsContainer {
+    grid-template-columns: 1fr;
+  }
+
+  .trafficLayout {
     grid-template-columns: 1fr;
   }
 
   .chartCardWide {
-    grid-column: auto;
+    min-height: 31rem;
   }
 }
 
@@ -299,5 +504,9 @@
 
   .chartDescription {
     text-align: left;
+  }
+
+  .trafficSummary {
+    padding: 0.9rem;
   }
 }

@@ -1,13 +1,32 @@
-import { Outlet } from "react-router-dom";
+import { useEffect } from "react";
+import { Outlet, useLocation } from "react-router-dom";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
+import CookieConsent from "@components/ui/CookieConsent/CookieConsent.jsx";
+import { trackPageAccess } from "@utils/analytics";
+
+let lastTrackedPageViewSignature = null;
 
 export default function PublicLayout() {
+  const location = useLocation();
+
+  useEffect(() => {
+    const signature = `${location.pathname}::${location.key || "default"}`;
+
+    if (lastTrackedPageViewSignature === signature) {
+      return;
+    }
+
+    lastTrackedPageViewSignature = signature;
+    trackPageAccess(location.pathname);
+  }, [location.pathname]);
+
   return (
     <>
       <Navbar />
       <Outlet />
       <Footer />
+      <CookieConsent />
     </>
   );
 }
