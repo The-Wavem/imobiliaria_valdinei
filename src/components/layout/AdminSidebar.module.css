@@ -168,6 +168,50 @@
   color: #fecaca;
 }
 
+.modalContent {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 0.25rem 0;
+}
+
+.modalPrompt {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.98rem;
+  line-height: 1.6;
+}
+
+.modalActionStack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.modalActionButton,
+.configActionButton {
+  width: 100%;
+  min-height: 3.25rem;
+}
+
+.configMenu,
+.configPasswordForm {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.configActions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 0.25rem;
+}
+
+.configActions .configActionButton {
+  flex: 1 1 12rem;
+}
+
 @media (min-width: 1024px) {
   .overlay,
   .mobileToggle {
