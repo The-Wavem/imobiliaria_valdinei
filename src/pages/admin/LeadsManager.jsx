@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { Eye, MessageCircle, Search } from "lucide-react";
-import AdminSidebar from "@components/layout/AdminSidebar";
 import Input from "@components/ui/Input/Input.jsx";
 import Button from "@components/ui/Button/Button.jsx";
 import Modal from "@components/ui/Modal/Modal.jsx";
@@ -266,8 +265,6 @@ export default function LeadsManager() {
 
   return (
     <div className={styles.layout}>
-      <AdminSidebar />
-
       <main className={styles.content}>
         <div className={styles.contentInner}>
           <header className={styles.header}>

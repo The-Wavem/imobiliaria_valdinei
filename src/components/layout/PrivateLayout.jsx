@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
+import AdminSidebar from "@components/layout/AdminSidebar";
 import { auth } from "../../services/firebaseConfig.js";
 import styles from "./PrivateLayout.module.css";
 
@@ -25,5 +26,10 @@ export default function PrivateLayout() {
     return <Navigate to="/admin/login" replace />;
   }
 
-  return <Outlet />;
+  return (
+    <>
+      <AdminSidebar />
+      <Outlet />
+    </>
+  );
 }

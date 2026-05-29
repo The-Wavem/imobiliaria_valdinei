@@ -16,7 +16,6 @@ import {
   Trash2,
   CarFront,
 } from "lucide-react";
-import AdminSidebar from "@components/layout/AdminSidebar";
 import Button from "@components/ui/Button/Button.jsx";
 import Modal from "@components/ui/Modal/Modal.jsx";
 import Input from "@components/ui/Input/Input.jsx";
@@ -584,8 +583,6 @@ export default function PropertyManager() {
 
   return (
     <div className={styles.layout}>
-      <AdminSidebar />
-
       <main className={styles.content}>
         <div className={styles.contentInner}>
           <header className={styles.header}>
