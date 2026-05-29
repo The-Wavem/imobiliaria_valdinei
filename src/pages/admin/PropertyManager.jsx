@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Bath,
   BedDouble,
@@ -21,6 +21,10 @@ import Button from "@components/ui/Button/Button.jsx";
 import Modal from "@components/ui/Modal/Modal.jsx";
 import Input from "@components/ui/Input/Input.jsx";
 import Select from "@components/ui/Select/Select.jsx";
+import {
+  buildPropertyDocument,
+  savePropertyDocument,
+} from "@services/AdminCadastro";
 import styles from "./PropertyManager.module.css";
 
 const tabOptions = [
@@ -37,7 +41,7 @@ const categoryOptions = [
   { label: "Comprar", value: "Comprar" },
 ];
 
-const initialProperties = [
+export const initialProperties = [
   {
     id: 1,
     title: "Casa térrea com piscina",
@@ -172,6 +176,27 @@ const currencyFormatter = new Intl.NumberFormat("pt-BR", {
   maximumFractionDigits: 0,
 });
 
+const PROPERTIES_STORAGE_KEY = "@valdinei:properties";
+
+function readStoredProperties() {
+  if (typeof window === "undefined") {
+    return initialProperties;
+  }
+
+  try {
+    const rawValue = window.localStorage.getItem(PROPERTIES_STORAGE_KEY);
+
+    if (!rawValue) {
+      return initialProperties;
+    }
+
+    const parsedValue = JSON.parse(rawValue);
+    return Array.isArray(parsedValue) ? parsedValue : initialProperties;
+  } catch {
+    return initialProperties;
+  }
+}
+
 function formatCurrency(value) {
   return currencyFormatter.format(Number(value || 0));
 }
@@ -220,7 +245,7 @@ function normalizeForm(property = emptyForm) {
 }
 
 export default function PropertyManager() {
-  const [properties, setProperties] = useState(initialProperties);
+  const [properties, setProperties] = useState(() => readStoredProperties());
   const [availableTypes, setAvailableTypes] = useState([
     "Casa",
     "Apartamento",
@@ -248,6 +273,16 @@ export default function PropertyManager() {
   const [newType, setNewType] = useState("");
   const [newFeature, setNewFeature] = useState("");
   const [newPhotoUrl, setNewPhotoUrl] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    window.localStorage.setItem(PROPERTIES_STORAGE_KEY, JSON.stringify(properties));
+    window.dispatchEvent(new CustomEvent("valdinei:analytics-update", { detail: { type: "properties" } }));
+  }, [properties]);
 
   const typeOptions = useMemo(
     () => [
@@ -286,6 +321,7 @@ export default function PropertyManager() {
     setNewType("");
     setNewFeature("");
     setNewPhotoUrl("");
+    setIsSaving(false);
     setIsModalOpen(true);
   };
 
@@ -303,6 +339,7 @@ export default function PropertyManager() {
     setNewType("");
     setNewFeature("");
     setNewPhotoUrl("");
+    setIsSaving(false);
     setIsModalOpen(true);
   };
 
@@ -440,20 +477,20 @@ export default function PropertyManager() {
     );
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const nextId =
       properties.reduce(
         (highestId, property) => Math.max(highestId, property.id),
         0,
       ) + 1;
+    const propertyId =
+      modalMode === "edit" && editingId ? editingId : nextId;
     const payload = {
-      id: modalMode === "edit" && editingId ? editingId : nextId,
+      id: propertyId,
       title: formData.title.trim(),
       code:
         formData.code.trim() ||
-        createPropertyCode(
-          modalMode === "edit" && editingId ? editingId : nextId,
-        ),
+        createPropertyCode(propertyId),
       category: formData.category,
       type: formData.type.trim() || "Imóvel",
       price: Number(formData.price || 0),
@@ -474,19 +511,75 @@ export default function PropertyManager() {
       active: true,
     };
 
-    setProperties((currentValue) => {
-      if (modalMode === "edit") {
-        return currentValue.map((property) =>
-          property.id === editingId
-            ? { ...property, ...payload, active: property.active }
-            : property,
-        );
+    const existingProperty =
+      modalMode === "edit"
+        ? properties.find((property) => property.id === editingId)
+        : null;
+
+    setIsSaving(true);
+
+    try {
+      const documentPayload = buildPropertyDocument(payload, {
+        propertyId,
+        active: existingProperty?.active ?? true,
+        existingProperty,
+      });
+
+      if (modalMode === "create" || existingProperty?.firestoreId) {
+        const savedDocument = await savePropertyDocument(payload, {
+          propertyId,
+          active: existingProperty?.active ?? true,
+          existingProperty,
+          firestoreId: existingProperty?.firestoreId,
+        });
+
+        payload.firestoreId = savedDocument.id;
       }
 
-      return [{ ...payload }, ...currentValue];
-    });
+      setProperties((currentValue) => {
+        if (modalMode === "edit") {
+          return currentValue.map((property) =>
+            property.id === editingId
+              ? {
+                  ...property,
+                  ...payload,
+                  structuredDocument: documentPayload,
+                  firestoreId: property.firestoreId || payload.firestoreId,
+                  active: property.active,
+                }
+              : property,
+          );
+        }
 
-    setIsModalOpen(false);
+        return [
+          {
+            ...payload,
+            structuredDocument: documentPayload,
+          },
+          ...currentValue,
+        ];
+      });
+
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error("Falha ao salvar o imóvel no banco:", error);
+
+      setProperties((currentValue) => {
+        if (modalMode === "edit") {
+          return currentValue.map((property) =>
+            property.id === editingId
+              ? { ...property, ...payload, active: property.active }
+              : property,
+          );
+        }
+
+        return [{ ...payload }, ...currentValue];
+      });
+
+      setIsModalOpen(false);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -602,7 +695,7 @@ export default function PropertyManager() {
                             aria-label={`Excluir ${property.title}`}
                           >
                             <Trash2 size={16} />
-                            <span>Excluir</span>
+                            <span className={styles.statusText}>Excluir</span>
                           </Button>
 
                           <Button
@@ -616,7 +709,9 @@ export default function PropertyManager() {
                             ) : (
                               <ToggleLeft size={16} />
                             )}
-                            <span>{property.active ? "Ativo" : "Inativo"}</span>
+                            <span className={styles.statusText}>
+                              {property.active ? "Ativo" : "Inativo"}
+                            </span>
                           </Button>
                         </div>
                       </td>
@@ -1049,10 +1144,11 @@ export default function PropertyManager() {
             <Button
               variant="primary"
               className={styles.modalButton}
+              disabled={isSaving}
               onClick={handleSubmit}
             >
               <Save size={16} />
-              <span>Salvar Imóvel</span>
+              <span>{isSaving ? "Salvando..." : "Salvar Imóvel"}</span>
             </Button>
           </footer>
         </div>

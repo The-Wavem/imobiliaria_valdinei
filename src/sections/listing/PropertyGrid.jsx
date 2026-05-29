@@ -7,6 +7,17 @@ import styles from "./PropertyGrid.module.css";
 export default function PropertyGrid({ properties, title, onPropertyClick }) {
   const navigate = useNavigate();
 
+  if (arguments[0]?.loading) {
+    return (
+      <section className={styles.emptySection}>
+        <div className={styles.emptyCard}>
+          <h3>Carregando imóveis</h3>
+          <p>Aguarde um momento enquanto buscamos os imoveis.</p>
+        </div>
+      </section>
+    );
+  }
+
   if (!properties.length) {
     return (
       <section className={styles.emptySection}>

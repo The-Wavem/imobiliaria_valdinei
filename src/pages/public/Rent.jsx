@@ -1,62 +1,44 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Footer from "@components/layout/Footer.jsx";
 import FilterBar from "@components/ui/FilterBar/FilterBar.jsx";
 import CategoryHero from "@sections/listing/CategoryHero.jsx";
 import PropertyGrid from "@sections/listing/PropertyGrid.jsx";
-
-const properties = [
-  {
-    id: "rent-1",
-    title: "Studio mobiliado próximo ao centro",
-    location: "Centro, Curitiba",
-    price: 3200,
-    type: "Studio",
-    category: "Alugar",
-    beds: 1,
-    baths: 1,
-    parking: 1,
-    area: 42,
-    amenities: ["Mobiliado", "Elevador"],
-    image: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&q=80&w=1200",
-  },
-  {
-    id: "rent-2",
-    title: "Apartamento reformado no Batel",
-    location: "Batel, Curitiba",
-    price: 5400,
-    type: "Apartamento",
-    category: "Alugar",
-    beds: 2,
-    baths: 2,
-    parking: 1,
-    area: 88,
-    amenities: ["Churrasqueira", "Elevador"],
-    image: "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&q=80&w=1200",
-  },
-  {
-    id: "rent-3",
-    title: "Casa ampla em condomínio familiar",
-    location: "Santa Felicidade, Curitiba",
-    price: 7800,
-    type: "Casa",
-    category: "Alugar",
-    beds: 3,
-    baths: 3,
-    parking: 2,
-    area: 180,
-    amenities: ["Piscina", "Pet Friendly"],
-    image: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&q=80&w=1200",
-  },
-];
+import { fetchPublishedProperties } from "@services/properties";
 
 export default function Rent() {
   const [filters, setFilters] = useState({});
+  const [properties, setProperties] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
   const handlePropertyClick = (propertyId) => {
     navigate(`/imovel/${propertyId}`);
   };
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadProperties = async () => {
+      try {
+        const items = await fetchPublishedProperties();
+
+        if (isMounted) {
+          setProperties(items.filter((property) => property.category.toLowerCase() === "alugar"));
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadProperties();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const filteredProperties = useMemo(() => {
     return properties.filter((property) => {
@@ -107,7 +89,12 @@ export default function Rent() {
         onSearch={setFilters}
         onAdvancedFiltersApply={setFilters}
       />
-      <PropertyGrid properties={filteredProperties} title="Imóveis para Alugar" onPropertyClick={handlePropertyClick} />
+      <PropertyGrid
+        properties={filteredProperties}
+        title="Imóveis para Alugar"
+        onPropertyClick={handlePropertyClick}
+        loading={isLoading}
+      />
       <Footer />
     </div>
   );
