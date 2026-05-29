@@ -9,6 +9,7 @@ import PropertyDetail from "@/pages/public/PropertyDetail";
 import Dashboard from "@/pages/admin/Dashboard";
 import PropertyManager from "@/pages/admin/PropertyManager";
 import LeadsManager from "@pages/admin/LeadsManager";
+import AdminLogin from "@pages/admin/Login";
 import Favorito from "@/pages/public/Favorito";
 import Contato from "@/pages/public/Contato";
 import Sobre from "@/pages/public/Sobre";
@@ -26,6 +27,8 @@ export default function Router() {
           <Route path="/sobre" element={<Sobre />} />
           <Route path="/imovel/:id" element={<PropertyDetail />} />  
       </Route>
+
+          <Route path="/admin/login" element={<AdminLogin />} />
 
       <Route element={<PrivateLayout />}>
          <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />

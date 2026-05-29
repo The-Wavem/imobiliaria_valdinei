@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
+import { signOut } from "firebase/auth";
 import {
   CalendarDays,
   Home,
@@ -13,6 +14,7 @@ import {
 import Modal from "@components/ui/Modal/Modal.jsx";
 import Button from "@components/ui/Button/Button.jsx";
 import Input from "@components/ui/Input/Input.jsx";
+import { auth } from "@services/firebaseConfig";
 import styles from "./AdminSidebar.module.css";
 
 const navigationItems = [
@@ -55,17 +57,14 @@ export default function AdminSidebar() {
     navigate("/");
   };
 
-  const handleLogout = () => {
-    // Placeholder até a integração com o logout do Firebase.
-    console.log("Firebase Logout Placeholder");
+  const handleLogout = async () => {
+    await signOut(auth);
     setIsLogoutModalOpen(false);
     setIsOpen(false);
     navigate("/");
   };
 
   const handleSavePassword = () => {
-    // Placeholder até a integração com atualização real de senha.
-    console.log("Config Password Save Placeholder");
     closeConfigModal();
   };
 
