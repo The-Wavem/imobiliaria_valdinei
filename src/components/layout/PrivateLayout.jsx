@@ -1,23 +1,24 @@
-import { Navigate, Outlet } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { Navigate, Outlet } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "@services/firebaseConfig";
+import { auth } from "../../services/firebaseConfig.js";
+import styles from "./PrivateLayout.module.css";
 
 export default function PrivateLayout() {
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [isChecking, setIsChecking] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setIsAuthenticated(Boolean(user));
-      setIsCheckingAuth(false);
+      setIsChecking(false);
     });
 
     return unsubscribe;
   }, []);
 
-  if (isCheckingAuth) {
-    return null;
+  if (isChecking) {
+    return <div className={styles.authLoader}>Verificando credenciais de segurança...</div>;
   }
 
   if (!isAuthenticated) {
