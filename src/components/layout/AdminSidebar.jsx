@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { signOut } from "firebase/auth";
+import { signOut, updatePassword } from "firebase/auth";
 import {
   CalendarDays,
   Home,
@@ -31,19 +31,30 @@ export default function AdminSidebar() {
   const [configTab, setConfigTab] = useState("menu");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
+  const [isSavingPassword, setIsSavingPassword] = useState(false);
   const navigate = useNavigate();
+
+  const resetPasswordState = () => {
+    setNewPassword("");
+    setConfirmPassword("");
+    setPasswordError("");
+    setPasswordSuccess(false);
+    setIsSavingPassword(false);
+  };
 
   const closeConfigModal = () => {
     setIsConfigModalOpen(false);
     setConfigTab("menu");
-    setNewPassword("");
-    setConfirmPassword("");
+    resetPasswordState();
   };
 
   const openConfigModal = () => {
     setConfigTab("menu");
     setIsConfigModalOpen(true);
     setIsOpen(false);
+    resetPasswordState();
   };
 
   const openLogoutModal = () => {
@@ -66,6 +77,48 @@ export default function AdminSidebar() {
 
   const handleSavePassword = () => {
     closeConfigModal();
+  };
+
+  const handleUpdatePassword = async (event) => {
+    event.preventDefault();
+    setPasswordError("");
+    setPasswordSuccess(false);
+
+    if (newPassword.length < 6) {
+      setPasswordError("A senha deve conter pelo menos 6 caracteres.");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError("As senhas não coincidem.");
+      return;
+    }
+
+    const currentUser = auth.currentUser;
+
+    if (!currentUser) {
+      setPasswordError("Não foi possível localizar a sessão autenticada.");
+      return;
+    }
+
+    setIsSavingPassword(true);
+
+    try {
+      await updatePassword(currentUser, newPassword);
+      setPasswordSuccess(true);
+      setNewPassword("");
+      setConfirmPassword("");
+      setPasswordError("");
+    } catch (error) {
+      if (error?.code === "auth/requires-recent-login") {
+        setPasswordError("Por segurança, faça logout e login novamente antes de mudar a senha.");
+        return;
+      }
+
+      setPasswordError("Não foi possível alterar a senha no momento. Tente novamente.");
+    } finally {
+      setIsSavingPassword(false);
+    }
   };
 
   return (
@@ -169,13 +222,16 @@ export default function AdminSidebar() {
               <Button
                 variant="outline"
                 className={styles.modalActionButton}
-                onClick={() => setConfigTab("password")}
+                onClick={() => {
+                  resetPasswordState();
+                  setConfigTab("password");
+                }}
               >
                 Trocar Senha
               </Button>
             </div>
           ) : (
-            <div className={styles.configPasswordForm}>
+            <form className={styles.configPasswordForm} onSubmit={handleUpdatePassword}>
               <Input
                 type="password"
                 label="Nova Senha"
@@ -190,20 +246,32 @@ export default function AdminSidebar() {
                 onChange={(event) => setConfirmPassword(event.target.value)}
               />
 
+              {passwordError ? <p className={styles.passwordError}>{passwordError}</p> : null}
+              {passwordSuccess ? <p className={styles.passwordSuccess}>Senha alterada com sucesso!</p> : null}
+
               <div className={styles.configActions}>
-                <Button variant="primary" className={styles.configActionButton} onClick={handleSavePassword}>
-                  Salvar
+                <Button
+                  variant="primary"
+                  className={styles.configActionButton}
+                  type="submit"
+                  disabled={isSavingPassword}
+                >
+                  {isSavingPassword ? "Salvando..." : "Salvar"}
                 </Button>
 
                 <Button
                   variant="outline"
                   className={styles.configActionButton}
-                  onClick={() => setConfigTab("menu")}
+                  type="button"
+                  onClick={() => {
+                    resetPasswordState();
+                    setConfigTab("menu");
+                  }}
                 >
                   Voltar
                 </Button>
               </div>
-            </div>
+            </form>
           )}
         </div>
       </Modal>

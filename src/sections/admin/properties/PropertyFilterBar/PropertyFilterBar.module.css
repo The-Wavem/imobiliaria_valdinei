@@ -1,0 +1,52 @@
+.section {
+  display: block;
+}
+
+.container {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(13rem, 0.75fr) auto;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  align-items: end;
+}
+
+.searchField,
+.selectField {
+  min-width: 0;
+}
+
+.actionField {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.addButton {
+  min-height: 3.25rem;
+  padding-inline: 1rem;
+  white-space: nowrap;
+}
+
+@media (max-width: 1120px) {
+  .container {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .searchField {
+    grid-column: 1 / -1;
+  }
+
+  .actionField {
+    grid-column: 1 / -1;
+    justify-content: stretch;
+  }
+
+  .addButton {
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    grid-template-columns: 1fr;
+  }
+}

@@ -212,6 +212,20 @@
   flex: 1 1 12rem;
 }
 
+.passwordError {
+  margin: 0;
+  color: #ef4444;
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+.passwordSuccess {
+  margin: 0;
+  color: #16a34a;
+  font-size: 0.875rem;
+  text-align: center;
+}
+
 @media (min-width: 1024px) {
   .overlay,
   .mobileToggle {
