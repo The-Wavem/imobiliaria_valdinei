@@ -6,6 +6,7 @@ import Home from "@/pages/public/Home";
 import Rent from "@/pages/public/Rent";
 import Buy from "@/pages/public/Buy";
 import PropertyDetail from "@/pages/public/PropertyDetail";
+import NotFound from "@pages/public/NotFound";
 import Dashboard from "@/pages/admin/Dashboard";
 import PropertyManager from "@/pages/admin/PropertyManager";
 import LeadsManager from "@pages/admin/LeadsManager";
@@ -33,6 +34,7 @@ export default function Router() {
         <Route path="/comprar" element={<Buy />} />
         <Route path="/sobre" element={<Sobre />} />
         <Route path="/imovel/:id" element={<PropertyDetail />} />
+        <Route path="*" element={<NotFound />} />
       </Route>
 
       <Route path="/admin/login" element={<Login />} />

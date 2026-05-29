@@ -4,6 +4,7 @@ import Navbar from "./Navbar";
 import Footer from "./Footer";
 import CookieConsent from "@components/ui/CookieConsent/CookieConsent.jsx";
 import { trackPageAccess } from "@utils/analytics";
+import styles from "./PublicLayout.module.css";
 
 let lastTrackedPageViewSignature = null;
 
@@ -24,7 +25,9 @@ export default function PublicLayout() {
   return (
     <>
       <Navbar />
-      <Outlet />
+      <div key={location.pathname} className={styles.pageTransition}>
+        <Outlet />
+      </div>
       <Footer />
       <CookieConsent />
     </>
