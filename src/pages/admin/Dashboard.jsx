@@ -4,7 +4,7 @@ import OverviewChart from "@sections/admin/dashboard/OverviewChart/OverviewChart
 import InsightsGrid from "@sections/admin/dashboard/InsightsGrid/InsightsGrid.jsx";
 import { FILTERS_STORAGE_KEY } from "@utils/analytics";
 import { initialProperties } from "@pages/admin/PropertyManager.jsx";
-import { initialRequests } from "@pages/admin/LeadsManager.jsx";
+import { initialRequests } from "../../data/admin/leadsSeed.js";
 
 const ACCESS_HISTORY_STORAGE_KEY = "@valdinei:access_history";
 const PROPERTIES_STORAGE_KEY = "@valdinei:properties";
