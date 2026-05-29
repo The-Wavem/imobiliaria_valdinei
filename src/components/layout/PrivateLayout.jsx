@@ -1,13 +1,15 @@
-import { useEffect, useState } from "react";
-import { Navigate, Outlet } from "react-router-dom";
+import { Suspense, useEffect, useState } from "react";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
 import AdminSidebar from "@components/layout/AdminSidebar";
+import Loader from "@components/ui/Loader/Loader.jsx";
 import { auth } from "../../services/firebaseConfig.js";
 import styles from "./PrivateLayout.module.css";
 
 export default function PrivateLayout() {
   const [isChecking, setIsChecking] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -17,6 +19,10 @@ export default function PrivateLayout() {
 
     return unsubscribe;
   }, []);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
 
   if (isChecking) {
     return <div className={styles.authLoader}>Verificando credenciais de segurança...</div>;
@@ -29,7 +35,17 @@ export default function PrivateLayout() {
   return (
     <>
       <AdminSidebar />
-      <Outlet />
+      <div key={location.pathname} className={styles.pageTransition}>
+        <Suspense
+          fallback={
+            <div className={styles.routeLoading}>
+              <Loader size={48} />
+            </div>
+          }
+        >
+          <Outlet />
+        </Suspense>
+      </div>
     </>
   );
 }
