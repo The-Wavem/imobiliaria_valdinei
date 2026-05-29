@@ -3,7 +3,7 @@ import DashboardStats from "@sections/admin/dashboard/DashboardStats/DashboardSt
 import OverviewChart from "@sections/admin/dashboard/OverviewChart/OverviewChart.jsx";
 import InsightsGrid from "@sections/admin/dashboard/InsightsGrid/InsightsGrid.jsx";
 import { FILTERS_STORAGE_KEY } from "@utils/analytics";
-import { initialProperties } from "@pages/admin/PropertyManager.jsx";
+import { initialProperties } from "../../data/admin/propertiesSeed.js";
 import { initialRequests } from "../../data/admin/leadsSeed.js";
 
 const ACCESS_HISTORY_STORAGE_KEY = "@valdinei:access_history";
