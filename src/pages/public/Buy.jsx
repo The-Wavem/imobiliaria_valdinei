@@ -93,7 +93,7 @@ export default function Buy() {
         properties={filteredProperties}
         title="Imóveis para Comprar"
         onPropertyClick={handlePropertyClick}
-        loading={isLoading}
+        isLoading={isLoading}
       />
       <Footer />
     </div>

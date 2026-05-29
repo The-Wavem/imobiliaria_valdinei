@@ -1,18 +1,35 @@
 import { useNavigate } from "react-router-dom";
 import { Search } from "lucide-react";
 import Button from "@components/ui/Button/Button.jsx";
+import Loader from "@components/ui/Loader/Loader.jsx";
 import PropertyCard from "@components/ui/PropertyCard/PropertyCard.jsx";
+import SkeletonCard from "@components/ui/Skeleton/SkeletonCard.jsx";
 import styles from "./PropertyGrid.module.css";
 
-export default function PropertyGrid({ properties, title, onPropertyClick }) {
+export default function PropertyGrid({ properties, title, onPropertyClick, isLoading = false, loading = false }) {
   const navigate = useNavigate();
+  const showLoading = isLoading || loading;
 
-  if (arguments[0]?.loading) {
+  if (showLoading) {
     return (
-      <section className={styles.emptySection}>
-        <div className={styles.emptyCard}>
-          <h3>Carregando imóveis</h3>
-          <p>Aguarde um momento enquanto buscamos os imoveis.</p>
+      <section className={styles.section} aria-label="Carregando imóveis">
+        <div className={styles.container}>
+          <div className={styles.header}>
+            <div>
+              <h2>{title}</h2>
+              <p>Buscando as melhores oportunidades para você.</p>
+            </div>
+
+            <div className={styles.loadingIndicator}>
+              <Loader size={36} />
+            </div>
+          </div>
+
+          <div className={styles.grid}>
+            {Array.from({ length: 6 }).map((_, index) => (
+              <SkeletonCard key={index} />
+            ))}
+          </div>
         </div>
       </section>
     );

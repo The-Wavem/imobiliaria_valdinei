@@ -93,7 +93,7 @@ export default function Rent() {
         properties={filteredProperties}
         title="Imóveis para Alugar"
         onPropertyClick={handlePropertyClick}
-        loading={isLoading}
+        isLoading={isLoading}
       />
       <Footer />
     </div>
