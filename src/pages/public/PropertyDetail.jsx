@@ -151,6 +151,19 @@ export default function PropertyDetail() {
     };
   }, [id]);
 
+  useEffect(() => {
+    if (property?.bairro) {
+      const signature = `${property.id || id}::${location.key || "default"}`;
+
+      if (lastTrackedPropertySignature === signature) {
+        return;
+      }
+
+      lastTrackedPropertySignature = signature;
+      trackBairroView(property.bairro);
+    }
+  }, [property, id, location.key]);
+
   if (isLoading) {
     return (
       <div className={styles.page}>
@@ -175,18 +188,6 @@ export default function PropertyDetail() {
   }
 
   const galleryImages = property.images.length ? property.images : property.image ? [property.image] : [];
-  useEffect(() => {
-    if (property?.bairro) {
-      const signature = `${property.id || id}::${location.key || "default"}`;
-
-      if (lastTrackedPropertySignature === signature) {
-        return;
-      }
-
-      lastTrackedPropertySignature = signature;
-      trackBairroView(property.bairro);
-    }
-  }, [property, id, location.key]);
 
   return (
     <div className={styles.page}>
