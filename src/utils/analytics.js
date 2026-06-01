@@ -1,9 +1,13 @@
+import { doc, increment, setDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "@services/firebaseConfig.js";
+
 const BAIRROS_STORAGE_KEY = "@valdinei:bairros";
 const CONSENT_STORAGE_KEY = "@valdinei:consent_status";
 const ACCESS_HISTORY_STORAGE_KEY = "@valdinei:access_history";
 const VISITOR_PROFILE_STORAGE_KEY = "@valdinei:visitor_profile";
 export const FILTERS_STORAGE_KEY = "@valdinei:filters";
 const ANALYTICS_UPDATED_EVENT = "valdinei:analytics-update";
+const ANALYTICS_BAIRROS_COLLECTION = "analytics_bairros";
 
 function readJsonObject(storageKey) {
   const rawValue = window.localStorage.getItem(storageKey);
@@ -131,6 +135,17 @@ function collectFilterEntries(filtersObj) {
   });
 }
 
+function normalizeBairroDocId(bairro) {
+  return String(bairro || "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 120);
+}
+
 export function trackBairroView(bairro) {
   if (typeof window === "undefined" || !bairro) {
     return;
@@ -146,6 +161,15 @@ export function trackBairroView(bairro) {
 
     stats[normalizedBairro] = (stats[normalizedBairro] || 0) + 1;
     writeJsonObject(BAIRROS_STORAGE_KEY, stats);
+    void setDoc(
+      doc(db, ANALYTICS_BAIRROS_COLLECTION, normalizeBairroDocId(normalizedBairro)),
+      {
+        name: normalizedBairro,
+        count: increment(1),
+        updatedAt: serverTimestamp(),
+      },
+      { merge: true },
+    );
     emitAnalyticsUpdate({ type: "bairros", bairro: normalizedBairro });
   } catch {
     window.localStorage.setItem(BAIRROS_STORAGE_KEY, JSON.stringify({ [String(bairro).trim()]: 1 }));

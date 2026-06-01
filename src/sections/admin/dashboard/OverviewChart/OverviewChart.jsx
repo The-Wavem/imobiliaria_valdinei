@@ -5,7 +5,6 @@ import {
   AreaChart,
   CartesianGrid,
   LabelList,
-  Legend,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -37,12 +36,6 @@ const tooltipContentStyle = {
   color: "var(--color-text-main)",
 };
 
-const tooltipLabelStyle = {
-  color: "var(--color-brand-secondary)",
-  fontWeight: 700,
-  fontFamily: "var(--font-sans)",
-};
-
 const tooltipItemStyle = {
   color: "var(--color-text-muted)",
   fontFamily: "var(--font-sans)",
@@ -53,10 +46,6 @@ const totalLabelStyle = {
   fontFamily: "var(--font-sans)",
   fontSize: 12,
   fontWeight: 700,
-};
-
-function formatPercent(value) {
-  return `${value.toFixed(1).replace(".", ",")}%`;
 }
 
 export default function OverviewChart({ data, period, onPeriodChange, summary = {} }) {
@@ -71,7 +60,7 @@ export default function OverviewChart({ data, period, onPeriodChange, summary = 
             <p className={styles.kicker}>Tráfego</p>
             <h2 className={styles.title}>Acessos Diários</h2>
             <p className={styles.subtitle}>
-              Acompanhe os acessos únicos e recorrentes que aceitaram cookies em {periodLabel.toLowerCase()}.
+              Acompanhe o volume de acessos registrado no período selecionado, em {periodLabel.toLowerCase()}.
             </p>
           </div>
 
@@ -100,13 +89,9 @@ export default function OverviewChart({ data, period, onPeriodChange, summary = 
               <ResponsiveContainer width="100%" height={360}>
                 <AreaChart data={data} margin={{ top: 24, right: 18, left: 0, bottom: 8 }}>
                   <defs>
-                    <linearGradient id="overviewGradientNew" x1="0" y1="0" x2="0" y2="1">
+                    <linearGradient id="overviewGradientAccess" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.5} />
                       <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0.06} />
-                    </linearGradient>
-                    <linearGradient id="overviewGradientRecurring" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="var(--color-brand-secondary)" stopOpacity={0.45} />
-                      <stop offset="95%" stopColor="var(--color-brand-secondary)" stopOpacity={0.08} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
@@ -115,21 +100,18 @@ export default function OverviewChart({ data, period, onPeriodChange, summary = 
                   <Tooltip
                     cursor={{ fill: "rgba(199, 156, 49, 0.06)" }}
                     contentStyle={tooltipContentStyle}
-                    labelStyle={tooltipLabelStyle}
                     itemStyle={tooltipItemStyle}
                   />
-                  <Legend verticalAlign="top" height={28} wrapperStyle={{ fontFamily: "var(--font-sans)" }} />
                   <Area
-                    dataKey="newClients"
-                    name="Novos / únicos"
-                    stackId="traffic"
+                    dataKey="acessos"
+                    name="Acessos"
                     type="monotone"
                     stroke="var(--color-primary)"
-                    fill="url(#overviewGradientNew)"
+                    fill="url(#overviewGradientAccess)"
                   >
                     <LabelList
                       content={({ x, y, width, payload }) => {
-                        const total = payload?.total ?? 0;
+                        const total = payload?.acessos ?? 0;
 
                         return (
                           <text
@@ -144,20 +126,12 @@ export default function OverviewChart({ data, period, onPeriodChange, summary = 
                       }}
                     />
                   </Area>
-                  <Area
-                    dataKey="frequentClients"
-                    name="Recorrentes"
-                    stackId="traffic"
-                    type="monotone"
-                    stroke="var(--color-brand-secondary)"
-                    fill="url(#overviewGradientRecurring)"
-                  />
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
               <div className={styles.emptyState}>
                 <BarChart2 size={44} strokeWidth={1.5} />
-                <p>Nenhum acesso foi registrado ainda para comparar novos e recorrentes.</p>
+                <p>Nenhum acesso foi registrado ainda para exibir o gráfico do período.</p>
               </div>
             )}
           </div>
@@ -180,19 +154,19 @@ export default function OverviewChart({ data, period, onPeriodChange, summary = 
               <div className={styles.summarySplitItem}>
                 <div className={styles.summarySplitRow}>
                   <span className={styles.summarySwatchNew} />
-                  <span>Novos / únicos</span>
+                  <span>Pico do período</span>
                 </div>
-                <strong>{formatPercent(summary.newShare || 0)}</strong>
-                <span>{numberFormatter.format(summary.newClients || 0)} acessos</span>
+                <strong>{numberFormatter.format(summary.peakValue || 0)}</strong>
+                <span>{summary.peakLabel || "Sem dados"}</span>
               </div>
 
               <div className={styles.summarySplitItem}>
                 <div className={styles.summarySplitRow}>
                   <span className={styles.summarySwatchRecurring} />
-                  <span>Recorrentes</span>
+                  <span>Dias analisados</span>
                 </div>
-                <strong>{formatPercent(summary.frequentShare || 0)}</strong>
-                <span>{numberFormatter.format(summary.frequentClients || 0)} acessos</span>
+                <strong>{numberFormatter.format(data.length || 0)}</strong>
+                <span>{periodLabel}</span>
               </div>
             </div>
           </aside>

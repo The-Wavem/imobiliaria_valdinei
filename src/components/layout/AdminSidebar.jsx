@@ -21,7 +21,7 @@ const navigationItems = [
   { label: "Dashboard", path: "/admin/dashboard", icon: LayoutDashboard },
   { label: "Imóveis", path: "/admin/imoveis", icon: Home },
   { label: "Leads", path: "/admin/leads", icon: Users },
-  { label: "Visitas", path: "/admin/visitas", icon: CalendarDays },
+  // { label: "Visitas", path: "/admin/visitas", icon: CalendarDays },
 ];
 
 export default function AdminSidebar() {
@@ -73,10 +73,6 @@ export default function AdminSidebar() {
     setIsLogoutModalOpen(false);
     setIsOpen(false);
     navigate("/");
-  };
-
-  const handleSavePassword = () => {
-    closeConfigModal();
   };
 
   const handleUpdatePassword = async (event) => {
