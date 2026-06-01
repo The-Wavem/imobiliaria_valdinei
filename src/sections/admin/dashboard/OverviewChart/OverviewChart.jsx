@@ -1,3 +1,4 @@
+import React, { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { ArrowUpRight, BarChart2 } from "lucide-react";
 import {
@@ -44,24 +45,118 @@ const tooltipItemStyle = {
 const formatDataBR = (dateStr) => {
   if (!dateStr) return "";
 
-  const [, month, day] = String(dateStr).split("-");
-  return day && month ? `${day}/${month}` : String(dateStr);
+  const parts = String(dateStr).split("-");
+
+  if (parts.length === 2) {
+    const monthIndex = parseInt(parts[1], 10) - 1;
+    const meses = [
+      "Jan",
+      "Fev",
+      "Mar",
+      "Abr",
+      "Mai",
+      "Jun",
+      "Jul",
+      "Ago",
+      "Set",
+      "Out",
+      "Nov",
+      "Dez",
+    ];
+    return meses[monthIndex] || dateStr;
+  }
+
+  if (parts.length === 3) {
+    const [, month, day] = parts;
+    return `${day}/${month}`;
+  }
+
+  return String(dateStr);
 };
 
-export default function OverviewChart({
-  data,
-  period,
-  onPeriodChange,
-  summary = {},
-}) {
-  const periodLabel =
-    periodOptions.find((option) => option.value === period)?.label ??
-    "Últimos 7 dias";
-  const hasData = data.length > 0;
-  const totalNewClients = data.reduce(
-    (total, item) => total + (Number(item.novosClientes) || 0),
+const formatDateToString = (date) => {
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+};
+
+export default function OverviewChart({ data = [], period, onPeriodChange }) {
+
+  const chartData = useMemo(() => {
+    if (period === "year") {
+      const currentYear = new Date().getFullYear();
+      const template = Array.from({ length: 12 }, (_, i) => {
+        return {
+          date: `${currentYear}-${String(i + 1).padStart(2, "0")}`,
+          acessos: 0,
+          novosClientes: 0,
+        };
+      });
+
+      data.forEach((curr) => {
+        if (!curr.date) return;
+        const monthStr = curr.date.substring(0, 7);
+        const target = template.find((t) => t.date === monthStr);
+        if (target) {
+          target.acessos += Number(curr.acessos) || 0;
+          target.novosClientes += Number(curr.novosClientes) || 0;
+        }
+      });
+      return template;
+    }
+
+    const daysCount = period === "7d" ? 7 : 30;
+    const today = new Date();
+
+    const template = Array.from({ length: daysCount }, (_, i) => {
+      const d = new Date(today);
+      d.setDate(today.getDate() - (daysCount - 1 - i));
+      return {
+        date: formatDateToString(d),
+        acessos: 0,
+        novosClientes: 0,
+      };
+    });
+
+    data.forEach((curr) => {
+      if (!curr.date) return;
+      const target = template.find((t) => t.date === curr.date);
+      if (target) {
+        target.acessos += Number(curr.acessos) || 0;
+        target.novosClientes += Number(curr.novosClientes) || 0;
+      }
+    });
+
+    return template;
+  }, [data, period]);
+
+  const hasData = data && data.length > 0;
+  const totalAcessos = chartData.reduce(
+    (acc, curr) => acc + (curr.acessos || 0),
     0,
   );
+  const totalNewClients = chartData.reduce(
+    (acc, curr) => acc + (curr.novosClientes || 0),
+    0,
+  );
+  const timeDivisor = chartData.length || 1;
+  const mediaAcessos = (totalAcessos / timeDivisor)
+    .toFixed(1)
+    .replace(".", ",");
+  const peakItem = hasData
+    ? chartData.reduce(
+        (max, curr) => (curr.acessos > max.acessos ? curr : max),
+        chartData[0],
+      )
+    : null;
+
+  const periodText =
+    {
+      "7d": "nos últimos 7 dias",
+      "30d": "nos últimos 30 dias",
+      year: "neste ano",
+    }[period] || "no período selecionado";
 
   return (
     <section className={styles.section} aria-label="Visão geral de tráfego">
@@ -69,10 +164,11 @@ export default function OverviewChart({
         <div className={styles.header}>
           <div>
             <p className={styles.kicker}>Tráfego</p>
-            <h2 className={styles.title}>Acessos Diários</h2>
+            <h2 className={styles.title}>
+              Acessos {period === "year" ? "Mensais" : "Diários"}
+            </h2>
             <p className={styles.subtitle}>
-              Acompanhe o volume de acessos registrado no período selecionado,
-              em {periodLabel.toLowerCase()}.
+              Acompanhe o volume de acessos registrado {periodText}.
             </p>
           </div>
 
@@ -100,7 +196,7 @@ export default function OverviewChart({
             {hasData ? (
               <ResponsiveContainer width="100%" height={360}>
                 <AreaChart
-                  data={data}
+                  data={chartData}
                   margin={{ top: 24, right: 18, left: 0, bottom: 8 }}
                 >
                   <defs>
@@ -200,12 +296,11 @@ export default function OverviewChart({
             <div className={styles.summaryStatCard}>
               <span className={styles.summaryStatLabel}>Total de acessos</span>
               <strong className={styles.summaryStatValue}>
-                {numberFormatter.format(summary.total || 0)}
+                {numberFormatter.format(totalAcessos)}
               </strong>
               <span className={styles.summaryStatHint}>
-                Média de{" "}
-                {(summary.averagePerDay || 0).toFixed(1).replace(".", ",")}{" "}
-                acessos por dia
+                Média de {mediaAcessos} acessos por{" "}
+                {period === "year" ? "mês" : "dia"}
               </span>
             </div>
 
@@ -216,9 +311,15 @@ export default function OverviewChart({
                   <span>Pico do período</span>
                 </div>
                 <strong>
-                  {numberFormatter.format(summary.peakValue || 0)}
+                  {peakItem && peakItem.acessos > 0
+                    ? numberFormatter.format(peakItem.acessos)
+                    : 0}
                 </strong>
-                <span>{summary.peakLabel || "Sem dados"}</span>
+                <span>
+                  {peakItem && peakItem.acessos > 0
+                    ? formatDataBR(peakItem.date)
+                    : "Sem dados"}
+                </span>
               </div>
 
               <div className={styles.summarySplitItem}>
@@ -226,7 +327,7 @@ export default function OverviewChart({
                   <span className={styles.summarySwatchRecurring} />
                   <span>Total de Aceites</span>
                 </div>
-                <strong>{numberFormatter.format(totalNewClients || 0)}</strong>
+                <strong>{numberFormatter.format(totalNewClients)}</strong>
                 <span>Total de termos de privacidade aceitos</span>
               </div>
             </div>
