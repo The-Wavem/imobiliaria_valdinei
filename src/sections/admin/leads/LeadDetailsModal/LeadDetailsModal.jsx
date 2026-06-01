@@ -3,7 +3,7 @@ import styles from "./LeadDetailsModal.module.css";
 
 export default function LeadDetailsModal({ isOpen, onClose, lead }) {
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Detalhes da Solicitação">
+    <Modal isOpen={isOpen} onClose={onClose} title="Detalhes da Solicitação" variant="admin">
       {lead ? (
         <div className={styles.detailsModal}>
           <div className={styles.detailGrid}>

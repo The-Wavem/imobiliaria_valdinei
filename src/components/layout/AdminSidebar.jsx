@@ -187,6 +187,7 @@ export default function AdminSidebar() {
         isOpen={isLogoutModalOpen}
         onClose={() => setIsLogoutModalOpen(false)}
         title="Sair do Painel"
+        variant="admin"
       >
         <div className={styles.modalContent}>
           <p className={styles.modalPrompt}>O que você deseja fazer?</p>
@@ -207,6 +208,7 @@ export default function AdminSidebar() {
         isOpen={isConfigModalOpen}
         onClose={closeConfigModal}
         title="Configurações"
+        variant="admin"
       >
         <div className={styles.modalContent}>
           {configTab === "menu" ? (

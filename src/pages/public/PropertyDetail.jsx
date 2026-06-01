@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useLocation, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { motion as motionFactory } from "framer-motion";
 import styles from "./PropertyDetail.module.css";
 import { trackBairroView } from "@utils/analytics";
@@ -40,8 +40,6 @@ const sidebarVariants = {
 const MotionMain = motionFactory.main;
 const MotionSection = motionFactory.section;
 const MotionDiv = motionFactory.div;
-
-let lastTrackedPropertySignature = null;
 
 const dummyProperties = [
   {
@@ -122,7 +120,6 @@ const dummyProperties = [
 
 export default function PropertyDetail() {
   const { id } = useParams();
-  const location = useLocation();
   const [isVisitModalOpen, setIsVisitModalOpen] = useState(false);
   const [property, setProperty] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -136,6 +133,10 @@ export default function PropertyDetail() {
 
         if (isMounted) {
           setProperty(item);
+
+          if (item?.bairro) {
+            await trackBairroView(item.bairro);
+          }
         }
       } finally {
         if (isMounted) {
@@ -150,19 +151,6 @@ export default function PropertyDetail() {
       isMounted = false;
     };
   }, [id]);
-
-  useEffect(() => {
-    if (property?.bairro) {
-      const signature = `${property.id || id}::${location.key || "default"}`;
-
-      if (lastTrackedPropertySignature === signature) {
-        return;
-      }
-
-      lastTrackedPropertySignature = signature;
-      trackBairroView(property.bairro);
-    }
-  }, [property, id, location.key]);
 
   if (isLoading) {
     return (

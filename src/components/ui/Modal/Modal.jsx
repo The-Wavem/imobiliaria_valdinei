@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { X } from "lucide-react";
 import styles from "./Modal.module.css";
 
-export default function Modal({ isOpen, onClose, title, children }) {
+export default function Modal({ isOpen, onClose, title, children, variant = "default" }) {
   useEffect(() => {
     if (!isOpen) {
       return undefined;
@@ -21,7 +21,11 @@ export default function Modal({ isOpen, onClose, title, children }) {
   }
 
   return (
-    <div className={styles.overlay} role="presentation" onClick={onClose}>
+    <div
+      className={`${styles.overlay} ${variant === "admin" ? styles.overlayAdmin : ""}`.trim()}
+      role="presentation"
+      onClick={onClose}
+    >
       <div
         className={styles.modal}
         role="dialog"

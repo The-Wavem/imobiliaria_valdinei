@@ -28,6 +28,11 @@
   animation: fadeIn 0.4s ease-out forwards;
 }
 
+.shell {
+  position: relative;
+  min-height: 100vh;
+}
+
 .routeLoading {
   min-height: 60vh;
   display: flex;

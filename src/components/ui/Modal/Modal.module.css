@@ -10,6 +10,11 @@
   backdrop-filter: blur(4px);
 }
 
+.overlayAdmin {
+  position: absolute;
+  inset: 0;
+}
+
 .modal {
   width: min(56rem, 100%);
   max-height: calc(100vh - 2rem);
@@ -64,5 +69,11 @@
   .header,
   .content {
     padding-inline: 1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .overlayAdmin {
+    inset: 0 0 0 var(--admin-sidebar-width, 18.75rem);
   }
 }

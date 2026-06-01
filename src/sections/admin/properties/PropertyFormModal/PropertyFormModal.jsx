@@ -197,6 +197,7 @@ export default function PropertyFormModal({
       isOpen={isOpen}
       onClose={onClose}
       title={mode === "edit" ? "Editar imóvel" : "Adicionar imóvel"}
+      variant="admin"
     >
       <div className={styles.modalContent}>
         <nav className={styles.tabs} aria-label="Navegação das abas do formulário">

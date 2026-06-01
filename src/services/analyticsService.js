@@ -164,7 +164,12 @@ function buildFallbackBairrosFromProperties(snapshot) {
   }, {});
 
   return Object.entries(counts)
-    .map(([bairro, acessos]) => ({ bairro, acessos }))
+    .map(([bairro, acessos]) => ({
+      name: bairro,
+      count: acessos,
+      bairro,
+      acessos,
+    }))
     .sort(sortByCountDesc)
     .slice(0, 5);
 }
@@ -181,13 +186,17 @@ export async function getTopBairros() {
   const bairros = snapshot.docs
     .map((documentSnapshot) => {
       const data = documentSnapshot.data() || {};
+      const name = String(data.name || documentSnapshot.id);
+      const count = Number(data.count || 0) || 0;
 
       return {
-        bairro: String(data.name || documentSnapshot.id),
-        acessos: Number(data.count || 0) || 0,
+        name,
+        count,
+        bairro: name,
+        acessos: count,
       };
     })
-    .filter((item) => item.bairro && item.acessos > 0);
+    .filter((item) => item.name && item.count > 0);
 
   if (bairros.length > 0) {
     return bairros;
