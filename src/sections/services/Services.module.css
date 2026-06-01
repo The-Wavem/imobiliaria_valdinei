@@ -1,6 +1,7 @@
 .hero {
   display: flex;
   flex-direction: column;
+  gap: 2rem;
   background-color: var(--color-secondary);
   width: 100%;
   padding: 24px calc(50% - 590px);
@@ -22,7 +23,7 @@
 .hero p {
   font-size: 1.5rem;
   font-weight: lighter;
-  line-height: 6rem;
+  line-height: 2rem;
   color: white;
 }
 
@@ -150,4 +151,85 @@
 a {
   color: inherit;
   text-decoration: none;
+}
+
+/* Responsividade */
+
+@media (max-width: 1200px) {
+  .hero, .services, .specialist {
+    padding-inline: 2rem;
+  }
+}
+
+@media (max-width: 992px) {
+  .hero {
+    gap: 3rem;
+  }
+
+  .hero h1 {
+    font-size: 3.5rem;
+    line-height: 4rem;
+  }
+
+  .hero p {
+    line-height: 2.5rem;
+  }
+
+  .services {
+    flex-direction: column;
+    gap: 2rem;
+    padding-block: 4rem;
+  }
+
+  .specialist h1 {
+    font-size: 2.5rem;
+  }
+
+  .specialist h2 {
+    margin-bottom: 3rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .hero {
+    gap: 3rem;
+  }
+
+  .hero h1 {
+    font-size: 3rem;
+    line-height: 3rem;
+  }
+
+  .hero p {
+    font-size: 1.1rem;
+    line-height: 1.8rem;
+  }
+
+  .services {
+    padding: 2rem 1rem;
+  }
+
+  .servicesCard {
+    padding: 1.5rem;
+  }
+
+  .specialist h1 {
+    font-size: 2rem;
+    line-height: 2.6rem;
+    text-align: center;
+  }
+
+  .specialist h1 span {
+    display: block;
+  }
+
+  .specialist h2 {
+    font-size: 1.25rem;
+    text-align: center;
+  }
+
+  .specialist button {
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+  }
 }

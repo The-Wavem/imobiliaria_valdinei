@@ -84,7 +84,7 @@ export default function Services() {
           </section>
         </div>
         <div className={styles.specialist}>
-          <h1>Pronto para encontrar seu <span>novo lar</span>?</h1>
+          <h1>Pronto para encontrar seu <span>novo lar?</span></h1>
           <h2>Nossa equipe está preparada para ajudar você em cada passo da sua jornada imobiliária.</h2>
           <button><a href="/contato">Falar com um especialista</a></button>
         </div>
