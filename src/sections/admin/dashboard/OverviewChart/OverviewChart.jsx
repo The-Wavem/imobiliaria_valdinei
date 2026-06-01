@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowUpRight, BarChart2 } from "lucide-react";
+import { ArrowUpRight, BarChart2, BadgeCheck } from "lucide-react";
 import {
   Area,
   AreaChart,
@@ -48,6 +48,13 @@ const totalLabelStyle = {
   fontWeight: 700,
 }
 
+const formatDataBR = (dateStr) => {
+  if (!dateStr) return "";
+
+  const [, month, day] = String(dateStr).split("-");
+  return day && month ? `${day}/${month}` : String(dateStr);
+};
+
 export default function OverviewChart({ data, period, onPeriodChange, summary = {} }) {
   const periodLabel = periodOptions.find((option) => option.value === period)?.label ?? "Últimos 7 dias";
   const hasData = data.length > 0;
@@ -95,12 +102,19 @@ export default function OverviewChart({ data, period, onPeriodChange, summary = 
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={axisTickStyle} />
+                  <XAxis
+                    dataKey="name"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={axisTickStyle}
+                    tickFormatter={formatDataBR}
+                  />
                   <YAxis axisLine={false} tickLine={false} tick={axisTickStyle} />
                   <Tooltip
                     cursor={{ fill: "rgba(199, 156, 49, 0.06)" }}
                     contentStyle={tooltipContentStyle}
                     itemStyle={tooltipItemStyle}
+                    labelFormatter={formatDataBR}
                   />
                   <Area
                     dataKey="acessos"
@@ -162,11 +176,13 @@ export default function OverviewChart({ data, period, onPeriodChange, summary = 
 
               <div className={styles.summarySplitItem}>
                 <div className={styles.summarySplitRow}>
-                  <span className={styles.summarySwatchRecurring} />
-                  <span>Dias analisados</span>
+                  <span className={styles.summaryMetricIcon} aria-hidden="true">
+                    <BadgeCheck size={12} />
+                  </span>
+                  <span>Novos Clientes (Aceites)</span>
                 </div>
-                <strong>{numberFormatter.format(data.length || 0)}</strong>
-                <span>{periodLabel}</span>
+                <strong>{numberFormatter.format(summary.total || 0)}</strong>
+                <span>Total de termos de privacidade aceitos</span>
               </div>
             </div>
           </aside>
