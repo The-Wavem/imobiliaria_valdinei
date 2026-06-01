@@ -3,7 +3,7 @@ import DashboardStats from "@sections/admin/dashboard/DashboardStats/DashboardSt
 import OverviewChart from "@sections/admin/dashboard/OverviewChart/OverviewChart.jsx";
 import InsightsGrid from "@sections/admin/dashboard/InsightsGrid/InsightsGrid.jsx";
 import Loader from "@components/ui/Loader/Loader.jsx";
-import { getAccessHistory, getTopBairros, getTopFilters } from "@services/analyticsService.js";
+import { getDailyAnalytics, getTopBairros, getTopFilters } from "@services/analyticsService.js";
 import { getPropertiesStats } from "@services/propertyService.js";
 import { getLeadsStats } from "@services/leadService.js";
 
@@ -33,7 +33,7 @@ export default function Dashboard() {
       try {
         const [accessHistoryResult, bairrosResult, filtersResult, propertiesStatsResult, leadsStatsResult] =
           await Promise.all([
-            getAccessHistory(),
+            getDailyAnalytics(),
             getTopBairros(),
             getTopFilters(),
             getPropertiesStats(),

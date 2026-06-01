@@ -1,14 +1,14 @@
 import { collection, doc, getDocs, increment, limit, orderBy, query, setDoc } from "firebase/firestore";
 import { db } from "./firebaseConfig.js";
 
-const ANALYTICS_VIEWS_COLLECTION = "analytics_views";
+const ANALYTICS_DAILY_COLLECTION = "analytics_daily";
 const ANALYTICS_FILTERS_COLLECTION = "analytics_filters";
 const ANALYTICS_BAIRROS_COLLECTION = "analytics_bairros";
 const PROPERTY_COLLECTION = "properties";
 
-export async function getAccessHistory() {
+export async function getDailyAnalytics() {
   const snapshot = await getDocs(
-    query(collection(db, ANALYTICS_VIEWS_COLLECTION), orderBy("date", "asc")),
+    query(collection(db, ANALYTICS_DAILY_COLLECTION), orderBy("date", "asc")),
   );
 
   return snapshot.docs
@@ -16,11 +16,12 @@ export async function getAccessHistory() {
       const data = documentSnapshot.data() || {};
 
       return {
-        name: String(data.date || documentSnapshot.id),
-        acessos: Number(data.count || 0) || 0,
+        date: String(data.date || documentSnapshot.id),
+        acessos: Number(data.views || 0) || 0,
+        novosClientes: Number(data.new_consents || 0) || 0,
       };
     })
-    .sort((leftItem, rightItem) => leftItem.name.localeCompare(rightItem.name));
+    .sort((leftItem, rightItem) => leftItem.date.localeCompare(rightItem.date));
 }
 
 export async function getTopFilters() {
@@ -44,6 +45,28 @@ export async function getTopFilters() {
 
 function getTodayIsoDate() {
   return new Date().toISOString().slice(0, 10);
+}
+
+async function updateDailyAnalytics(fieldName) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    const today = getTodayIsoDate();
+    const docRef = doc(db, ANALYTICS_DAILY_COLLECTION, today);
+
+    await setDoc(
+      docRef,
+      {
+        date: today,
+        [fieldName]: increment(1),
+      },
+      { merge: true },
+    );
+  } catch (error) {
+    console.error("Falha ao registrar analytics diário no Firestore:", error);
+  }
 }
 
 function normalizeFilterDocId(filterTag) {
@@ -207,26 +230,12 @@ export async function getTopBairros() {
   return buildFallbackBairrosFromProperties(propertiesSnapshot);
 }
 
-export async function trackPageAccess() {
-  if (typeof window === "undefined") {
-    return;
-  }
+export async function trackPageView() {
+  await updateDailyAnalytics("views");
+}
 
-  try {
-    const today = getTodayIsoDate();
-    const docRef = doc(db, ANALYTICS_VIEWS_COLLECTION, today);
-
-    await setDoc(
-      docRef,
-      {
-        date: today,
-        count: increment(1),
-      },
-      { merge: true },
-    );
-  } catch (error) {
-    console.error("Falha ao registrar acesso no Firestore:", error);
-  }
+export async function trackNewConsent() {
+  await updateDailyAnalytics("new_consents");
 }
 
 export async function trackFilterUsage(filtersObj) {

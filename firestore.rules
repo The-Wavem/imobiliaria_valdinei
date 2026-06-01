@@ -16,6 +16,10 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
+    match /analytics_daily/{dayId} {
+      allow read, write: if true;
+    }
+
     match /analytics_filters/{filterId} {
       allow read, write: if true;
     }
