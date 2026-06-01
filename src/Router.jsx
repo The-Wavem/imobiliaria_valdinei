@@ -19,8 +19,8 @@ export default function Router() {
     <Routes>
       <Route element={<PublicLayout />}>
           <Route index element={<Home />} />
-          <Route path="contato" element={<Contato />} />
-          <Route path="favorito" element={<Favorito />} />
+          <Route path="/contato" element={<Contato />} />
+          <Route path="/favorito" element={<Favorito />} />
           <Route path="/alugar" element={<Rent />} />
           <Route path="/comprar" element={<Buy />} />
           <Route path="/sobre" element={<Sobre />} />
