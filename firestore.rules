@@ -7,6 +7,23 @@ service cloud.firestore {
       allow create, update, delete: if true;
     }
 
+    match /leads/{leadId} {
+      allow read: if true;
+      allow create: if true;
+    }
+
+    match /analytics_views/{viewId} {
+      allow read, write: if true;
+    }
+
+    match /analytics_filters/{filterId} {
+      allow read, write: if true;
+    }
+
+    match /analytics_bairros/{bairroId} {
+      allow read, write: if true;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

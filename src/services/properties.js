@@ -23,6 +23,7 @@ export function mapPropertyDocument(snapshot) {
   const media = data.media || {};
   const content = data.content || {};
   const status = data.status || {};
+  const photos = Array.isArray(media.photos) ? media.photos.filter(Boolean) : [];
 
   return {
     id: snapshot.id,
@@ -40,8 +41,8 @@ export function mapPropertyDocument(snapshot) {
     parking: toNumber(location.parkingSpaces),
     area: toNumber(location.area),
     amenities: Array.isArray(data.features) ? data.features : [],
-    image: media.coverImage || media.photos?.[0] || "",
-    images: Array.isArray(media.photos) ? media.photos : [],
+    image: media.coverImage || photos[0] || "",
+    images: photos,
     summary: content.summary || "",
     description: content.description || "",
     featured: Boolean(status.featured),

@@ -4,6 +4,7 @@ import PropertyFilterBar from "@sections/admin/properties/PropertyFilterBar/Prop
 import PropertyTable from "@sections/admin/properties/PropertyTable/PropertyTable.jsx";
 import PropertyFormModal from "@sections/admin/properties/PropertyFormModal/PropertyFormModal.jsx";
 import { buildPropertyDocument, savePropertyDocument } from "@services/AdminCadastro";
+import { addProperty } from "@services/propertyService.js";
 import { initialProperties } from "../../data/admin/propertiesSeed.js";
 
 const emptyForm = {
@@ -101,15 +102,6 @@ export default function PropertyManager() {
   const [filterStatus, setFilterStatus] = useState("Todos");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
-
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    window.localStorage.setItem(PROPERTIES_STORAGE_KEY, JSON.stringify(properties));
-    window.dispatchEvent(new CustomEvent("valdinei:analytics-update", { detail: { type: "properties" } }));
-  }, [properties]);
 
   const totalProperties = properties.length;
   const ativos = useMemo(() => properties.filter((property) => property.active).length, [properties]);
@@ -256,7 +248,11 @@ export default function PropertyManager() {
         existingProperty,
       });
 
-      if (modalMode === "create" || existingProperty?.firestoreId) {
+      if (modalMode === "create") {
+        const savedId = await addProperty(documentPayload);
+
+        payload.firestoreId = savedId;
+      } else if (existingProperty?.firestoreId) {
         const savedDocument = await savePropertyDocument(payload, {
           propertyId,
           active: existingProperty?.active ?? true,

@@ -6,6 +6,8 @@ import ButtonFavorito from "@components/ui/Button_Favorito/Button_Favorito.jsx";
 import styles from "./PropertyCard.module.css";
 
 export default function PropertyCard({ property, onViewDetails }) {
+  const coverImage = property.image || property.photos?.find(Boolean) || undefined;
+
   return (
     <article className={styles.card}>
       <div className={styles.imageWrap}>
@@ -20,7 +22,7 @@ export default function PropertyCard({ property, onViewDetails }) {
           }}
         >
           <img
-            src={property.image}
+            src={coverImage}
             alt={property.title}
             className={styles.image}
             referrerPolicy="no-referrer"

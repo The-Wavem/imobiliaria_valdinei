@@ -1,7 +1,19 @@
-import { collection, getDocs } from "firebase/firestore";
+import { addDoc, collection, getDocs } from "firebase/firestore";
 import { db } from "./firebaseConfig.js";
 
 const LEADS_COLLECTION = "leads";
+
+export async function addLead(leadData) {
+  const payload = {
+    ...leadData,
+    status: "Novo",
+    createdAt: new Date().toISOString(),
+  };
+
+  const reference = await addDoc(collection(db, LEADS_COLLECTION), payload);
+
+  return reference.id;
+}
 
 export async function getLeadsStats() {
   const snapshot = await getDocs(collection(db, LEADS_COLLECTION));

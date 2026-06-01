@@ -17,6 +17,7 @@ import Button from "@components/ui/Button/Button.jsx";
 import Modal from "@components/ui/Modal/Modal.jsx";
 import Input from "@components/ui/Input/Input.jsx";
 import Select from "@components/ui/Select/Select.jsx";
+import Loader from "@components/ui/Loader/Loader.jsx";
 import styles from "./PropertyFormModal.module.css";
 
 const tabOptions = [
@@ -407,9 +408,9 @@ export default function PropertyFormModal({
 
             <div className={styles.galleryShell}>
               <div className={styles.galleryGrid}>
-                {formData.photos.map((photoUrl, index) => (
+                  {formData.photos.filter(Boolean).map((photoUrl, index) => (
                   <div key={`${photoUrl}-${index}`} className={styles.thumbnailCard}>
-                    <img src={photoUrl} alt={`Mídia ${index + 1} do imóvel`} />
+                      <img src={photoUrl || undefined} alt={`Mídia ${index + 1} do imóvel`} />
 
                     {index === 0 ? <span className={styles.coverBadge}>Capa</span> : null}
 
@@ -452,7 +453,7 @@ export default function PropertyFormModal({
           </Button>
 
           <Button variant="primary" className={styles.modalButton} disabled={isSaving} onClick={handleSave}>
-            <Save size={16} />
+            {isSaving ? <Loader size={20} /> : <Save size={16} />}
             <span>{isSaving ? "Salvando..." : "Salvar Imóvel"}</span>
           </Button>
         </footer>

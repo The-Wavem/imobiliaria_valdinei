@@ -19,6 +19,8 @@ export default function PropertyTable({
   onDelete,
   onToggleStatus,
 }) {
+  const getThumbnail = (property) => property.photos?.find(Boolean) || property.thumbnail || undefined;
+
   return (
     <section className={styles.section} aria-label="Tabela de imóveis cadastrados">
       <div className={styles.card}>
@@ -52,7 +54,7 @@ export default function PropertyTable({
                     <td data-label="Foto">
                       <div className={styles.cellContent}>
                         <div className={styles.thumbnail}>
-                          <img src={property.photos?.[0] || property.thumbnail} alt={property.title} />
+                          <img src={getThumbnail(property)} alt={property.title} />
                         </div>
                       </div>
                     </td>

@@ -9,11 +9,16 @@ import styles from "./PropertyGallery.module.css";
 export default function PropertyGallery({ images = [], title }) {
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
+  const safeImages = images.filter((image) => Boolean(image));
 
   const openGallery = (index) => {
     setActiveIndex(index || 0);
     setIsOpen(true);
   };
+
+  if (safeImages.length === 0) {
+    return null;
+  }
 
   return (
     <div className={styles.gallery}>
@@ -24,10 +29,10 @@ export default function PropertyGallery({ images = [], title }) {
         slidesPerView={1}
         onSlideChange={(sw) => setActiveIndex(sw.activeIndex)}
       >
-        {images.map((src, idx) => (
+        {safeImages.map((src, idx) => (
           <SwiperSlide key={idx}>
             <img
-              src={src}
+              src={src || undefined}
               alt={`${title} - ${idx + 1}`}
               className={styles.image}
               onClick={() => openGallery(idx)}
@@ -45,9 +50,9 @@ export default function PropertyGallery({ images = [], title }) {
 
             <div className={styles.modalSwiperWrap}>
               <Swiper modules={[Navigation]} navigation initialSlide={activeIndex} spaceBetween={20} slidesPerView={1}>
-                {images.map((src, idx) => (
+                {safeImages.map((src, idx) => (
                   <SwiperSlide key={idx}>
-                    <img src={src} alt={`${title} - ${idx + 1}`} className={styles.modalImage} />
+                    <img src={src || undefined} alt={`${title} - ${idx + 1}`} className={styles.modalImage} />
                   </SwiperSlide>
                 ))}
               </Swiper>
