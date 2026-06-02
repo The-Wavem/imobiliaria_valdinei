@@ -4,7 +4,7 @@ import Footer from "@components/layout/Footer.jsx";
 import FilterBar from "@components/ui/FilterBar/FilterBar.jsx";
 import CategoryHero from "@sections/listing/CategoryHero.jsx";
 import PropertyGrid from "@sections/listing/PropertyGrid.jsx";
-import { getPublicProperties } from "@/services/propertyService";
+import { getPublicProperties } from "@services/propertyService.js";
 
 export default function Rent() {
   const [filters, setFilters] = useState({});
@@ -18,24 +18,15 @@ export default function Rent() {
 
   useEffect(() => {
     let isMounted = true;
-
     const loadProperties = async () => {
       try {
-        // Ajustado para buscar "Alugar" como salvo no banco
         const items = await getPublicProperties("Alugar");
-
-        if (isMounted) {
-          setProperties(items);
-        }
+        if (isMounted) setProperties(items);
       } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
+        if (isMounted) setIsLoading(false);
       }
     };
-
     loadProperties();
-
     return () => {
       isMounted = false;
     };
@@ -43,7 +34,10 @@ export default function Rent() {
 
   const filteredProperties = useMemo(() => {
     return properties.filter((property) => {
-      const location = (filters.location || "").trim().toLowerCase();
+      const loc = property.location || {};
+      const pricing = property.pricing || {};
+      const feat = property.features || [];
+      const searchLocation = (filters.location || "").trim().toLowerCase();
       const propertyType = filters.propertyType || "";
       const priceMin =
         Number((filters.priceMin || "").toString().replace(/[^0-9]/g, "")) || 0;
@@ -59,34 +53,35 @@ export default function Rent() {
       const amenities = filters.amenities || [];
       const areaMin = Number(filters.areaMin || 0);
       const areaMax = Number(filters.areaMax || Number.POSITIVE_INFINITY);
-      const propAddress = (property.address || "").toLowerCase();
-      const propNeighborhood = (property.neighborhood || "").toLowerCase();
+      const propAddress = (loc.address || "").toLowerCase();
+      const propNeighborhood = (loc.neighborhood || "").toLowerCase();
       const matchesLocation =
-        !location ||
-        propAddress.includes(location) ||
-        propNeighborhood.includes(location);
-      const matchesType = !propertyType || property.type === propertyType;
-      const propPrice = Number(property.price) || 0;
-      const matchesPrice = propPrice >= priceMin && propPrice <= priceMax;
-      const propBeds = Number(property.bedrooms) || 0;
+        !searchLocation ||
+        propAddress.includes(searchLocation) ||
+        propNeighborhood.includes(searchLocation);
+      const matchesType =
+        !propertyType ||
+        (property.type &&
+          property.type.toLowerCase() === propertyType.toLowerCase());
+      const rentPrice = Number(pricing.price) || 0;
+      const matchesPrice = rentPrice >= priceMin && rentPrice <= priceMax;
+      const propBeds = Number(loc.bedrooms) || 0;
       const matchesBedrooms =
         bedrooms === "Qualquer" ||
         propBeds >= Number(bedrooms.replace("+", ""));
-      const propBaths = Number(property.bathrooms) || 0;
+      const propBaths = Number(loc.bathrooms) || 0;
       const matchesBathrooms =
         bathrooms === "Qualquer" ||
         propBaths >= Number(bathrooms.replace("+", ""));
-      const propParking = Number(property.parkingSpaces) || 0;
+      const propParking = Number(loc.parkingSpaces) || 0;
       const matchesParking =
         parking === "Qualquer" ||
         propParking >= Number(parking.replace("+", ""));
-      const propArea = Number(property.area) || 0;
+      const propArea = Number(loc.area) || 0;
       const matchesArea = propArea >= areaMin && propArea <= areaMax;
       const matchesAmenities =
         amenities.length === 0 ||
-        amenities.every((amenity) =>
-          (property.features || []).includes(amenity),
-        );
+        amenities.every((amenity) => feat.includes(amenity));
 
       return (
         matchesLocation &&
@@ -102,7 +97,7 @@ export default function Rent() {
   }, [properties, filters]);
 
   return (
-    <div>
+    <main className="pageTransition">
       <CategoryHero category="Alugar" />
       <FilterBar onSearch={setFilters} onAdvancedFiltersApply={setFilters} />
       <PropertyGrid
@@ -112,6 +107,6 @@ export default function Rent() {
         isLoading={isLoading}
       />
       <Footer />
-    </div>
+    </main>
   );
 }

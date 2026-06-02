@@ -33,7 +33,6 @@ export const getPublicProperties = async (categoryParam) => {
   try {
     const q = query(
       collection(db, "properties"),
-      where("status", "==", "Ativo"),
       where("category", "==", categoryParam)
     );
 

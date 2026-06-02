@@ -65,12 +65,13 @@ export default function PropertyFormModal({
   const [newFeature, setNewFeature] = useState("");
   const [newPhotoUrl, setNewPhotoUrl] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
   useEffect(() => {
     if (!isOpen) {
       return;
     }
-
+    setShowCancelConfirm(false);
     setActiveTab("basic");
     setIsAddingType(false);
     setNewType("");
@@ -80,7 +81,9 @@ export default function PropertyFormModal({
 
     if (formData?.type) {
       setAvailableTypes((currentValue) =>
-        currentValue.includes(formData.type) ? currentValue : [...currentValue, formData.type],
+        currentValue.includes(formData.type)
+          ? currentValue
+          : [...currentValue, formData.type],
       );
     }
 
@@ -124,13 +127,16 @@ export default function PropertyFormModal({
     setFormData((currentValue) => ({
       ...currentValue,
       photos: [...currentValue.photos, value],
-      imageUrl: currentValue.photos.length === 0 ? value : currentValue.imageUrl,
+      imageUrl:
+        currentValue.photos.length === 0 ? value : currentValue.imageUrl,
     }));
   };
 
   const removePhoto = (photoIndex) => {
     setFormData((currentValue) => {
-      const nextPhotos = currentValue.photos.filter((_, index) => index !== photoIndex);
+      const nextPhotos = currentValue.photos.filter(
+        (_, index) => index !== photoIndex,
+      );
 
       return {
         ...currentValue,
@@ -170,16 +176,45 @@ export default function PropertyFormModal({
   };
 
   const deleteType = (typeToRemove) => {
-    setAvailableTypes((currentValue) => currentValue.filter((item) => item !== typeToRemove));
+    setAvailableTypes((currentValue) =>
+      currentValue.filter((item) => item !== typeToRemove),
+    );
     updateField("type", formData.type === typeToRemove ? "" : formData.type);
   };
 
   const deleteFeature = (featureToRemove) => {
-    setAvailableFeatures((currentValue) => currentValue.filter((item) => item !== featureToRemove));
+    setAvailableFeatures((currentValue) =>
+      currentValue.filter((item) => item !== featureToRemove),
+    );
     setFormData((currentValue) => ({
       ...currentValue,
-      features: currentValue.features.filter((item) => item !== featureToRemove),
+      features: currentValue.features.filter(
+        (item) => item !== featureToRemove,
+      ),
     }));
+  };
+
+  const isFormDirty = useMemo(() => {
+    return (
+      formData.title.trim() !== "" ||
+      formData.price !== "" ||
+      formData.address.trim() !== "" ||
+      formData.photos.length > 0 ||
+      formData.features.length > 0
+    );
+  }, [formData]);
+
+  const handleCancelClick = () => {
+    if (isFormDirty) {
+      setShowCancelConfirm(true);
+    } else {
+      onClose();
+    }
+  };
+
+  const handleConfirmCancel = () => {
+    setShowCancelConfirm(false);
+    onClose();
   };
 
   const handleSave = async () => {
@@ -200,7 +235,10 @@ export default function PropertyFormModal({
       variant="admin"
     >
       <div className={styles.modalContent}>
-        <nav className={styles.tabs} aria-label="Navegação das abas do formulário">
+        <nav
+          className={styles.tabs}
+          aria-label="Navegação das abas do formulário"
+        >
           {tabOptions.map((tab) => (
             <button
               key={tab.id}
@@ -216,11 +254,39 @@ export default function PropertyFormModal({
         {activeTab === "basic" ? (
           <section className={styles.tabPanel}>
             <div className={styles.formGrid}>
-              <Input label="Título" placeholder="Ex: Casa térrea com piscina" value={formData.title} onChange={(event) => updateField("title", event.target.value)} />
-              <Input label="Código" placeholder="Ex: IV-1204" value={formData.code} onChange={(event) => updateField("code", event.target.value)} />
-              <Input label="Preço" type="number" placeholder="0" value={formData.price} onChange={(event) => updateField("price", event.target.value)} />
-              <Input label="Condomínio" type="number" placeholder="0" value={formData.condo} onChange={(event) => updateField("condo", event.target.value)} />
-              <Input label="IPTU" type="number" placeholder="0" value={formData.iptu} onChange={(event) => updateField("iptu", event.target.value)} />
+              <Input
+                label="Título"
+                placeholder="Ex: Casa térrea com piscina"
+                value={formData.title}
+                onChange={(event) => updateField("title", event.target.value)}
+              />
+              <Input
+                label="Código"
+                placeholder="Ex: IV-1204"
+                value={formData.code}
+                onChange={(event) => updateField("code", event.target.value)}
+              />
+              <Input
+                label="Preço"
+                type="number"
+                placeholder="0"
+                value={formData.price}
+                onChange={(event) => updateField("price", event.target.value)}
+              />
+              <Input
+                label="Condomínio"
+                type="number"
+                placeholder="0"
+                value={formData.condo}
+                onChange={(event) => updateField("condo", event.target.value)}
+              />
+              <Input
+                label="IPTU"
+                type="number"
+                placeholder="0"
+                value={formData.iptu}
+                onChange={(event) => updateField("iptu", event.target.value)}
+              />
 
               <div className={styles.dynamicSelectRow}>
                 <div className={styles.dynamicSelectGroup}>
@@ -260,10 +326,25 @@ export default function PropertyFormModal({
                           className={styles.inlineInput}
                         />
                         <div className={styles.inlineActionGroup}>
-                          <Button type="button" variant="outline" className={styles.inlineIconButton} onClick={confirmNewType} aria-label="Confirmar novo tipo">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className={styles.inlineIconButton}
+                            onClick={confirmNewType}
+                            aria-label="Confirmar novo tipo"
+                          >
                             <Check size={16} />
                           </Button>
-                          <Button type="button" variant="outline" className={styles.inlineIconButton} onClick={() => { setIsAddingType(false); setNewType(""); }} aria-label="Cancelar novo tipo">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className={styles.inlineIconButton}
+                            onClick={() => {
+                              setIsAddingType(false);
+                              setNewType("");
+                            }}
+                            aria-label="Cancelar novo tipo"
+                          >
                             <X size={16} />
                           </Button>
                         </div>
@@ -271,8 +352,19 @@ export default function PropertyFormModal({
                     </div>
                   ) : (
                     <div className={styles.selectRow}>
-                      <Select label="Tipo" options={typeOptions} value={formData.type} onChange={(value) => updateField("type", value)} />
-                      <Button type="button" variant="outline" className={styles.inlineAddButton} onClick={() => setIsAddingType(true)} aria-label="Adicionar novo tipo">
+                      <Select
+                        label="Tipo"
+                        options={typeOptions}
+                        value={formData.type}
+                        onChange={(value) => updateField("type", value)}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className={styles.inlineAddButton}
+                        onClick={() => setIsAddingType(true)}
+                        aria-label="Adicionar novo tipo"
+                      >
                         <Plus size={16} />
                       </Button>
                     </div>
@@ -286,12 +378,59 @@ export default function PropertyFormModal({
         {activeTab === "location" ? (
           <section className={styles.tabPanel}>
             <div className={styles.formGrid}>
-              <Input label="Endereço" icon={MapPin} placeholder="Rua, avenida, número" value={formData.address} onChange={(event) => updateField("address", event.target.value)} />
-              <Input label="Bairro" placeholder="Nome do bairro" value={formData.neighborhood} onChange={(event) => updateField("neighborhood", event.target.value)} />
-              <Input label="Área (m²)" icon={Ruler} type="number" placeholder="0" value={formData.area} onChange={(event) => updateField("area", event.target.value)} />
-              <Input label="Quartos" icon={BedDouble} type="number" placeholder="0" value={formData.bedrooms} onChange={(event) => updateField("bedrooms", event.target.value)} />
-              <Input label="Banheiros" icon={Bath} type="number" placeholder="0" value={formData.bathrooms} onChange={(event) => updateField("bathrooms", event.target.value)} />
-              <Input label="Vagas" icon={CarFront} type="number" placeholder="0" value={formData.parkingSpaces} onChange={(event) => updateField("parkingSpaces", event.target.value)} />
+              <Input
+                label="Endereço"
+                icon={MapPin}
+                placeholder="Rua, avenida, número"
+                value={formData.address}
+                onChange={(event) => updateField("address", event.target.value)}
+              />
+              <Input
+                label="Bairro"
+                placeholder="Nome do bairro"
+                value={formData.neighborhood}
+                onChange={(event) =>
+                  updateField("neighborhood", event.target.value)
+                }
+              />
+              <Input
+                label="Área (m²)"
+                icon={Ruler}
+                type="number"
+                placeholder="0"
+                value={formData.area}
+                onChange={(event) => updateField("area", event.target.value)}
+              />
+              <Input
+                label="Quartos"
+                icon={BedDouble}
+                type="number"
+                placeholder="0"
+                value={formData.bedrooms}
+                onChange={(event) =>
+                  updateField("bedrooms", event.target.value)
+                }
+              />
+              <Input
+                label="Banheiros"
+                icon={Bath}
+                type="number"
+                placeholder="0"
+                value={formData.bathrooms}
+                onChange={(event) =>
+                  updateField("bathrooms", event.target.value)
+                }
+              />
+              <Input
+                label="Vagas"
+                icon={CarFront}
+                type="number"
+                placeholder="0"
+                value={formData.parkingSpaces}
+                onChange={(event) =>
+                  updateField("parkingSpaces", event.target.value)
+                }
+              />
             </div>
           </section>
         ) : null}
@@ -301,10 +440,13 @@ export default function PropertyFormModal({
             <div className={styles.featureIntro}>
               <div>
                 <p className={styles.featureKicker}>Comodidades</p>
-                <h3 className={styles.featureTitle}>Selecione as características do imóvel</h3>
+                <h3 className={styles.featureTitle}>
+                  Selecione as características do imóvel
+                </h3>
               </div>
               <p className={styles.featureDescription}>
-                Organize os diferenciais do anúncio e deixe a vitrine mais clara.
+                Organize os diferenciais do anúncio e deixe a vitrine mais
+                clara.
               </p>
             </div>
 
@@ -328,7 +470,9 @@ export default function PropertyFormModal({
                   }
 
                   setAvailableFeatures((currentValue) =>
-                    currentValue.includes(value) ? currentValue : [...currentValue, value],
+                    currentValue.includes(value)
+                      ? currentValue
+                      : [...currentValue, value],
                   );
 
                   setFormData((currentValue) => ({
@@ -349,7 +493,11 @@ export default function PropertyFormModal({
               {availableFeatures.map((featureItem) => (
                 <div key={featureItem} className={styles.featureCard}>
                   <label className={styles.featureCheckLabel}>
-                    <input type="checkbox" checked={formData.features.includes(featureItem)} onChange={() => toggleFeature(featureItem)} />
+                    <input
+                      type="checkbox"
+                      checked={formData.features.includes(featureItem)}
+                      onChange={() => toggleFeature(featureItem)}
+                    />
                     <span>{featureItem}</span>
                   </label>
 
@@ -375,7 +523,10 @@ export default function PropertyFormModal({
               </div>
               <div className={styles.mediaDropzoneText}>
                 <strong>Adicione fotos ou vídeos do imóvel</strong>
-                <span>Você pode inserir URLs ou simular a seleção de arquivos com o botão abaixo.</span>
+                <span>
+                  Você pode inserir URLs ou simular a seleção de arquivos com o
+                  botão abaixo.
+                </span>
               </div>
 
               <div className={styles.mediaDropzoneActions}>
@@ -409,11 +560,19 @@ export default function PropertyFormModal({
 
             <div className={styles.galleryShell}>
               <div className={styles.galleryGrid}>
-                  {formData.photos.filter(Boolean).map((photoUrl, index) => (
-                  <div key={`${photoUrl}-${index}`} className={styles.thumbnailCard}>
-                      <img src={photoUrl || undefined} alt={`Mídia ${index + 1} do imóvel`} />
+                {formData.photos.filter(Boolean).map((photoUrl, index) => (
+                  <div
+                    key={`${photoUrl}-${index}`}
+                    className={styles.thumbnailCard}
+                  >
+                    <img
+                      src={photoUrl || undefined}
+                      alt={`Mídia ${index + 1} do imóvel`}
+                    />
 
-                    {index === 0 ? <span className={styles.coverBadge}>Capa</span> : null}
+                    {index === 0 ? (
+                      <span className={styles.coverBadge}>Capa</span>
+                    ) : null}
 
                     <button
                       type="button"
@@ -433,7 +592,12 @@ export default function PropertyFormModal({
         {activeTab === "description" ? (
           <section className={styles.tabPanel}>
             <div className={styles.descriptionGroup}>
-              <Input label="Resumo Rápido" placeholder="Ex: Lindo sobrado triplex com sol da manhã" value={formData.summary} onChange={(event) => updateField("summary", event.target.value)} />
+              <Input
+                label="Resumo Rápido"
+                placeholder="Ex: Lindo sobrado triplex com sol da manhã"
+                value={formData.summary}
+                onChange={(event) => updateField("summary", event.target.value)}
+              />
 
               <label className={styles.textareaField}>
                 <span className={styles.textareaLabel}>Descrição Completa</span>
@@ -441,7 +605,9 @@ export default function PropertyFormModal({
                   className={styles.textareaControl}
                   placeholder="Descreva o imóvel com detalhes, diferenciais, posicionamento solar, acabamentos e contexto de uso."
                   value={formData.description}
-                  onChange={(event) => updateField("description", event.target.value)}
+                  onChange={(event) =>
+                    updateField("description", event.target.value)
+                  }
                 />
               </label>
             </div>
@@ -449,14 +615,48 @@ export default function PropertyFormModal({
         ) : null}
 
         <footer className={styles.modalFooter}>
-          <Button variant="outline" className={styles.modalButton} onClick={onClose}>
-            Cancelar
-          </Button>
-
-          <Button variant="primary" className={styles.modalButton} disabled={isSaving} onClick={handleSave}>
-            {isSaving ? <Loader size={20} /> : <Save size={16} />}
-            <span>{isSaving ? "Salvando..." : "Salvar Imóvel"}</span>
-          </Button>
+          {showCancelConfirm ? (
+            <div className={styles.cancelConfirm}>
+              <p className={styles.cancelConfirmText}>
+                Descartar as alterações feitas?
+              </p>
+              <div className={styles.cancelConfirmActions}>
+                <Button
+                  variant="outline"
+                  className={styles.modalButton}
+                  onClick={() => setShowCancelConfirm(false)}
+                >
+                  Continuar editando
+                </Button>
+                <Button
+                  variant="secondary"
+                  className={styles.modalButton}
+                  onClick={handleConfirmCancel}
+                >
+                  Sim, descartar
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <Button
+                variant="outline"
+                className={styles.modalButton}
+                onClick={handleCancelClick}
+              >
+                Cancelar
+              </Button>
+              <Button
+                variant="primary"
+                className={styles.modalButton}
+                disabled={isSaving}
+                onClick={handleSave}
+              >
+                {isSaving ? <Loader size={20} /> : <Save size={16} />}
+                <span>{isSaving ? "Salvando..." : "Salvar Imóvel"}</span>
+              </Button>
+            </>
+          )}
         </footer>
       </div>
     </Modal>
