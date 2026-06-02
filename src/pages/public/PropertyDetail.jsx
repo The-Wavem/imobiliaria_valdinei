@@ -3,7 +3,8 @@ import { useParams } from "react-router-dom";
 import { motion as motionFactory } from "framer-motion";
 import styles from "./PropertyDetail.module.css";
 import { trackBairroView } from "@utils/analytics";
-
+import { incrementPropertyViews } from "@/services/propertyService";
+  
 import Breadcrumb from "@components/ui/Breadcrumb/Breadcrumb.jsx";
 import PropertyGallery from "@sections/property-detail/PropertyGallery";
 import PropertyHeader from "@sections/property-detail/PropertyHeader";
@@ -64,6 +65,7 @@ export default function PropertyDetail() {
           if (item?.bairro) {
             await trackBairroView(item.bairro);
           }
+          await incrementPropertyViews(item.id);
         }
       } finally {
         if (isMounted) {

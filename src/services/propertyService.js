@@ -1,4 +1,4 @@
-import { addDoc, collection, getDocs } from "firebase/firestore";
+import { addDoc, collection, doc, getDocs, increment, setDoc } from "firebase/firestore";
 import { db } from "./firebaseConfig.js";
 import { mapPropertyDocument } from "./properties.js";
 
@@ -42,3 +42,14 @@ export async function getPublicProperties(categoryParam) {
     return [];
   }
 }
+
+export const incrementPropertyViews = async (propertyId) => {
+  if (!propertyId) return;
+  
+  try {
+    const propertyRef = doc(db, "properties", propertyId);
+    await setDoc(propertyRef, { views: increment(1) }, { merge: true });
+  } catch (error) {
+    console.error(`Erro ao registrar view para o imóvel ${propertyId}:`, error);
+  }
+};

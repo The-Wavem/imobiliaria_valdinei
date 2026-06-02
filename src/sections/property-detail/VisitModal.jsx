@@ -60,31 +60,12 @@ export default function VisitModal({ isOpen, onClose, property }) {
         propertyId: property?.id || "Sem ID",
         propertyTitle: propertyTitle,
         propertyCode: property?.code || "Sem código",
-        source: "Modal de Visita do Site",
+        source: "Agendamento de Visita",
         visitDate: form.date,
         visitPeriod: form.period,
       });
 
-      const numeroValdinei = import.meta.env.VALDINEI_PHONE;
-
-      const textoWhatsApp =
-        `*Nova Solicitação de Visita!* 🏠\n\n` +
-        `*Cliente:* ${form.name}\n` +
-        `*Imóvel:* ${propertyTitle} (Cód: ${property?.code || "S/N"})\n` +
-        `*Data sugerida:* ${form.date}\n` +
-        `*Período:* ${form.period}\n\n` +
-        `Gostaria de confirmar este agendamento!`;
-
-      const urlEncodedText = encodeURIComponent(textoWhatsApp);
-
       setStatus("success");
-
-      setTimeout(() => {
-        window.open(
-          `https://wa.me/${numeroValdinei}?text=${urlEncodedText}`,
-          "_blank",
-        );
-      }, 800);
     } catch (error) {
       console.error("Erro ao enviar Lead da Visita:", error);
       setStatus("error");
