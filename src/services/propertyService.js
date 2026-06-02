@@ -1,4 +1,4 @@
-import { addDoc, collection, getDocs } from "firebase/firestore";
+import { addDoc, collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "./firebaseConfig.js";
 
 const PROPERTY_COLLECTION = "properties";
@@ -28,3 +28,19 @@ export async function getPropertiesStats() {
     inativos: total - ativos,
   };
 }
+
+export const getPublicProperties = async (categoryParam) => {
+  try {
+    const q = query(
+      collection(db, "properties"),
+      where("status", "==", "Ativo"),
+      where("category", "==", categoryParam)
+    );
+
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+  } catch (error) {
+    console.error("Erro ao buscar imóveis públicos:", error);
+    return [];
+  }
+};
