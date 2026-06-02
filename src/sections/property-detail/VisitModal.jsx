@@ -40,19 +40,18 @@ export default function VisitModal({ isOpen, onClose, property }) {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault(); // Corrigido de 'event' para 'e'
+    e.preventDefault();
 
     if (status === "submitting") return;
     setStatus("submitting");
 
     try {
-      // Pega o título seguro do imóvel
       const propertyTitle = property?.title || property?.content?.summary || "Imóvel selecionado";
       
-      // Cria a mensagem automática com a data e período escolhidos
+      // 1. Mensagem para o painel administrativo (Firebase)
       const visitMessage = `Olá, Valdinei! Gostaria de agendar uma visita para o imóvel "${propertyTitle}" no dia ${form.date} no período da ${form.period}.`;
 
-      // Envia para o Firebase
+      // 2. Salva no Firebase primeiro (Garante que o dado não se perca)
       await addLead({
         name: form.name,
         phone: form.phone,
@@ -66,7 +65,27 @@ export default function VisitModal({ isOpen, onClose, property }) {
         visitPeriod: form.period
       });
 
+      // 3. Formata a mensagem perfeita para o WhatsApp do Valdinei
+      const numeroValdinei = "5541999999999"; // Coloque o número real dele aqui (DDI + DDD + Numero)
+      
+      const textoWhatsApp = `*Nova Solicitação de Visita!* 🏠\n\n` +
+                            `*Cliente:* ${form.name}\n` +
+                            `*Imóvel:* ${propertyTitle} (Cód: ${property?.code || 'S/N'})\n` +
+                            `*Data sugerida:* ${form.date}\n` +
+                            `*Período:* ${form.period}\n\n` +
+                            `Gostaria de confirmar este agendamento!`;
+
+      // Converte o texto para o formato de URL (troca espaços por %20, etc)
+      const urlEncodedText = encodeURIComponent(textoWhatsApp);
+
+      // 4. Mostra o sucesso na tela para o cliente saber que deu certo
       setStatus("success");
+
+      // 5. O Pulo do Gato: Abre o WhatsApp do cliente em uma NOVA ABA após meio segundo
+      setTimeout(() => {
+        window.open(`https://wa.me/${numeroValdinei}?text=${urlEncodedText}`, '_blank');
+      }, 800);
+
     } catch (error) {
       console.error("Erro ao enviar Lead da Visita:", error);
       setStatus("error");
