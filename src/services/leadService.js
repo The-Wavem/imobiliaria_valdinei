@@ -3,20 +3,44 @@ import { db } from "./firebaseConfig.js";
 
 const LEADS_COLLECTION = "leads";
 
-export const addLead = async (leadData) => {
-  try {
-    const docRef = await addDoc(collection(db, "leads"), {
-      ...leadData,
-      status: "Novo",
-      createdAt: new Date().toISOString(),
-      read: false 
-    });
-    return docRef.id;
-  } catch (error) {
-    console.error("Erro ao salvar solicitação de contato:", error);
-    throw error;
-  }
-};
+export async function addLead(leadData) {
+  const payload = {
+    ...leadData,
+    status: "Novo",
+    createdAt: new Date().toISOString(),
+  };
+
+  const reference = await addDoc(collection(db, LEADS_COLLECTION), payload);
+  return reference.id;
+}
+
+export async function addWhatsAppLead({ name, phone, propertyId, propertyTitle, propertyCode }) {
+  const payload = {
+    requestType: "Contato",
+    origem: "WhatsApp Direto",
+    status: "Novo",
+    client: {
+      name: name.trim(),
+      phone: phone.trim(),
+      email: "",
+      property: propertyTitle || "",
+    },
+    propertyId: propertyId || "",
+    propertyCode: propertyCode || "",
+    date: new Date().toLocaleString("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
+    message: `Cliente solicitou contato via WhatsApp sobre o imóvel ${propertyTitle} (${propertyCode}).`,
+    createdAt: new Date().toISOString(),
+  };
+
+  const reference = await addDoc(collection(db, LEADS_COLLECTION), payload);
+  return reference.id;
+}
 
 export async function getLeadsStats() {
   const snapshot = await getDocs(collection(db, LEADS_COLLECTION));
@@ -28,13 +52,8 @@ export async function getLeadsStats() {
 
       accumulator.total += 1;
 
-      if (status === "Novo") {
-        accumulator.novos += 1;
-      }
-
-      if (status === "Em Atendimento") {
-        accumulator.emAtendimento += 1;
-      }
+      if (status === "Novo") accumulator.novos += 1;
+      if (status === "Em Atendimento") accumulator.emAtendimento += 1;
 
       return accumulator;
     },

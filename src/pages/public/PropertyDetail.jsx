@@ -154,6 +154,7 @@ export default function PropertyDetail() {
               condo={property.condo}
               iptu={property.iptu}
               propertyTitle={property.title}
+              propertyId={property.id}
               onScheduleVisit={() => setIsVisitModalOpen(true)}
             />
           </MotionDiv>

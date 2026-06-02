@@ -22,7 +22,6 @@ const periodOptions = [
   { value: "noite", label: "Noite" },
 ];
 
-// ⚠️ ATENÇÃO: Mudei a prop 'propertyName' para 'property' (o objeto inteiro)
 export default function VisitModal({ isOpen, onClose, property }) {
   const [form, setForm] = useState(initialFormState);
   const [status, setStatus] = useState("idle"); // 'idle' | 'submitting' | 'success' | 'error'
@@ -35,7 +34,9 @@ export default function VisitModal({ isOpen, onClose, property }) {
   }, [isOpen]);
 
   const updateField = (field) => (eventOrValue) => {
-    const value = eventOrValue?.target ? eventOrValue.target.value : eventOrValue;
+    const value = eventOrValue?.target
+      ? eventOrValue.target.value
+      : eventOrValue;
     setForm((current) => ({ ...current, [field]: value }));
   };
 
@@ -46,46 +47,44 @@ export default function VisitModal({ isOpen, onClose, property }) {
     setStatus("submitting");
 
     try {
-      const propertyTitle = property?.title || property?.content?.summary || "Imóvel selecionado";
-      
-      // 1. Mensagem para o painel administrativo (Firebase)
+      const propertyTitle =
+        property?.title || property?.content?.summary || "Imóvel selecionado";
+
       const visitMessage = `Olá, Valdinei! Gostaria de agendar uma visita para o imóvel "${propertyTitle}" no dia ${form.date} no período da ${form.period}.`;
 
-      // 2. Salva no Firebase primeiro (Garante que o dado não se perca)
       await addLead({
         name: form.name,
         phone: form.phone,
         email: form.email,
         message: visitMessage,
-        propertyId: property?.id || 'Sem ID',
+        propertyId: property?.id || "Sem ID",
         propertyTitle: propertyTitle,
-        propertyCode: property?.code || 'Sem código',
+        propertyCode: property?.code || "Sem código",
         source: "Modal de Visita do Site",
         visitDate: form.date,
-        visitPeriod: form.period
+        visitPeriod: form.period,
       });
 
-      // 3. Formata a mensagem perfeita para o WhatsApp do Valdinei
-      const numeroValdinei = "5541999999999"; // Coloque o número real dele aqui (DDI + DDD + Numero)
-      
-      const textoWhatsApp = `*Nova Solicitação de Visita!* 🏠\n\n` +
-                            `*Cliente:* ${form.name}\n` +
-                            `*Imóvel:* ${propertyTitle} (Cód: ${property?.code || 'S/N'})\n` +
-                            `*Data sugerida:* ${form.date}\n` +
-                            `*Período:* ${form.period}\n\n` +
-                            `Gostaria de confirmar este agendamento!`;
+      const numeroValdinei = import.meta.env.VALDINEI_PHONE;
 
-      // Converte o texto para o formato de URL (troca espaços por %20, etc)
+      const textoWhatsApp =
+        `*Nova Solicitação de Visita!* 🏠\n\n` +
+        `*Cliente:* ${form.name}\n` +
+        `*Imóvel:* ${propertyTitle} (Cód: ${property?.code || "S/N"})\n` +
+        `*Data sugerida:* ${form.date}\n` +
+        `*Período:* ${form.period}\n\n` +
+        `Gostaria de confirmar este agendamento!`;
+
       const urlEncodedText = encodeURIComponent(textoWhatsApp);
 
-      // 4. Mostra o sucesso na tela para o cliente saber que deu certo
       setStatus("success");
 
-      // 5. O Pulo do Gato: Abre o WhatsApp do cliente em uma NOVA ABA após meio segundo
       setTimeout(() => {
-        window.open(`https://wa.me/${numeroValdinei}?text=${urlEncodedText}`, '_blank');
+        window.open(
+          `https://wa.me/${numeroValdinei}?text=${urlEncodedText}`,
+          "_blank",
+        );
       }, 800);
-
     } catch (error) {
       console.error("Erro ao enviar Lead da Visita:", error);
       setStatus("error");
@@ -107,8 +106,8 @@ export default function VisitModal({ isOpen, onClose, property }) {
               O Valdinei já recebeu seu contato e as informações da visita. Ele
               retornará em breve para confirmar.
             </p>
-            <Button 
-              variant="primary" 
+            <Button
+              variant="primary"
               onClick={onClose} // Fecha o modal elegantemente
               style={{ marginTop: "1.5rem" }}
             >
@@ -120,7 +119,9 @@ export default function VisitModal({ isOpen, onClose, property }) {
             <div className={styles.heroCard}>
               <span className={styles.eyebrow}>Intenção de visita</span>
               <p className={styles.propertyName}>
-                {property?.title || property?.content?.summary || "Imóvel selecionado"}
+                {property?.title ||
+                  property?.content?.summary ||
+                  "Imóvel selecionado"}
               </p>
               <p className={styles.subtitle}>
                 Sugira uma data e o corretor Valdinei entrará em contato para
@@ -174,7 +175,13 @@ export default function VisitModal({ isOpen, onClose, property }) {
                 </div>
 
                 {status === "error" && (
-                  <p style={{color: "red", fontSize: "0.875rem", marginTop: "1rem"}}>
+                  <p
+                    style={{
+                      color: "red",
+                      fontSize: "0.875rem",
+                      marginTop: "1rem",
+                    }}
+                  >
                     Ocorreu um erro ao enviar. Tente novamente mais tarde.
                   </p>
                 )}
@@ -185,7 +192,9 @@ export default function VisitModal({ isOpen, onClose, property }) {
                   className={styles.submitButton}
                   disabled={status === "submitting"}
                 >
-                  {status === "submitting" ? "Enviando..." : "Solicitar intenção de visita"}
+                  {status === "submitting"
+                    ? "Enviando..."
+                    : "Solicitar intenção de visita"}
                 </Button>
               </form>
             </div>

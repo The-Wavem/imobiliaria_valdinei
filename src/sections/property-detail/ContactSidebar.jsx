@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { MessageCircle, CheckCircle2, X, Phone, User } from "lucide-react";
+import { MessageCircle, CheckCircle2, X, Phone, User, Loader2 } from "lucide-react";
 import { createPortal } from "react-dom";
+import { addWhatsAppLead } from "@services/leadService";
 import styles from "./ContactSidebar.module.css";
 
-const VALDINEI_PHONE = import.meta.env.VITE_VALDINEI_PHONE; // substitua pelo número real
+const VALDINEI_PHONE = import.meta.env.VITE_VALDINEI_PHONE;
 
 function buildWhatsAppMessage({ propertyTitle, propertyCode, propertyPrice, clientName, clientPhone }) {
   const price = Number(propertyPrice).toLocaleString("pt-BR", {
@@ -23,9 +24,19 @@ function buildWhatsAppMessage({ propertyTitle, propertyCode, propertyPrice, clie
   );
 }
 
-export default function ContactSidebar({ code, price, condo, iptu, onScheduleVisit, propertyTitle }) {
+export default function ContactSidebar({
+  code,
+  price,
+  condo,
+  iptu,
+  onScheduleVisit,
+  propertyTitle,
+  propertyId,
+}) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState(false);
   const [form, setForm] = useState({ name: "", phone: "" });
   const [errors, setErrors] = useState({});
 
@@ -33,50 +44,74 @@ export default function ContactSidebar({ code, price, condo, iptu, onScheduleVis
     setForm({ name: "", phone: "" });
     setErrors({});
     setIsSuccess(false);
+    setSaveError(false);
     setIsModalOpen(true);
   };
 
   const closeModal = () => {
     setIsModalOpen(false);
-    setTimeout(() => setIsSuccess(false), 300);
+    setTimeout(() => {
+      setIsSuccess(false);
+      setSaveError(false);
+    }, 300);
   };
 
   const validate = () => {
     const next = {};
     if (!form.name.trim()) next.name = "Informe seu nome";
-    if (!form.phone.trim()) next.phone = "Informe seu telefone";
+    if (!form.phone.trim()) next.phone = "Informe seu WhatsApp";
     return next;
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
     }
 
-    const message = buildWhatsAppMessage({
-      propertyTitle: propertyTitle || "Imóvel",
-      propertyCode: code,
-      propertyPrice: price,
-      clientName: form.name.trim(),
-      clientPhone: form.phone.trim(),
-    });
+    setIsSaving(true);
+    setSaveError(false);
 
-    window.open(
-      `https://wa.me/${VALDINEI_PHONE}?text=${message}`,
-      "_blank",
-      "noopener,noreferrer"
-    );
+    try {
+      await addWhatsAppLead({
+        name: form.name.trim(),
+        phone: form.phone.trim(),
+        propertyId,
+        propertyTitle,
+        propertyCode: code,
+      });
 
-    setIsSuccess(true);
+      const message = buildWhatsAppMessage({
+        propertyTitle: propertyTitle || "Imóvel",
+        propertyCode: code,
+        propertyPrice: price,
+        clientName: form.name.trim(),
+        clientPhone: form.phone.trim(),
+      });
+
+      window.open(
+        `https://wa.me/${VALDINEI_PHONE}?text=${message}`,
+        "_blank",
+        "noopener,noreferrer"
+      );
+
+      setIsSuccess(true);
+    } catch (error) {
+      console.error("Falha ao salvar lead:", error);
+      setSaveError(true);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const updateField = (field) => (e) => {
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: undefined }));
-    }
+    if (errors[field]) setErrors((prev) => ({ ...prev, [field]: undefined }));
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") handleConfirm();
   };
 
   return (
@@ -140,9 +175,10 @@ export default function ContactSidebar({ code, price, condo, iptu, onScheduleVis
                 <div className={styles.successIcon}>
                   <CheckCircle2 size={32} />
                 </div>
-                <h3>Mensagem enviada!</h3>
+                <h3>Tudo certo!</h3>
                 <p>
-                  O Valdinei já recebeu sua solicitação pelo WhatsApp e entrará em contato em breve.
+                  Seu interesse foi registrado e o WhatsApp foi aberto com a mensagem pronta.
+                  O Valdinei entrará em contato em breve.
                 </p>
                 <button className={styles.whatsappBtn} onClick={closeModal}>
                   Fechar
@@ -152,12 +188,12 @@ export default function ContactSidebar({ code, price, condo, iptu, onScheduleVis
               <>
                 <div className={styles.modalHeader}>
                   <div className={styles.modalBadge}>
-                    <MessageCircle size={16} />
-                    <span>Contato via WhatsApp</span>
+                    <MessageCircle size={14} />
+                    <span>Contato rápido via WhatsApp</span>
                   </div>
-                  <h3 className={styles.modalTitle}>Interessado neste imóvel?</h3>
+                  <h3 className={styles.modalTitle}>Falar com o corretor</h3>
                   <p className={styles.modalSubtitle}>
-                    Preencha seus dados e o Valdinei receberá sua mensagem diretamente no WhatsApp dele com os detalhes do imóvel.
+                    Preencha seus dados abaixo. Vamos abrir o WhatsApp com a mensagem já pronta e registrar seu interesse automaticamente.
                   </p>
                 </div>
 
@@ -170,8 +206,8 @@ export default function ContactSidebar({ code, price, condo, iptu, onScheduleVis
                 <div className={styles.formFields}>
                   <label className={styles.fieldWrap}>
                     <span className={styles.fieldLabel}>
-                      <User size={14} />
-                      Seu nome
+                      <User size={13} />
+                      Seu nome completo
                     </span>
                     <input
                       className={`${styles.fieldInput} ${errors.name ? styles.fieldInputError : ""}`}
@@ -179,14 +215,19 @@ export default function ContactSidebar({ code, price, condo, iptu, onScheduleVis
                       placeholder="Como você se chama?"
                       value={form.name}
                       onChange={updateField("name")}
+                      onKeyDown={handleKeyDown}
+                      disabled={isSaving}
+                      autoFocus
                     />
-                    {errors.name && <span className={styles.fieldError}>{errors.name}</span>}
+                    {errors.name && (
+                      <span className={styles.fieldError}>{errors.name}</span>
+                    )}
                   </label>
 
                   <label className={styles.fieldWrap}>
                     <span className={styles.fieldLabel}>
-                      <Phone size={14} />
-                      Seu telefone (WhatsApp)
+                      <Phone size={13} />
+                      Seu WhatsApp
                     </span>
                     <input
                       className={`${styles.fieldInput} ${errors.phone ? styles.fieldInputError : ""}`}
@@ -194,18 +235,41 @@ export default function ContactSidebar({ code, price, condo, iptu, onScheduleVis
                       placeholder="(41) 9XXXX-XXXX"
                       value={form.phone}
                       onChange={updateField("phone")}
+                      onKeyDown={handleKeyDown}
+                      disabled={isSaving}
                     />
-                    {errors.phone && <span className={styles.fieldError}>{errors.phone}</span>}
+                    {errors.phone && (
+                      <span className={styles.fieldError}>{errors.phone}</span>
+                    )}
                   </label>
                 </div>
 
+                {saveError && (
+                  <p className={styles.saveError}>
+                    Não foi possível registrar seu contato. Tente novamente.
+                  </p>
+                )}
+
                 <div className={styles.modalActions}>
-                  <button className={styles.whatsappBtn} onClick={handleConfirm}>
-                    <MessageCircle size={18} />
-                    <span>Confirmar e enviar no WhatsApp</span>
+                  <button
+                    className={styles.whatsappBtn}
+                    onClick={handleConfirm}
+                    disabled={isSaving}
+                  >
+                    {isSaving ? (
+                      <>
+                        <Loader2 size={18} className={styles.spinIcon} />
+                        <span>Registrando...</span>
+                      </>
+                    ) : (
+                      <>
+                        <MessageCircle size={18} />
+                        <span>Falar com o Valdinei agora</span>
+                      </>
+                    )}
                   </button>
                   <p className={styles.modalDisclaimer}>
-                    Você será redirecionado para o WhatsApp com a mensagem já preenchida.
+                    Seus dados ficam salvos com segurança e o Valdinei poderá entrar em contato com você.
                   </p>
                 </div>
               </>
