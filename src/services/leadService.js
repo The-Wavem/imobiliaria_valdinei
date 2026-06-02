@@ -3,17 +3,20 @@ import { db } from "./firebaseConfig.js";
 
 const LEADS_COLLECTION = "leads";
 
-export async function addLead(leadData) {
-  const payload = {
-    ...leadData,
-    status: "Novo",
-    createdAt: new Date().toISOString(),
-  };
-
-  const reference = await addDoc(collection(db, LEADS_COLLECTION), payload);
-
-  return reference.id;
-}
+export const addLead = async (leadData) => {
+  try {
+    const docRef = await addDoc(collection(db, "leads"), {
+      ...leadData,
+      status: "Novo",
+      createdAt: new Date().toISOString(),
+      read: false 
+    });
+    return docRef.id;
+  } catch (error) {
+    console.error("Erro ao salvar solicitação de contato:", error);
+    throw error;
+  }
+};
 
 export async function getLeadsStats() {
   const snapshot = await getDocs(collection(db, LEADS_COLLECTION));

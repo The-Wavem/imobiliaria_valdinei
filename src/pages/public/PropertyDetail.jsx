@@ -165,7 +165,7 @@ export default function PropertyDetail() {
       <VisitModal
         isOpen={isVisitModalOpen}
         onClose={() => setIsVisitModalOpen(false)}
-        propertyName={property.title}
+        property={property}
       />
     </div>
   );
