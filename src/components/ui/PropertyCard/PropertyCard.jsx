@@ -1,99 +1,125 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { MapPin, BedDouble, Bath, CarFront, Ruler } from "lucide-react";
+import { MapPin, BedDouble, Bath, CarFront, Ruler, Bed, Maximize, Calendar } from "lucide-react";
 import styles from "./PropertyCard.module.css";
+import buttonStyles from "../Button/Button.module.css";
 import Button from "../Button/Button";
+import ButtonFavorito from "../Button_Favorito/Button_Favorito";
 
 export default function PropertyCard({ property, onViewDetails }) {
-  if (!property) return null;
-
-  // 1. BLINDAGEM DE DADOS: Lidando com a estrutura aninhada do Firebase
-  const loc = property.location || {};
-  const pricing = property.pricing || {};
-
-  // Pegando textos com fallback seguro
-  const title =
-    property.title || property.content?.summary || "Imóvel Exclusivo";
-
-  // ✅ O CONSERTO DO ERRO: Lendo as strings dentro do objeto location
-  const neighborhood = loc.neighborhood || property.neighborhood || "";
-  const address = loc.address || property.address || "";
-  const addressString = neighborhood
-    ? `${neighborhood}, ${address}`
-    : address || "Localização não informada";
-
-  // Convertendo números (evita o erro do toLocaleString)
-  const price = Number(property.price || pricing.price || 0);
-  const area = Number(property.area || loc.area || 0);
-  const beds = Number(property.bedrooms || loc.bedrooms || 0);
-  const baths = Number(property.bathrooms || loc.bathrooms || 0);
-  const parking = Number(property.parkingSpaces || loc.parkingSpaces || 0);
-
-  // Pega a primeira foto ou um placeholder elegante
   const coverImage =
-    (property.photos && property.photos[0]) ||
+    property.image ||
     property.imageUrl ||
-    "https://via.placeholder.com/600x400?text=Valdinei+Im%C3%B3veis";
+    property.thumbnail ||
+    property.photos?.find(Boolean) ||
+    undefined;
+
+  // beds/baths/area podem vir como beds ou bedrooms dependendo da origem
+  const beds = property.beds ?? property.bedrooms ?? 0;
+  const baths = property.baths ?? property.bathrooms ?? 0;
+  const area = property.area ?? 0;
 
   return (
-    <div className={styles.card}>
-      <div className={styles.imageWrapper}>
-        <img src={coverImage} alt={title} className={styles.image} />
-        <span className={styles.badge}>
-          {property.category || property.type || "Imóvel"}
-        </span>
+    <article className={styles.card}>
+      <div className={styles.imageWrap}>
+        <Link
+          to={`/imovel/${property.id}`}
+          className={styles.cardLink}
+          onClick={(e) => {
+            if (onViewDetails) {
+              e.preventDefault();
+              onViewDetails(property.id);
+            }
+          }}
+        >
+          {coverImage ? (
+            <img
+              src={coverImage}
+              alt={property.title}
+              className={styles.image}
+              referrerPolicy="no-referrer"
+            />
+          ) : (
+            <div className={styles.imagePlaceholder}>
+              <span>Sem foto</span>
+            </div>
+          )}
+        </Link>
+
+        <div className={styles.badges}>
+          <span className={styles.badge}>{property.type}</span>
+          <span className={`${styles.badge} ${styles.categoryBadge}`}>
+            {property.category}
+          </span>
+        </div>
+
+        <ButtonFavorito property={property} />
       </div>
 
       <div className={styles.content}>
-        <div className={styles.header}>
-          <h3 className={styles.title}>{title}</h3>
-
-          <p className={styles.location}>
-            <MapPin size={16} />
-            {/* O texto do endereço agora é uma string segura */}
-            <span>{addressString}</span>
-          </p>
+        <div className={styles.location}>
+          <MapPin size={14} />
+          <span>{property.location}</span>
         </div>
 
-        <div className={styles.price}>
-          {price.toLocaleString("pt-BR", {
+        <h3 className={styles.title}>
+          <Link
+            to={`/imovel/${property.id}`}
+            className={styles.titleLink}
+            onClick={(e) => {
+              if (onViewDetails) {
+                e.preventDefault();
+                onViewDetails(property.id);
+              }
+            }}
+          >
+            {property.title}
+          </Link>
+        </h3>
+
+        <p className={styles.price}>
+          {property.price.toLocaleString("pt-BR", {
             style: "currency",
             currency: "BRL",
           })}
+        </p>
+
+        <div className={styles.stats}>
+          {beds > 0 && (
+            <div className={styles.statItem}>
+              <Bed size={16} />
+              <span>{beds} quarto{beds !== 1 ? "s" : ""}</span>
+            </div>
+          )}
+          {baths > 0 && (
+            <div className={styles.statItem}>
+              <Bath size={16} />
+              <span>{baths} banheiro{baths !== 1 ? "s" : ""}</span>
+            </div>
+          )}
+          {area > 0 && (
+            <div className={styles.statItem}>
+              <Maximize size={16} />
+              <span>{area}m²</span>
+            </div>
+          )}
         </div>
 
-        <div className={styles.features}>
-          <div className={styles.feature} title="Área Útil">
-            <Ruler size={18} />
-            <span>{area} m²</span>
-          </div>
-          <div className={styles.feature} title="Quartos">
-            <BedDouble size={18} />
-            <span>{beds}</span>
-          </div>
-          <div className={styles.feature} title="Banheiros">
-            <Bath size={18} />
-            <span>{baths}</span>
-          </div>
-          <div className={styles.feature} title="Vagas">
-            <CarFront size={18} />
-            <span>{parking}</span>
-          </div>
-        </div>
-
-        <div className={styles.footer}>
-          <Button
-            variant="primary"
-            fullWidth
-            onClick={
-              onViewDetails ||
-              (() => (window.location.href = `/imovel/${property.id}`))
-            }
+        <div className={styles.actions}>
+          <Link
+            to={`/imovel/${property.id}`}
+            className={`${buttonStyles.btn} ${buttonStyles.outline} ${styles.detailsButton}`}
+            onClick={(e) => {
+              if (onViewDetails) {
+                e.preventDefault();
+                onViewDetails(property.id);
+              }
+            }}
           >
             Ver Detalhes
-          </Button>
+          </Link>
         </div>
       </div>
-    </div>
+    </article>
   );
 }
