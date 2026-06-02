@@ -3,9 +3,11 @@ import PropertyStats from "@sections/admin/properties/PropertyStats/PropertyStat
 import PropertyFilterBar from "@sections/admin/properties/PropertyFilterBar/PropertyFilterBar.jsx";
 import PropertyTable from "@sections/admin/properties/PropertyTable/PropertyTable.jsx";
 import PropertyFormModal from "@sections/admin/properties/PropertyFormModal/PropertyFormModal.jsx";
-import { buildPropertyDocument, savePropertyDocument } from "@services/AdminCadastro";
-import { addProperty } from "@services/propertyService.js";
-import { initialProperties } from "../../data/admin/propertiesSeed.js";
+import {
+  buildPropertyDocument,
+  savePropertyDocument,
+} from "@services/AdminCadastro";
+import { addProperty, getAllProperties } from "@services/propertyService.js";
 
 const emptyForm = {
   title: "",
@@ -27,27 +29,6 @@ const emptyForm = {
   summary: "",
   description: "",
 };
-
-const PROPERTIES_STORAGE_KEY = "@valdinei:properties";
-
-function readStoredProperties() {
-  if (typeof window === "undefined") {
-    return initialProperties;
-  }
-
-  try {
-    const rawValue = window.localStorage.getItem(PROPERTIES_STORAGE_KEY);
-
-    if (!rawValue) {
-      return initialProperties;
-    }
-
-    const parsedValue = JSON.parse(rawValue);
-    return Array.isArray(parsedValue) ? parsedValue : initialProperties;
-  } catch {
-    return initialProperties;
-  }
-}
 
 function createPropertyCode(nextId) {
   return `IV-${String(nextId).padStart(4, "0")}`;
@@ -93,7 +74,7 @@ function normalizeForm(property = emptyForm) {
 }
 
 export default function PropertyManager() {
-  const [properties, setProperties] = useState(() => readStoredProperties());
+  const [properties, setProperties] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState("create");
   const [editingId, setEditingId] = useState(null);
@@ -102,10 +83,37 @@ export default function PropertyManager() {
   const [filterStatus, setFilterStatus] = useState("Todos");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
+  const [editingProperty, setEditingProperty] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   const totalProperties = properties.length;
-  const ativos = useMemo(() => properties.filter((property) => property.active).length, [properties]);
+  const ativos = useMemo(
+    () => properties.filter((property) => property.active).length,
+    [properties],
+  );
   const inativos = totalProperties - ativos;
+
+  const loadProperties = async () => {
+    setIsLoading(true);
+    const data = await getAllProperties();
+    setProperties(data);
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    loadProperties();
+  }, []);
+
+  const handleOpenModal = (property = null) => {
+    setEditingProperty(property);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setEditingProperty(null);
+    setIsModalOpen(false);
+    loadProperties(); // Recarrega a tabela após fechar/salvar o modal
+  };
 
   const filteredProperties = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
@@ -121,7 +129,9 @@ export default function PropertyManager() {
             property.neighborhood,
           ]
             .filter(Boolean)
-            .some((field) => String(field).toLowerCase().includes(normalizedSearch))
+            .some((field) =>
+              String(field).toLowerCase().includes(normalizedSearch),
+            )
         : true;
 
       const matchesStatus =
@@ -135,10 +145,16 @@ export default function PropertyManager() {
     });
   }, [filterStatus, properties, searchTerm]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredProperties.length / itemsPerPage));
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredProperties.length / itemsPerPage),
+  );
   const safeCurrentPage = Math.min(currentPage, totalPages);
   const startIndex = (safeCurrentPage - 1) * itemsPerPage;
-  const visibleProperties = filteredProperties.slice(startIndex, startIndex + itemsPerPage);
+  const visibleProperties = filteredProperties.slice(
+    startIndex,
+    startIndex + itemsPerPage,
+  );
 
   const openCreateModal = () => {
     setModalMode("create");
@@ -207,8 +223,7 @@ export default function PropertyManager() {
         (highestId, property) => Math.max(highestId, property.id),
         0,
       ) + 1;
-    const propertyId =
-      modalMode === "edit" && editingId ? editingId : nextId;
+    const propertyId = modalMode === "edit" && editingId ? editingId : nextId;
     const payload = {
       id: propertyId,
       title: formData.title.trim(),
@@ -232,7 +247,8 @@ export default function PropertyManager() {
       description: formData.description.trim(),
       active:
         modalMode === "edit"
-          ? properties.find((property) => property.id === editingId)?.active ?? true
+          ? (properties.find((property) => property.id === editingId)?.active ??
+            true)
           : true,
     };
 
@@ -286,14 +302,14 @@ export default function PropertyManager() {
         ];
       });
 
-        setIsModalOpen(false);
-        setModalMode("create");
-        setEditingId(null);
-        setFormData(normalizeForm(emptyForm));
+      setIsModalOpen(false);
+      setModalMode("create");
+      setEditingId(null);
+      setFormData(normalizeForm(emptyForm));
 
-        if (modalMode === "create") {
-          setCurrentPage(1);
-        }
+      if (modalMode === "create") {
+        setCurrentPage(1);
+      }
     } catch (error) {
       console.error("Falha ao salvar o imóvel no banco:", error);
 
@@ -320,7 +336,11 @@ export default function PropertyManager() {
     <main className="admin-container">
       <h1 className="admin-title">Imóveis</h1>
 
-      <PropertyStats total={totalProperties} ativos={ativos} inativos={inativos} />
+      <PropertyStats
+        total={totalProperties}
+        ativos={ativos}
+        inativos={inativos}
+      />
 
       <PropertyFilterBar
         searchTerm={searchTerm}
@@ -331,23 +351,27 @@ export default function PropertyManager() {
       />
 
       <PropertyTable
-        properties={visibleProperties}
+        properties={properties}
+        isLoading={isLoading}
         currentPage={safeCurrentPage}
         totalPages={totalPages}
         onPageChange={setCurrentPage}
-        onEdit={openEditModal}
+        onEdit={handleOpenModal}
         onDelete={handleDelete}
         onToggleStatus={handleStatusToggle}
+        onRefresh={loadProperties}
       />
 
-      <PropertyFormModal
-        isOpen={isModalOpen}
-        onClose={closeModal}
-        formData={formData}
-        setFormData={setFormData}
-        onSave={handleSubmit}
-        mode={modalMode}
-      />
+      {isModalOpen && (
+        <PropertyFormModal
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          formData={formData}
+          setFormData={setFormData}
+          onSave={handleSubmit}
+          mode={modalMode}
+        />
+      )}
     </main>
   );
 }
