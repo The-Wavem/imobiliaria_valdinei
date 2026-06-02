@@ -1,11 +1,12 @@
+/* ── Sidebar ── */
 .sidebarInner {
   position: sticky;
   top: 100px;
   background: var(--color-brand-secondary);
-  padding: 2.5rem;
-  border-radius: var(--radius-lg);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 25px 50px -12px rgba(20, 20, 60, 0.25);
+  padding: 1.75rem;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 25px 50px -12px rgba(20, 20, 60, 0.3);
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
@@ -17,99 +18,346 @@
   align-items: center;
   gap: 0.85rem;
   padding-bottom: 1.25rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .agentPhoto {
-  width: 48px;
-  height: 48px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
   object-fit: cover;
   flex-shrink: 0;
+  border: 2px solid rgba(199, 156, 49, 0.5);
 }
 
 .agentMeta {
   display: grid;
   gap: 0.15rem;
 }
-
 .agentName {
-  font-weight: 600;
-  color: #ffffff;
-  line-height: 1.1;
+  font-weight: 700;
+  color: #fff;
+  font-size: 1rem;
 }
-
 .agentRole {
-  font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.priceWrap,
-.taxes,
-.code,
-.priceLabel {
-  color: inherit;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .priceWrap {
   display: grid;
-  gap: 0.25rem;
-  margin-left: 0.15rem;
-  padding-top: 0.1rem;
+  gap: 0.2rem;
 }
 .priceLabel {
-  font-size: 0.9rem;
-  opacity: 0.75;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
 }
 .priceValue {
   display: flex;
   align-items: baseline;
-  gap: 0.35rem;
-  font-weight: 300;
-  font-size: 2.1rem;
-  line-height: 1.05;
+  gap: 0.3rem;
 }
-
 .currency {
   font-size: 1rem;
-  opacity: 0.8;
+  color: var(--color-primary);
+  font-weight: 700;
 }
-
 .amount {
+  font-size: 2.2rem;
+  font-weight: 300;
   letter-spacing: -0.03em;
+  color: #fff;
+  line-height: 1;
 }
 .code {
-  font-size: 0.9rem;
-  opacity: 0.75;
-}
-.taxes {
-  font-size: 0.95rem;
-  display: grid;
-  gap: 0.45rem;
-  margin-left: 0.15rem;
-  line-height: 1.45;
-}
-.cta {
-  display: flex;
-  gap: 0.75rem;
-  flex-direction: column;
-}
-.whatsappButton {
-  background: #25d366;
-  color: #ffffff;
-  border: 0;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.5);
 }
 
-.whatsappButton:hover {
-  background: #1ebe5b;
+.taxes {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.65);
+  padding: 0.85rem 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.cta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-top: 0.25rem;
+}
+
+.whatsappBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  min-height: 3.25rem;
+  padding: 0.85rem 1.25rem;
+  border-radius: 0.875rem;
+  border: 0;
+  background: #25d366;
+  color: #ffffff;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    filter 0.2s ease,
+    transform 0.2s ease;
+  width: 100%;
+}
+
+.whatsappBtn:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+.visitBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.85rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 0.875rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.85);
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+  width: 100%;
+}
+
+.visitBtn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* ── Modal ── */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+}
+
+.modalBox {
+  position: relative;
+  width: min(100%, 26rem);
+  background: #ffffff;
+  border-radius: 1.5rem;
+  padding: 2rem;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.22);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.modalClose {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  border: 0;
+  background: rgba(20, 20, 60, 0.07);
+  color: var(--color-brand-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.modalClose:hover {
+  background: rgba(20, 20, 60, 0.13);
+}
+
+.modalHeader {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.modalBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(37, 211, 102, 0.1);
+  color: #166534;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  width: fit-content;
+}
+
+.modalTitle {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  color: var(--color-brand-secondary);
+  line-height: 1.2;
+}
+
+.modalSubtitle {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  line-height: 1.6;
+}
+
+.propertyPreview {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.9rem 1rem;
+  background: rgba(20, 20, 60, 0.04);
+  border-radius: 0.875rem;
+  border-left: 3px solid var(--color-primary);
+}
+
+.previewLabel {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-primary);
+}
+
+.previewTitle {
+  font-size: 0.975rem;
+  font-weight: 700;
+  color: var(--color-brand-secondary);
+  line-height: 1.3;
+}
+
+.previewCode {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.formFields {
+  display: grid;
+  gap: 0.875rem;
+}
+
+.fieldWrap {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.fieldLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.fieldInput {
+  width: 100%;
+  min-height: 3rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  border: 1.5px solid rgba(20, 20, 60, 0.12);
+  background: #fff;
+  color: var(--color-text-main);
+  font-family: var(--font-sans);
+  font-size: 0.975rem;
+  font-weight: 500;
+  outline: none;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.fieldInput:focus {
+  border-color: #25d366;
+  box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.15);
+}
+
+.fieldInputError {
+  border-color: #ef4444 !important;
+}
+.fieldError {
+  font-size: 0.8rem;
+  color: #ef4444;
+  font-weight: 600;
+}
+
+.modalActions {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.modalDisclaimer {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* ── Sucesso ── */
+.successState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.875rem;
+  padding: 1rem 0;
+}
+
+.successIcon {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  background: rgba(37, 211, 102, 0.1);
+  color: #16a34a;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.successState h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  color: var(--color-brand-secondary);
+}
+
+.successState p {
+  margin: 0;
+  font-size: 0.925rem;
+  color: var(--color-text-muted);
+  line-height: 1.6;
+  max-width: 22rem;
 }
 
 @media (max-width: 900px) {
   .sidebarInner {
     position: static;
-  }
-  .cta {
-    flex-direction: row;
-    gap: 0.5rem;
   }
 }
