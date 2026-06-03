@@ -11,7 +11,7 @@ export default function PropertyManager() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("Todos");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 6;
+  const itemsPerPage = 8;
   const [editingProperty, setEditingProperty] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -158,7 +158,7 @@ export default function PropertyManager() {
       />
 
       <PropertyTable
-        properties={properties}
+        properties={visibleProperties}
         isLoading={isLoading}
         currentPage={safeCurrentPage}
         totalPages={totalPages}
