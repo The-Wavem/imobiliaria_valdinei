@@ -31,5 +31,21 @@ service cloud.firestore {
       // Apenas o Admin consegue ler a lista, atualizar status ou deletar um lead
       allow read, update, delete: if isAdmin();
     }
+
+    // Regras para as coleções de Analytics
+    match /analytics_daily/{docId} {
+      allow read, delete: if isAdmin();
+      allow create, update: if true;
+    }
+
+    match /analytics_filters/{docId} {
+      allow read, delete: if isAdmin();
+      allow create, update: if true;
+    }
+
+    match /analytics_bairros/{docId} {
+      allow read, delete: if isAdmin();
+      allow create, update: if true;
+    }
   }
 }
