@@ -16,6 +16,7 @@ const Login = lazy(() => import("@pages/admin/Login.jsx"));
 const Favorito = lazy(() => import("@/pages/public/Favorito.jsx"));
 const Contato = lazy(() => import("@/pages/public/Contato.jsx"));
 const Sobre = lazy(() => import("@/pages/public/Sobre.jsx"));
+const Servicos = lazy(() => import("@/pages/public/Servicos.jsx"));
 
 export default function Router() {
   return (
@@ -38,7 +39,7 @@ export default function Router() {
         <Route element={<PublicLayout />}>
           <Route index element={<Home />} />
           <Route path="contato" element={<Contato />} />
-          {/* <Route path="servicos" element={<Servicos />} /> */}
+          <Route path="servicos" element={<Servicos />} />
           <Route path="favorito" element={<Favorito />} />
           <Route path="/alugar" element={<Rent />} />
           <Route path="/comprar" element={<Buy />} />

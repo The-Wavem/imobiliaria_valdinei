@@ -1,0 +1,235 @@
+.hero {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  background-color: var(--color-secondary);
+  width: 100%;
+  padding: 24px calc(50% - 590px);
+  padding-block: 4rem;
+  margin: 0 auto;
+}
+
+.hero h1 {
+  font-size: 5rem;
+  font-weight: bold;
+  line-height: 6rem;
+  color: white;
+}
+
+.hero h1 > span {
+  color: var(--color-primary);
+}
+
+.hero p {
+  font-size: 1.5rem;
+  font-weight: lighter;
+  line-height: 2rem;
+  color: white;
+}
+
+.services {
+  display: flex;
+  gap: 5rem;
+  padding: 100px;
+}
+
+.servicesCard {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  width: 100%;
+  border-radius: 20px;
+  background-color: #f8f7f7;
+  box-shadow: 0px 5px 10px #0000001a;
+  margin-top: 2rem;
+  padding: 2.25rem;
+  transition: all 0.3s ease;
+}
+
+.servicesCard > div > svg {
+  border-radius: 20px;
+  background-color: white;
+  padding: 1rem; 
+  width: 70px;
+  height: auto;
+  transition: all 0.3s ease;
+  box-shadow: 0px 5px 10px #0000001a;
+  color: var(--color-primary);
+}
+
+
+.servicesCard:hover {
+  background-color: var(--color-primary);
+  color: var(--color-secondary);
+  .invisibleDiv {
+    opacity: 1;
+  }
+}
+
+.servicesCard > h1 {
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.servicesCard > p {
+  font-family: 'Arial', sans-serif;
+  font-size: 1.25rem;
+  line-height: 1.5rem;
+  font-weight: light;
+}
+
+.servicesCard button {
+  background-color: var(--color-secondary);
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  width: fit-content;
+  border-radius: 10px;
+}
+
+.invisibleDiv {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.invisibleDiv span {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.specialist {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: var(--color-secondary);
+  width: 100%;
+  padding: 24px calc(50% - 590px);
+  padding-block: 4rem;
+  margin: 0 auto;
+  color: white;
+}
+
+.specialist h1 {
+  font-size: 3rem;
+  font-weight: bold;
+  margin-bottom: 3rem;
+}
+
+.specialist h1 > span {
+  color: var(--color-primary);
+}
+
+.specialist h2 {
+  font-size: 1.5rem;
+  font-weight: lighter;
+  margin-bottom: 5rem;
+}
+
+.specialist button {
+  background-color: var(--color-primary);
+  color: var(--color-secondary);
+  border: none;
+  padding: 1.5rem 3rem;
+  font-size: 1.25rem;
+  font-weight: bold;
+  cursor: pointer;
+  width: fit-content;
+  border-radius: 10px;
+  box-shadow: 0px 2px 5px var(--color-primary);
+}
+
+.specialist button:hover {
+  cursor: pointer;
+  filter: brightness(0.9);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Responsividade */
+
+@media (max-width: 1200px) {
+  .hero, .services, .specialist {
+    padding-inline: 2rem;
+  }
+}
+
+@media (max-width: 992px) {
+  .hero {
+    gap: 3rem;
+  }
+
+  .hero h1 {
+    font-size: 3.5rem;
+    line-height: 4rem;
+  }
+
+  .hero p {
+    line-height: 2.5rem;
+  }
+
+  .services {
+    flex-direction: column;
+    gap: 2rem;
+    padding-block: 4rem;
+  }
+
+  .specialist h1 {
+    font-size: 2.5rem;
+  }
+
+  .specialist h2 {
+    margin-bottom: 3rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .hero {
+    gap: 3rem;
+  }
+
+  .hero h1 {
+    font-size: 3rem;
+    line-height: 3rem;
+  }
+
+  .hero p {
+    font-size: 1.1rem;
+    line-height: 1.8rem;
+  }
+
+  .services {
+    padding: 2rem 1rem;
+  }
+
+  .servicesCard {
+    padding: 1.5rem;
+  }
+
+  .specialist h1 {
+    font-size: 2rem;
+    line-height: 2.6rem;
+    text-align: center;
+  }
+
+  .specialist h1 span {
+    display: block;
+  }
+
+  .specialist h2 {
+    font-size: 1.25rem;
+    text-align: center;
+  }
+
+  .specialist button {
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+  }
+}
