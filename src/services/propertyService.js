@@ -1,6 +1,7 @@
 import {
   addDoc,
   collection,
+  deleteDoc,
   doc,
   getDocs,
   increment,
@@ -62,6 +63,17 @@ export const updateProperty = async (id, propertyData) => {
     return true;
   } catch (error) {
     console.error("Erro ao atualizar imóvel:", error);
+    throw error;
+  }
+};
+
+export const deleteProperty = async (id) => {
+  try {
+    const propertyRef = doc(db, PROPERTY_COLLECTION, id);
+    await deleteDoc(propertyRef);
+    return true;
+  } catch (error) {
+    console.error("Erro ao excluir imóvel:", error);
     throw error;
   }
 };

@@ -1,4 +1,4 @@
-import { Pencil, ToggleLeft, ToggleRight, Trash2, Eye } from "lucide-react"; // <-- Adicionei o Eye
+import { Pencil, ToggleLeft, ToggleRight, Trash2, Eye } from "lucide-react";
 import Button from "@components/ui/Button/Button.jsx";
 import styles from "./PropertyTable.module.css";
 
@@ -19,12 +19,11 @@ export default function PropertyTable({
   onDelete,
   onToggleStatus,
 }) {
-  // Ajustado para ler o array 'photos' que o Firebase salva
   const getThumbnail = (property) =>
     (property.photos && property.photos[0]) ||
     property.imageUrl ||
     property.thumbnail ||
-    undefined;
+    "https://via.placeholder.com/150?text=Sem+Foto";
 
   return (
     <section
@@ -78,7 +77,11 @@ export default function PropertyTable({
                       <td data-label="Foto">
                         <div className={styles.cellContent}>
                           <div className={styles.thumbnail}>
-                            <img src={getThumbnail(property)} alt={title} />
+                            <img 
+                              src={getThumbnail(property)} 
+                              alt={title} 
+                              style={{ objectFit: "cover", width: "100%", height: "100%" }}
+                            />
                           </div>
                         </div>
                       </td>
@@ -109,7 +112,7 @@ export default function PropertyTable({
                             className={`${styles.statusButton} ${isActive ? styles.statusActive : styles.statusInactive}`.trim()}
                             onClick={() =>
                               onToggleStatus &&
-                              onToggleStatus(property.id, property.status)
+                              onToggleStatus(property.firestoreId || property.id, property.status)
                             }
                           >
                             {isActive ? (
@@ -125,7 +128,6 @@ export default function PropertyTable({
                         </div>
                       </td>
 
-                      {/* AQUI ESTÁ A COLUNA DE VIEWS */}
                       <td data-label="Views">
                         <div
                           className={styles.cellContent}
@@ -166,7 +168,7 @@ export default function PropertyTable({
                             type="button"
                             variant="secondary"
                             className={styles.actionButton}
-                            onClick={() => onDelete && onDelete(property.id)}
+                            onClick={() => onDelete && onDelete(property.firestoreId || property.id)}
                           >
                             <Trash2 size={16} />
                             <span>Excluir</span>

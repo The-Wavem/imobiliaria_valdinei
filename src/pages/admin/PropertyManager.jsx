@@ -3,7 +3,7 @@ import PropertyStats from "@sections/admin/properties/PropertyStats/PropertyStat
 import PropertyFilterBar from "@sections/admin/properties/PropertyFilterBar/PropertyFilterBar.jsx";
 import PropertyTable from "@sections/admin/properties/PropertyTable/PropertyTable.jsx";
 import PropertyFormModal from "@sections/admin/properties/PropertyFormModal/PropertyFormModal.jsx";
-import { addProperty, updateProperty, getAllProperties } from "@services/propertyService.js";
+import { addProperty, updateProperty, getAllProperties, deleteProperty } from "@services/propertyService.js";
 
 export default function PropertyManager() {
   const [properties, setProperties] = useState([]);
@@ -90,38 +90,36 @@ export default function PropertyManager() {
     setCurrentPage(1);
   };
 
-  const handleStatusToggle = async (propertyId) => {
-    const property = properties.find((p) => p.id === propertyId || p.firestoreId === propertyId);
-    if (!property) return;
+  const handleToggleStatus = async (id, currentStatus) => {
+    const newStatus = currentStatus === "Ativo" ? "Inativo" : "Ativo";
     
-    const currentStatus = property.status === "Ativo" || property.active === true;
-    const newStatus = currentStatus ? "Inativo" : "Ativo";
-    
-    await updateProperty(property.firestoreId || propertyId, { 
+    await updateProperty(id, { 
       status: newStatus,
-      active: !currentStatus 
+      active: newStatus === "Ativo"
     });
     
     loadProperties();
   };
 
-  const handleDelete = (propertyId) => {
+  const handleDeleteProperty = async (propertyId) => {
     const propertyToDelete = properties.find(
       (property) => property.id === propertyId || property.firestoreId === propertyId,
     );
-    const confirmed = window.confirm(
-      propertyToDelete
-        ? `Excluir o imóvel ${propertyToDelete.code} - ${propertyToDelete.title}?`
-        : "Excluir este imóvel?",
-    );
+    
+    const titleOrCode = propertyToDelete ? `${propertyToDelete.code} - ${propertyToDelete.title}` : "este imóvel";
+    const confirmed = window.confirm(`Tem certeza que deseja excluir o imóvel ${titleOrCode}?`);
 
     if (!confirmed) {
       return;
     }
 
-    setProperties((currentValue) =>
-      currentValue.filter((property) => property.id !== propertyId && property.firestoreId !== propertyId),
-    );
+    try {
+      await deleteProperty(propertyId);
+      loadProperties();
+    } catch (error) {
+      console.error("Erro ao excluir:", error);
+      alert("Falha ao excluir o imóvel. Tente novamente.");
+    }
   };
 
   const handleSearchChange = (event) => {
@@ -168,8 +166,8 @@ export default function PropertyManager() {
         totalPages={totalPages}
         onPageChange={setCurrentPage}
         onEdit={handleOpenModal}
-        onDelete={handleDelete}
-        onToggleStatus={handleStatusToggle}
+        onDelete={handleDeleteProperty}
+        onToggleStatus={handleToggleStatus}
         onRefresh={loadProperties}
       />
 
