@@ -35,3 +35,71 @@ h1, h2, h3, h4, h5, h6 {
 .animate-in {
   animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+.admin-container {
+  min-height: 100vh;
+  margin-left: var(--admin-sidebar-width, 18.75rem);
+  display: grid;
+  gap: 2rem;
+  padding: 2rem clamp(1.25rem, 2vw, 2rem) 2.5rem;
+}
+
+.admin-title {
+  margin: 0;
+  color: var(--color-brand-secondary);
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 2.6vw, 2.8rem);
+  line-height: 1.05;
+}
+
+@media (max-width: 1023px) {
+  .admin-container {
+    margin-left: 0;
+    padding-top: 4.75rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-container {
+    padding-inline: 1rem;
+  }
+}
+
+/* ==========================================================================
+   CUSTOM SCROLLBAR (GLOBAL & MODAIS)
+   ========================================================================== */
+
+/* Suporte para Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-brand-primary) transparent;
+}
+
+/* Chrome, Edge, Safari */
+::-webkit-scrollbar {
+  width: 8px; /* Fininha e elegante na vertical */
+  height: 8px; /* Fininha na horizontal (para a tabela no mobile, etc) */
+}
+
+/* Fundo da barra (Trilho) */
+::-webkit-scrollbar-track {
+  background: transparent; 
+}
+
+/* A barrinha em si (Thumb) */
+::-webkit-scrollbar-thumb {
+  background-color: #CBD5E1; /* Um cinza claro e muito discreto */
+  border-radius: 10px; /* Arredondada estilo Mac/iOS */
+  border: 2px solid transparent; /* Cria um "respiro" em volta da barra */
+  background-clip: padding-box;
+}
+
+/* Efeito UAU ao passar o mouse */
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-brand-primary); /* Fica DOURADA no hover! */
+}
+
+/* Garante que o scroll principal do site seja suave */
+html {
+  scroll-behavior: smooth;
+}

@@ -1,0 +1,55 @@
+.detailsModal {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.detailGrid,
+.detailGridTwo {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.detailCard {
+  display: grid;
+  gap: 0.35rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.detailLabel {
+  color: var(--color-brand-primary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.detailCard strong {
+  color: var(--color-brand-secondary);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.messageBlock {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.messageArea {
+  padding: 1rem 1.1rem;
+  border-radius: var(--radius-md);
+  background: var(--color-background);
+  color: var(--color-text-main);
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 1200px) {
+  .detailGrid,
+  .detailGridTwo {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,40 +1,64 @@
-import React from "react";
-import { Navigate, Route, Routes } from "react-router";
+import { lazy, Suspense } from "react";
+import { Navigate, Route, Routes } from "react-router-dom";
+import Loader from "@components/ui/Loader/Loader.jsx";
 import PublicLayout from "@/components/layout/PublicLayout";
 import PrivateLayout from "@/components/layout/PrivateLayout";
-import Home from "@/pages/public/Home";
-import Rent from "@/pages/public/Rent";
-import Buy from "@/pages/public/Buy";
-import PropertyDetail from "@/pages/public/PropertyDetail";
-import Dashboard from "@/pages/admin/Dashboard";
-import PropertyManager from "@/pages/admin/PropertyManager";
-import LeadsManager from "@pages/admin/LeadsManager";
-import Favorito from "@/pages/public/Favorito";
-import Contato from "@/pages/public/Contato";
-import Sobre from "@/pages/public/Sobre";
-import Services from "@/pages/public/Services";
+
+const Home = lazy(() => import("@/pages/public/Home.jsx"));
+const Rent = lazy(() => import("@/pages/public/Rent.jsx"));
+const Buy = lazy(() => import("@/pages/public/Buy.jsx"));
+const PropertyDetail = lazy(() => import("@/pages/public/PropertyDetail.jsx"));
+const NotFound = lazy(() => import("@pages/public/NotFound.jsx"));
+const Dashboard = lazy(() => import("@pages/admin/Dashboard.jsx"));
+const PropertyManager = lazy(() => import("@pages/admin/PropertyManager.jsx"));
+const LeadsManager = lazy(() => import("@pages/admin/LeadsManager.jsx"));
+const Login = lazy(() => import("@pages/admin/Login.jsx"));
+const Favorito = lazy(() => import("@/pages/public/Favorito.jsx"));
+const Contato = lazy(() => import("@/pages/public/Contato.jsx"));
+const Sobre = lazy(() => import("@/pages/public/Sobre.jsx"));
+const Servicos = lazy(() => import("@/pages/public/Servicos.jsx"));
 
 export default function Router() {
   return (
-    <Routes>
-      <Route element={<PublicLayout />}>
+    <Suspense
+      fallback={
+        <div
+          style={{
+            minHeight: "100vh",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "2rem",
+          }}
+        >
+          <Loader size={56} />
+        </div>
+      }
+    >
+      <Routes>
+        <Route element={<PublicLayout />}>
           <Route index element={<Home />} />
-          <Route path="/contato" element={<Contato />} />
-          <Route path="/favorito" element={<Favorito />} />
+          <Route path="contato" element={<Contato />} />
+          <Route path="servicos" element={<Servicos />} />
+          <Route path="favorito" element={<Favorito />} />
           <Route path="/alugar" element={<Rent />} />
           <Route path="/comprar" element={<Buy />} />
           <Route path="/sobre" element={<Sobre />} />
-          <Route path="/servicos" element={<Services />} />
-          <Route path="/imovel/:id" element={<PropertyDetail />} />  
-      </Route>
+          <Route path="/imovel/:id" element={<PropertyDetail />} />
+          <Route path="*" element={<NotFound />} />
+        </Route>
 
-      <Route element={<PrivateLayout />}>
-         <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
-         <Route path="/admin/dashboard" element={<Dashboard />} />
-         <Route path="/admin/imoveis" element={<PropertyManager />} />
-         <Route path="/admin/leads" element={<LeadsManager />} />
-         <Route path="/admin/visitas" element={<Dashboard />} />
-      </Route>
-    </Routes>
+        <Route path="/admin/login" element={<Login />} />
+
+        <Route element={<PrivateLayout />}>
+          <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+          <Route path="/admin/dashboard" element={<Dashboard />} />
+          <Route path="/admin/imoveis" element={<PropertyManager />} />
+          <Route path="/admin/leads" element={<LeadsManager />} />
+          <Route path="/admin/solicitacoes" element={<LeadsManager />} />
+          <Route path="/admin/visitas" element={<Dashboard />} />
+        </Route>
+      </Routes>
+    </Suspense>
   );
 }

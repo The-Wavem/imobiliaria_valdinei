@@ -1,0 +1,316 @@
+.section {
+  display: block;
+}
+
+.card {
+  padding: 1.25rem;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  border-radius: calc(var(--radius-md) + 4px);
+  background: var(--color-surface);
+  box-shadow: 0 18px 44px rgba(15, 23, 42, 0.06);
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.kicker {
+  margin: 0 0 0.35rem;
+  color: var(--color-brand-primary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0;
+  color: var(--color-brand-secondary);
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  line-height: 1.15;
+}
+
+.meta {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.95rem;
+}
+
+.tableWrap {
+  overflow: hidden;
+  border-radius: var(--radius-md);
+}
+
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 0.55rem;
+}
+
+.table thead th {
+  padding: 1rem;
+  background: var(--color-brand-secondary);
+  color: #ffffff;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: left;
+}
+
+.table thead th:first-child {
+  border-top-left-radius: var(--radius-md);
+}
+
+.table thead th:last-child {
+  border-top-right-radius: var(--radius-md);
+}
+
+.row td {
+  padding: 1rem;
+  vertical-align: middle;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.row td:first-child {
+  border-left: 4px solid transparent;
+  border-top-left-radius: 1rem;
+  border-bottom-left-radius: 1rem;
+}
+
+.row td:last-child {
+  border-top-right-radius: 1rem;
+  border-bottom-right-radius: 1rem;
+}
+
+.row:hover td {
+  background: rgba(248, 249, 250, 0.88);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+}
+
+.rowActive td:first-child {
+  border-left-color: var(--color-brand-primary);
+}
+
+.rowInactive td:first-child {
+  border-left-color: #94a3b8;
+}
+
+.cellContent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.thumbnail {
+  width: 4.5rem;
+  height: 4.5rem;
+  overflow: hidden;
+  border-radius: 1rem;
+  background: linear-gradient(135deg, rgba(20, 20, 60, 0.08), rgba(199, 156, 49, 0.12));
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.06);
+}
+
+.thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.propertyTitle {
+  color: var(--color-brand-secondary);
+  font-size: 1rem;
+  line-height: 1.25;
+}
+
+.propertyCode,
+.propertyCategory {
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.propertyType {
+  color: var(--color-text-main);
+  font-weight: 700;
+}
+
+.propertyPrice {
+  color: var(--color-brand-primary);
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.statusButton {
+  min-height: 2.65rem !important;
+  padding: 0.55rem 0.85rem !important;
+  border-radius: var(--radius-md) !important;
+  gap: 0.45rem;
+}
+
+.statusActive {
+  background-color: rgba(199, 156, 49, 0.1) !important;
+  color: var(--color-brand-primary) !important;
+  border-color: rgba(199, 156, 49, 0.3) !important;
+}
+
+.statusInactive {
+  /* O "Roxinho" elegante (Secondary Brand Color) */
+  background-color: rgba(20, 20, 60, 0.08) !important;
+  color: var(--color-brand-secondary) !important;
+  border-color: rgba(20, 20, 60, 0.2) !important;
+}
+
+.actionsCell {
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+.actionButton {
+  min-height: 2.65rem !important;
+  padding: 0.55rem 0.85rem !important;
+  border-radius: var(--radius-md) !important;
+  gap: 0.45rem;
+  white-space: nowrap;
+}
+
+.emptyRow td {
+  padding: 1.5rem 1rem;
+}
+
+.emptyState {
+  display: grid;
+  gap: 0.3rem;
+  justify-items: center;
+  padding: 0.75rem 0;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.emptyState strong {
+  color: var(--color-brand-secondary);
+  font-size: 1rem;
+}
+
+.paginationFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-top: 1.25rem;
+}
+
+.paginationIndicator {
+  color: var(--color-brand-secondary);
+  font-weight: 700;
+}
+
+.paginationButton {
+  min-height: 2.8rem !important;
+  padding: 0.65rem 1rem !important;
+}
+
+.paginationButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+@media (max-width: 1200px) {
+  .paginationFooter {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .paginationIndicator {
+    text-align: center;
+  }
+}
+
+@media (max-width: 1024px) {
+  .header {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 768px) {
+  .table thead {
+    display: none;
+  }
+
+  .table,
+  .table tbody,
+  .table tr,
+  .table td {
+    display: block;
+    width: 100%;
+  }
+
+  .table {
+    border-spacing: 0;
+  }
+
+  .table tbody {
+    display: grid;
+    gap: 0.9rem;
+  }
+
+  .row {
+    display: grid;
+    gap: 0.8rem;
+    padding: 1rem;
+    border: 1px solid rgba(15, 23, 42, 0.06);
+    border-radius: 1rem;
+    background: #ffffff;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
+  }
+
+  .row td {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .row td::before {
+    content: attr(data-label);
+    flex: 0 0 38%;
+    color: var(--color-brand-primary);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .cellContent {
+    flex: 1 1 auto;
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  .actionsCell {
+    width: 100%;
+  }
+
+  .actionsCell .actionButton,
+  .actionsCell .statusButton {
+    width: 100%;
+  }
+
+  .actionsCell {
+    display: grid;
+    gap: 0.55rem;
+  }
+}

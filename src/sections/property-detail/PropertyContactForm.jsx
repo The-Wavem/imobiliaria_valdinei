@@ -1,21 +1,56 @@
-import React, { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Input from "@components/ui/Input/Input";
 import Button from "@components/ui/Button/Button.jsx";
+import Loader from "@components/ui/Loader/Loader.jsx";
 import inputStyles from "@components/ui/Input/Input.module.css";
+import { addLead } from "@services/leadService.js";
 import styles from "./PropertyContactForm.module.css";
 
 export default function PropertyContactForm({ property }) {
+  const defaultMessage = useMemo(
+    () => `Olá, tenho interesse no imóvel ${property?.title || ""}. Gostaria de mais informações.`,
+    [property?.title],
+  );
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [message, setMessage] = useState(
-    `Olá, tenho interesse no imóvel ${property?.title || ""}. Gostaria de mais informações.`,
-  );
+  const [message, setMessage] = useState(defaultMessage);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [feedback, setFeedback] = useState("");
+  const [feedbackType, setFeedbackType] = useState("success");
 
-  const handleSubmit = (e) => {
+  useEffect(() => {
+    setMessage(defaultMessage);
+  }, [defaultMessage]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log({ name, email, phone, message, propertyId: property?.id });
-    alert("Mensagem enviada (simulada). Obrigado!");
+    setIsSubmitting(true);
+    setFeedback("");
+
+    try {
+      await addLead({
+        name: name.trim(),
+        email: email.trim(),
+        phone: phone.trim(),
+        message: message.trim(),
+        propertyId: property?.id || "",
+        propertyTitle: property?.title || "",
+      });
+
+      setName("");
+      setEmail("");
+      setPhone("");
+      setMessage(defaultMessage);
+      setFeedbackType("success");
+      setFeedback("Mensagem enviada com sucesso. Em breve entraremos em contato.");
+    } catch (error) {
+      console.error("Falha ao salvar lead:", error);
+      setFeedbackType("error");
+      setFeedback("Não foi possível enviar sua mensagem. Tente novamente.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -29,6 +64,18 @@ export default function PropertyContactForm({ property }) {
         </div>
 
         <form className={styles.form} onSubmit={handleSubmit}>
+          {feedback ? (
+            <div
+              className={`${styles.feedback} ${
+                feedbackType === "success" ? styles.feedbackSuccess : styles.feedbackError
+              }`}
+              role="status"
+              aria-live="polite"
+            >
+              {feedback}
+            </div>
+          ) : null}
+
           <div className={styles.inputGrid}>
             <Input
               label="Nome"
@@ -70,8 +117,9 @@ export default function PropertyContactForm({ property }) {
           </label>
 
           <div className={styles.actions}>
-            <Button variant="primary" className={styles.submitButton}>
-              Enviar
+            <Button variant="primary" className={styles.submitButton} disabled={isSubmitting}>
+              {isSubmitting ? <Loader size={20} /> : null}
+              <span>{isSubmitting ? "Enviando..." : "Enviar"}</span>
             </Button>
           </div>
         </form>

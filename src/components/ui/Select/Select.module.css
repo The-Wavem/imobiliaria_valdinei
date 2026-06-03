@@ -99,7 +99,7 @@
   min-width: var(--radix-popover-trigger-width);
   width: var(--radix-popover-trigger-width);
   max-height: var(--radix-popover-content-available-height);
-  z-index: 9999;
+  z-index: 99999999;
   overflow: hidden;
   border: 1px solid var(--select-content-border, rgba(20, 20, 60, 0.08));
   border-radius: var(--radius-md);
