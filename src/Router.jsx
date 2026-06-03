@@ -16,7 +16,7 @@ const Login = lazy(() => import("@pages/admin/Login.jsx"));
 const Favorito = lazy(() => import("@/pages/public/Favorito.jsx"));
 const Contato = lazy(() => import("@/pages/public/Contato.jsx"));
 const Sobre = lazy(() => import("@/pages/public/Sobre.jsx"));
-const Servicos = lazy(() => import("@/pages/public/Servicos.jsx"));
+const Servicos = lazy(() => import("@/pages/public/Services.jsx"));
 
 export default function Router() {
   return (
