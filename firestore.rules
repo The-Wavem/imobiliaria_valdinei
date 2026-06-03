@@ -1,35 +1,35 @@
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // Função auxiliar para verificar se o usuário é o Admin (está autenticado)
+    function isAdmin() {
+      return request.auth != null;
+    }
+
+    // Regras para a coleção de imóveis
     match /properties/{propertyId} {
-      allow read: if true;
-      allow create, update, delete: if true;
+      // O Admin lê tudo. O público lê apenas imóveis ativos.
+      allow read: if isAdmin() || resource.data.status == 'Ativo';
+
+      // Criação e exclusão totais restritas ao Admin
+      allow create, delete: if isAdmin();
+
+      // Atualização: Admin pode tudo.
+      // Visitante comum PODE APENAS incrementar o contador de visualizações.
+      allow update: if isAdmin() || (
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['views']) 
+        && request.resource.data.views == resource.data.views + 1
+      );
     }
 
+    // Regras para a coleção de leads (contatos)
     match /leads/{leadId} {
-      allow read: if true;
+      // Qualquer um na internet pode criar (enviar um contato/whatsapp)
       allow create: if true;
-    }
 
-    match /analytics_views/{viewId} {
-      allow read, write: if true;
-    }
-
-    match /analytics_daily/{dayId} {
-      allow read, write: if true;
-    }
-
-    match /analytics_filters/{filterId} {
-      allow read, write: if true;
-    }
-
-    match /analytics_bairros/{bairroId} {
-      allow read, write: if true;
-    }
-
-    match /{document=**} {
-      allow read, write: if false;
+      // Apenas o Admin consegue ler a lista, atualizar status ou deletar um lead
+      allow read, update, delete: if isAdmin();
     }
   }
 }
