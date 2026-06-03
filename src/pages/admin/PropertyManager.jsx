@@ -3,7 +3,7 @@ import PropertyStats from "@sections/admin/properties/PropertyStats/PropertyStat
 import PropertyFilterBar from "@sections/admin/properties/PropertyFilterBar/PropertyFilterBar.jsx";
 import PropertyTable from "@sections/admin/properties/PropertyTable/PropertyTable.jsx";
 import PropertyFormModal from "@sections/admin/properties/PropertyFormModal/PropertyFormModal.jsx";
-import { addProperty, updateProperty, getAllProperties, deleteProperty } from "@services/propertyService.js";
+import { addProperty, updateProperty, getAllProperties, deleteProperty, togglePropertyStatus } from "@services/propertyService.js";
 
 export default function PropertyManager() {
   const [properties, setProperties] = useState([]);
@@ -93,10 +93,8 @@ export default function PropertyManager() {
   const handleToggleStatus = async (id, currentStatus) => {
     const newStatus = currentStatus === "Ativo" ? "Inativo" : "Ativo";
     
-    await updateProperty(id, { 
-      status: newStatus,
-      active: newStatus === "Ativo"
-    });
+    // Agora usamos a função cirúrgica em vez da atualização completa!
+    await togglePropertyStatus(id, newStatus);
     
     loadProperties();
   };

@@ -164,3 +164,20 @@ export const getAllProperties = async () => {
     return [];
   }
 };
+
+// Função exclusiva para alterar APENAS o status do imóvel
+export const togglePropertyStatus = async (id, newStatus) => {
+  try {
+    const propertyRef = doc(db, PROPERTY_COLLECTION, id);
+    // Atualiza apenas o campo status e a data, sem mexer no resto da casa!
+    await updateDoc(propertyRef, { 
+      status: newStatus,
+      active: newStatus === "Ativo", // mantendo coerência com o boolean active usado nos filtros
+      updatedAt: new Date().toISOString()
+    });
+    return true;
+  } catch (error) {
+    console.error("Erro ao alterar status do imóvel:", error);
+    throw error;
+  }
+};
