@@ -13,6 +13,7 @@ const requestStatusOptions = [
 const requestTypeStyles = {
   Visita: styles.requestBadgeVisit,
   Contato: styles.requestBadgeContact,
+  "WhatsApp Direto": styles.requestBadgeContact,
 };
 
 const requestStatusRowStyles = {
@@ -33,9 +34,9 @@ function sanitizePhone(phone) {
   return String(phone || "").replace(/\D/g, "");
 }
 
-function buildWhatsAppUrl(client) {
-  const message = `Olá ${client.name}, vi que você solicitou informações sobre o imóvel ${client.property}. Como posso ajudar?`;
-  return `https://wa.me/55${sanitizePhone(client.phone)}?text=${encodeURIComponent(message)}`;
+function buildWhatsAppUrl(name, phone, property) {
+  const message = `Olá ${name}, vi que você solicitou informações sobre o imóvel ${property}. Como posso ajudar?`;
+  return `https://wa.me/55${sanitizePhone(phone)}?text=${encodeURIComponent(message)}`;
 }
 
 function getRequestTypeClass(requestType) {
@@ -48,6 +49,20 @@ function getRequestStatusColor(status) {
 
 function getRequestRowClass(status) {
   return requestStatusRowStyles[status] || styles.rowNovo;
+}
+
+function formatLeadDate(createdAt, fallbackDate) {
+  if (createdAt) {
+    const d = new Date(createdAt);
+    return d.toLocaleString("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+  }
+  return fallbackDate || "N/A";
 }
 
 export default function LeadsTable({
@@ -87,65 +102,81 @@ export default function LeadsTable({
               </tr>
             </thead>
             <tbody>
-              {leads.map((lead) => (
-                <tr key={lead.id} className={`${styles.tableRow} ${getRequestRowClass(lead.status)}`.trim()}>
-                  <td>
-                    <div className={styles.dateCell}>{lead.date}</div>
-                  </td>
-                  <td>
-                    <div className={styles.clientCell}>
-                      <strong>{lead.client.name}</strong>
-                      <span>{lead.client.phone}</span>
-                    </div>
-                  </td>
-                  <td>
-                    <div className={styles.propertyCell}>
-                      <strong>{lead.client.property}</strong>
-                      <span>{lead.client.email}</span>
-                    </div>
-                  </td>
-                  <td>
-                    <span className={`${styles.requestBadge} ${getRequestTypeClass(lead.requestType)}`}>
-                      {lead.requestType}
-                    </span>
-                  </td>
-                  <td>
-                    <Select
-                      compact
-                      label="Status"
-                      options={requestStatusOptions}
-                      value={lead.status}
-                      onChange={(nextStatus) => onStatusChange(lead.id, nextStatus)}
-                      className={styles.statusSelect}
-                      contentClassName={styles.statusSelectMenu}
-                      statusColor={getRequestStatusColor(lead.status)}
-                    />
-                  </td>
-                  <td>
-                    <div className={styles.actionsCell}>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className={`${styles.actionButton} ${styles.whatsappButton}`}
-                        onClick={() => window.open(buildWhatsAppUrl(lead.client), "_blank", "noopener,noreferrer")}
-                        aria-label={`Abrir WhatsApp para ${lead.client.name}`}
-                      >
-                        <MessageCircle size={16} />
-                      </Button>
+              {leads.map((lead) => {
+                const clientName = lead.name || lead.client?.name || "Sem Nome";
+                const clientPhone = lead.phone || lead.client?.phone || "";
+                const clientEmail = lead.email || lead.client?.email || "";
+                const propTitle = lead.propertyTitle || lead.client?.property || "Imóvel não especificado";
+                const reqType = lead.source || lead.requestType || "Contato";
+                const formattedDate = formatLeadDate(lead.createdAt, lead.date);
 
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className={styles.actionButton}
-                        onClick={() => onViewDetails(lead)}
-                      >
-                        <Eye size={16} />
-                        <span>Ver Detalhes</span>
-                      </Button>
-                    </div>
+                return (
+                  <tr key={lead.id} className={`${styles.tableRow} ${getRequestRowClass(lead.status)}`.trim()}>
+                    <td>
+                      <div className={styles.dateCell}>{formattedDate}</div>
+                    </td>
+                    <td>
+                      <div className={styles.clientCell}>
+                        <strong>{clientName}</strong>
+                        <span>{clientPhone}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <div className={styles.propertyCell}>
+                        <strong>{propTitle}</strong>
+                        <span>{clientEmail}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <span className={`${styles.requestBadge} ${getRequestTypeClass(reqType)}`}>
+                        {reqType}
+                      </span>
+                    </td>
+                    <td>
+                      <Select
+                        compact
+                        label="Status"
+                        options={requestStatusOptions}
+                        value={lead.status}
+                        onChange={(nextStatus) => onStatusChange(lead.id, nextStatus)}
+                        className={styles.statusSelect}
+                        contentClassName={styles.statusSelectMenu}
+                        statusColor={getRequestStatusColor(lead.status)}
+                      />
+                    </td>
+                    <td>
+                      <div className={styles.actionsCell}>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className={`${styles.actionButton} ${styles.whatsappButton}`}
+                          onClick={() => window.open(buildWhatsAppUrl(clientName, clientPhone, propTitle), "_blank", "noopener,noreferrer")}
+                          aria-label={`Abrir WhatsApp para ${clientName}`}
+                        >
+                          <MessageCircle size={16} />
+                        </Button>
+
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className={styles.actionButton}
+                          onClick={() => onViewDetails(lead)}
+                        >
+                          <Eye size={16} />
+                          <span>Ver Detalhes</span>
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+              {leads.length === 0 && (
+                <tr>
+                  <td colSpan={6} style={{ textAlign: "center", padding: "2rem", color: "var(--color-text-muted)" }}>
+                    Nenhuma solicitação encontrada.
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>

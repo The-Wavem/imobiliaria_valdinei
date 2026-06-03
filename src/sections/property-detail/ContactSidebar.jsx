@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { MessageCircle, CheckCircle2, X, Phone, User, Loader2 } from "lucide-react";
 import { createPortal } from "react-dom";
-import { addWhatsAppLead } from "@services/leadService";
+import { addLead } from "@services/leadService";
 import styles from "./ContactSidebar.module.css";
 
 const VALDINEI_PHONE = import.meta.env.VITE_VALDINEI_PHONE;
@@ -74,15 +74,18 @@ export default function ContactSidebar({
     setSaveError(false);
 
     try {
-      await addWhatsAppLead({
+      await addLead({
         name: form.name.trim(),
         phone: form.phone.trim(),
+        email: "",
         propertyId,
         propertyTitle,
         propertyCode: code,
+        source: "WhatsApp Direto",
+        message: "Interesse via botão de WhatsApp"
       });
 
-      const message = buildWhatsAppMessage({
+      const messageText = buildWhatsAppMessage({
         propertyTitle: propertyTitle || "Imóvel",
         propertyCode: code,
         propertyPrice: price,
@@ -90,11 +93,13 @@ export default function ContactSidebar({
         clientPhone: form.phone.trim(),
       });
 
-      window.open(
-        `https://wa.me/${VALDINEI_PHONE}?text=${message}`,
-        "_blank",
-        "noopener,noreferrer"
-      );
+      setTimeout(() => {
+        window.open(
+          `https://wa.me/${VALDINEI_PHONE}?text=${messageText}`,
+          "_blank",
+          "noopener,noreferrer"
+        );
+      }, 300);
 
       setIsSuccess(true);
     } catch (error) {

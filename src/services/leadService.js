@@ -7,6 +7,7 @@ export async function addLead(leadData) {
   const payload = {
     ...leadData,
     status: "Novo",
+    read: false,
     createdAt: new Date().toISOString(),
   };
 
@@ -59,4 +60,23 @@ export async function getLeadsStats() {
     },
     { total: 0, novos: 0, emAtendimento: 0 },
   );
+}
+
+export async function getAllLeads() {
+  try {
+    const snapshot = await getDocs(collection(db, LEADS_COLLECTION));
+    const leads = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    return leads.sort((a, b) => {
+      const dateA = new Date(a.createdAt || 0).getTime();
+      const dateB = new Date(b.createdAt || 0).getTime();
+      return dateB - dateA;
+    });
+  } catch (error) {
+    console.error("Erro ao buscar leads:", error);
+    return [];
+  }
 }

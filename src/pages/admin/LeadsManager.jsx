@@ -3,118 +3,79 @@ import LeadsStats from "@sections/admin/leads/LeadsStats/LeadsStats.jsx";
 import LeadsFilterBar from "@sections/admin/leads/LeadsFilterBar/LeadsFilterBar.jsx";
 import LeadsTable from "@sections/admin/leads/LeadsTable/LeadsTable.jsx";
 import LeadDetailsModal from "@sections/admin/leads/LeadDetailsModal/LeadDetailsModal.jsx";
-import { initialRequests } from "../../data/admin/leadsSeed.js";
-
-function parseBrazilianDateTime(dateValue) {
-  const [datePart = "", timePart = "00:00"] = String(dateValue || "")
-    .trim()
-    .split(" ");
-  const [day = "0", month = "0", year = "0"] = datePart.split("/");
-  const [hours = "0", minutes = "0"] = timePart.split(":");
-
-  return new Date(
-    Number(year),
-    Number(month) - 1,
-    Number(day),
-    Number(hours),
-    Number(minutes),
-  ).getTime();
-}
-
-const LEADS_STORAGE_KEY = "@valdinei:leads";
-
-function readStoredRequests() {
-  if (typeof window === "undefined") {
-    return initialRequests;
-  }
-
-  try {
-    const rawValue = window.localStorage.getItem(LEADS_STORAGE_KEY);
-
-    if (!rawValue) {
-      return initialRequests;
-    }
-
-    const parsedValue = JSON.parse(rawValue);
-    return Array.isArray(parsedValue) ? parsedValue : initialRequests;
-  } catch {
-    return initialRequests;
-  }
-}
+import { getAllLeads } from "@services/leadService.js";
 
 export default function LeadsManager() {
-  const [requests, setRequests] = useState(() => readStoredRequests());
+  const [leads, setLeads] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("Todos");
   const [filterType, setFilterType] = useState("Todos");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const ITEMS_PER_PAGE = 10;
 
   useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
+    async function loadLeads() {
+      setIsLoading(true);
+      try {
+        const data = await getAllLeads();
+        setLeads(data);
+      } catch (error) {
+        console.error("Erro ao carregar leads:", error);
+      } finally {
+        setIsLoading(false);
+      }
     }
-
-    window.localStorage.setItem(LEADS_STORAGE_KEY, JSON.stringify(requests));
-    window.dispatchEvent(
-      new CustomEvent("valdinei:analytics-update", {
-        detail: { type: "leads" },
-      }),
-    );
-  }, [requests]);
+    loadLeads();
+  }, []);
 
   const totalNovos = useMemo(
-    () => requests.filter((request) => request.status === "Novo").length,
-    [requests],
+    () => leads.filter((lead) => lead.status === "Novo").length,
+    [leads],
   );
 
   const totalAtendimento = useMemo(
     () =>
-      requests.filter((request) =>
-        ["Em Atendimento", "Agendado"].includes(request.status),
+      leads.filter((lead) =>
+        ["Em Atendimento", "Agendado"].includes(lead.status),
       ).length,
-    [requests],
+    [leads],
   );
 
   const totalFinalizadas = useMemo(
-    () => requests.filter((request) => request.status === "Finalizado").length,
-    [requests],
+    () => leads.filter((lead) => lead.status === "Finalizado").length,
+    [leads],
   );
 
-  const processedLeads = useMemo(() => {
+  const filteredLeads = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
 
-    return [...requests]
-      .filter((request) => {
-        const matchesSearch = normalizedSearch
-          ? request.client.name.toLowerCase().includes(normalizedSearch)
-          : true;
+    return [...leads].filter((lead) => {
+      const name = lead.name || lead.client?.name || "";
+      const property = lead.propertyTitle || lead.client?.property || "";
+      const matchesSearch = normalizedSearch
+        ? name.toLowerCase().includes(normalizedSearch) || property.toLowerCase().includes(normalizedSearch)
+        : true;
 
-        const matchesStatus =
-          filterStatus === "Todos" || request.status === filterStatus;
-        const matchesType =
-          filterType === "Todos" || request.requestType === filterType;
+      const matchesStatus =
+        filterStatus === "Todos" || lead.status === filterStatus;
+      
+      const type = lead.source || lead.requestType || "";
+      const matchesType =
+        filterType === "Todos" || type === filterType;
 
-        return matchesSearch && matchesStatus && matchesType;
-      })
-      .sort(
-        (leftRequest, rightRequest) =>
-          parseBrazilianDateTime(rightRequest.date) -
-          parseBrazilianDateTime(leftRequest.date),
-      );
-  }, [filterStatus, filterType, requests, searchTerm]);
+      return matchesSearch && matchesStatus && matchesType;
+    });
+  }, [filterStatus, filterType, leads, searchTerm]);
 
-  const totalRequests = processedLeads.length;
-  const totalPages = Math.max(1, Math.ceil(totalRequests / itemsPerPage));
+  const totalPages = Math.max(1, Math.ceil(filteredLeads.length / ITEMS_PER_PAGE));
   const safeCurrentPage = Math.min(currentPage, totalPages);
-  const indexOfLastItem = safeCurrentPage * itemsPerPage;
-  const indexOfFirstItem =
-    totalRequests === 0 ? 0 : indexOfLastItem - itemsPerPage;
-  const visibleRequests = processedLeads.slice(
-    indexOfFirstItem,
-    indexOfLastItem,
+  
+  const paginatedLeads = filteredLeads.slice(
+    (safeCurrentPage - 1) * ITEMS_PER_PAGE,
+    safeCurrentPage * ITEMS_PER_PAGE
   );
 
   const openDetails = (request) => {
@@ -128,9 +89,10 @@ export default function LeadsManager() {
   };
 
   const handleStatusChange = (requestId, nextStatus) => {
-    setRequests((currentValue) =>
-      currentValue.map((request) =>
-        request.id === requestId ? { ...request, status: nextStatus } : request,
+    // Atualiza apenas localmente para ser reativo. No mundo real, aqui chamaria um updateLeadStatus no backend
+    setLeads((currentValue) =>
+      currentValue.map((lead) =>
+        lead.id === requestId ? { ...lead, status: nextStatus } : lead,
       ),
     );
   };
@@ -169,16 +131,22 @@ export default function LeadsManager() {
         onTypeChange={handleTypeFilterChange}
       />
 
-      <LeadsTable
-        leads={visibleRequests}
-        totalItems={totalRequests}
-        currentPage={safeCurrentPage}
-        totalPages={totalPages}
-        itemsPerPage={itemsPerPage}
-        onPageChange={setCurrentPage}
-        onViewDetails={openDetails}
-        onStatusChange={handleStatusChange}
-      />
+      {isLoading ? (
+        <div style={{ padding: "2rem", textAlign: "center", color: "var(--color-text-muted)" }}>
+          Carregando leads do banco de dados...
+        </div>
+      ) : (
+        <LeadsTable
+          leads={paginatedLeads}
+          totalItems={filteredLeads.length}
+          currentPage={safeCurrentPage}
+          totalPages={totalPages}
+          itemsPerPage={ITEMS_PER_PAGE}
+          onPageChange={setCurrentPage}
+          onViewDetails={openDetails}
+          onStatusChange={handleStatusChange}
+        />
+      )}
 
       <LeadDetailsModal
         isOpen={isDetailsOpen}
