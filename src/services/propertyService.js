@@ -18,7 +18,8 @@ const formatPropertyData = (data) => ({
   code: data.code || "",
   category: data.category || "",
   type: data.type || "",
-  status: data.status || "Ativo",
+  status: data.status || "Inativo",
+  active: (data.status || "Inativo") === "Ativo",
   pricing: {
     price: Number(data.price || 0),
     condo: Number(data.condo || 0),

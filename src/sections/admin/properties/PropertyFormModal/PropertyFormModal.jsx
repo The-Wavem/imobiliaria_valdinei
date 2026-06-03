@@ -54,7 +54,7 @@ const defaultForm = {
   category: "", type: "", address: "", neighborhood: "",
   area: "", bedrooms: "", bathrooms: "", parkingSpaces: "",
   features: [], photos: [], summary: "", description: "",
-  status: "Ativo"
+  status: "Inativo"
 };
 
 export default function PropertyFormModal({ isOpen, onClose, property, onSave }) {

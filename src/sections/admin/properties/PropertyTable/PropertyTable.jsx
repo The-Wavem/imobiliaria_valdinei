@@ -112,7 +112,7 @@ export default function PropertyTable({
                         <div className={styles.cellContent}>
                           <Button
                             type="button"
-                            variant={isActive ? "primary" : "secondary"}
+                            variant="outline" /* <-- MUDAMOS AQUI PARA NÃO BRIGAR COM O CSS */
                             className={`${styles.statusButton} ${isActive ? styles.statusActive : styles.statusInactive}`.trim()}
                             onClick={() =>
                               onToggleStatus &&

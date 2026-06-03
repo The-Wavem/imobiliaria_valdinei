@@ -158,11 +158,16 @@
 }
 
 .statusActive {
-  box-shadow: 0 12px 24px rgba(199, 156, 49, 0.16);
+  background-color: rgba(199, 156, 49, 0.1) !important;
+  color: var(--color-brand-primary) !important;
+  border-color: rgba(199, 156, 49, 0.3) !important;
 }
 
 .statusInactive {
-  opacity: 0.96;
+  /* O "Roxinho" elegante (Secondary Brand Color) */
+  background-color: rgba(20, 20, 60, 0.08) !important;
+  color: var(--color-brand-secondary) !important;
+  border-color: rgba(20, 20, 60, 0.2) !important;
 }
 
 .actionsCell {

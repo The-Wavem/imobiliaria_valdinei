@@ -3,6 +3,7 @@ import PropertyStats from "@sections/admin/properties/PropertyStats/PropertyStat
 import PropertyFilterBar from "@sections/admin/properties/PropertyFilterBar/PropertyFilterBar.jsx";
 import PropertyTable from "@sections/admin/properties/PropertyTable/PropertyTable.jsx";
 import PropertyFormModal from "@sections/admin/properties/PropertyFormModal/PropertyFormModal.jsx";
+import ConfirmDialog from "@components/ui/ConfirmDialog/ConfirmDialog.jsx";
 import { addProperty, updateProperty, getAllProperties, deleteProperty, togglePropertyStatus } from "@services/propertyService.js";
 
 export default function PropertyManager() {
@@ -14,6 +15,7 @@ export default function PropertyManager() {
   const itemsPerPage = 8;
   const [editingProperty, setEditingProperty] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [confirmDelete, setConfirmDelete] = useState({ isOpen: false, propertyId: null });
 
   const totalProperties = properties.length;
   const ativos = useMemo(
@@ -99,24 +101,22 @@ export default function PropertyManager() {
     loadProperties();
   };
 
-  const handleDeleteProperty = async (propertyId) => {
-    const propertyToDelete = properties.find(
-      (property) => property.id === propertyId || property.firestoreId === propertyId,
-    );
-    
-    const titleOrCode = propertyToDelete ? `${propertyToDelete.code} - ${propertyToDelete.title}` : "este imóvel";
-    const confirmed = window.confirm(`Tem certeza que deseja excluir o imóvel ${titleOrCode}?`);
+  // Quando clica no botão "Excluir" na tabela
+  const handleDeleteRequest = (id) => {
+    setConfirmDelete({ isOpen: true, propertyId: id });
+  };
 
-    if (!confirmed) {
-      return;
-    }
-
-    try {
-      await deleteProperty(propertyId);
-      loadProperties();
-    } catch (error) {
-      console.error("Erro ao excluir:", error);
-      alert("Falha ao excluir o imóvel. Tente novamente.");
+  // Quando clica no botão "Confirmar" dentro do nosso alerta
+  const confirmDeleteAction = async () => {
+    if (confirmDelete.propertyId) {
+      try {
+        await deleteProperty(confirmDelete.propertyId);
+        setConfirmDelete({ isOpen: false, propertyId: null });
+        loadProperties(); // Atualiza a tabela imediatamente
+      } catch (error) {
+        console.error("Erro ao excluir:", error);
+        alert("Falha ao excluir o imóvel. Tente novamente.");
+      }
     }
   };
 
@@ -164,7 +164,7 @@ export default function PropertyManager() {
         totalPages={totalPages}
         onPageChange={setCurrentPage}
         onEdit={handleOpenModal}
-        onDelete={handleDeleteProperty}
+        onDelete={handleDeleteRequest} // <-- LIGANDO O GATILHO AQUI
         onToggleStatus={handleToggleStatus}
         onRefresh={loadProperties}
       />
@@ -177,6 +177,16 @@ export default function PropertyManager() {
           onSave={handleSaveProperty}
         />
       )}
+
+      <ConfirmDialog
+        isOpen={confirmDelete.isOpen}
+        onClose={() => setConfirmDelete({ isOpen: false, propertyId: null })}
+        onConfirm={confirmDeleteAction}
+        title="Excluir Imóvel"
+        message="Tem certeza que deseja apagar este imóvel permanentemente? Esta ação não poderá ser desfeita."
+        confirmText="Sim, excluir"
+        cancelText="Cancelar"
+      />
     </main>
   );
 }
