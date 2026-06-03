@@ -1,6 +1,15 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { MapPin, BedDouble, Bath, CarFront, Ruler, Bed, Maximize, Calendar } from "lucide-react";
+import {
+  MapPin,
+  BedDouble,
+  Bath,
+  CarFront,
+  Ruler,
+  Bed,
+  Maximize,
+  Calendar,
+} from "lucide-react";
 import styles from "./PropertyCard.module.css";
 import buttonStyles from "../Button/Button.module.css";
 import Button from "../Button/Button";
@@ -41,7 +50,10 @@ export default function PropertyCard({ property, onViewDetails }) {
             />
           ) : (
             <div className={styles.imagePlaceholder}>
-              <span>Sem foto</span>
+              <img
+                src="https://static.vecteezy.com/system/resources/previews/016/916/479/large_2x/placeholder-icon-design-free-vector.jpg"
+                alt="Sem foto disponível"
+              />
             </div>
           )}
         </Link>
@@ -88,13 +100,17 @@ export default function PropertyCard({ property, onViewDetails }) {
           {beds > 0 && (
             <div className={styles.statItem}>
               <Bed size={16} />
-              <span>{beds} quarto{beds !== 1 ? "s" : ""}</span>
+              <span>
+                {beds} quarto{beds !== 1 ? "s" : ""}
+              </span>
             </div>
           )}
           {baths > 0 && (
             <div className={styles.statItem}>
               <Bath size={16} />
-              <span>{baths} banheiro{baths !== 1 ? "s" : ""}</span>
+              <span>
+                {baths} banheiro{baths !== 1 ? "s" : ""}
+              </span>
             </div>
           )}
           {area > 0 && (

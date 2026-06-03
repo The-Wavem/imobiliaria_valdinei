@@ -23,7 +23,7 @@ export default function PropertyTable({
     (property.photos && property.photos[0]) ||
     property.imageUrl ||
     property.thumbnail ||
-    "https://via.placeholder.com/150?text=Sem+Foto";
+    "https://static.vecteezy.com/system/resources/previews/016/916/479/large_2x/placeholder-icon-design-free-vector.jpg";
 
   return (
     <section
@@ -77,10 +77,14 @@ export default function PropertyTable({
                       <td data-label="Foto">
                         <div className={styles.cellContent}>
                           <div className={styles.thumbnail}>
-                            <img 
-                              src={getThumbnail(property)} 
-                              alt={title} 
-                              style={{ objectFit: "cover", width: "100%", height: "100%" }}
+                            <img
+                              src={getThumbnail(property)}
+                              alt={title}
+                              style={{
+                                objectFit: "cover",
+                                width: "100%",
+                                height: "100%",
+                              }}
                             />
                           </div>
                         </div>
@@ -112,7 +116,10 @@ export default function PropertyTable({
                             className={`${styles.statusButton} ${isActive ? styles.statusActive : styles.statusInactive}`.trim()}
                             onClick={() =>
                               onToggleStatus &&
-                              onToggleStatus(property.firestoreId || property.id, property.status)
+                              onToggleStatus(
+                                property.firestoreId || property.id,
+                                property.status,
+                              )
                             }
                           >
                             {isActive ? (
@@ -168,7 +175,10 @@ export default function PropertyTable({
                             type="button"
                             variant="secondary"
                             className={styles.actionButton}
-                            onClick={() => onDelete && onDelete(property.firestoreId || property.id)}
+                            onClick={() =>
+                              onDelete &&
+                              onDelete(property.firestoreId || property.id)
+                            }
                           >
                             <Trash2 size={16} />
                             <span>Excluir</span>
