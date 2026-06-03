@@ -49,15 +49,18 @@ const baseFeatures = [
   "Pet friendly",
 ];
 
-export default function PropertyFormModal({
-  isOpen,
-  onClose,
-  formData,
-  setFormData,
-  onSave,
-  mode = "create",
-}) {
+const defaultForm = {
+  title: "", code: "", price: "", condo: "", iptu: "",
+  category: "", type: "", address: "", neighborhood: "",
+  area: "", bedrooms: "", bathrooms: "", parkingSpaces: "",
+  features: [], photos: [], summary: "", description: "",
+  status: "Ativo"
+};
+
+export default function PropertyFormModal({ isOpen, onClose, property, onSave }) {
+  const mode = property ? "edit" : "create";
   const [activeTab, setActiveTab] = useState("basic");
+  const [formData, setFormData] = useState(defaultForm);
   const [availableTypes, setAvailableTypes] = useState(baseTypes);
   const [availableFeatures, setAvailableFeatures] = useState(baseFeatures);
   const [isAddingType, setIsAddingType] = useState(false);
@@ -79,28 +82,51 @@ export default function PropertyFormModal({
     setNewPhotoUrl("");
     setIsSaving(false);
 
-    if (formData?.type) {
-      setAvailableTypes((currentValue) =>
-        currentValue.includes(formData.type)
-          ? currentValue
-          : [...currentValue, formData.type],
-      );
-    }
-
-    if (Array.isArray(formData?.features)) {
-      setAvailableFeatures((currentValue) => {
-        const nextValues = [...currentValue];
-
-        formData.features.forEach((feature) => {
-          if (!nextValues.includes(feature)) {
-            nextValues.push(feature);
-          }
-        });
-
-        return nextValues;
+    if (property) {
+      setFormData({
+        title: property.title || property.content?.summary || "",
+        code: property.code || "",
+        price: property.pricing?.price || property.price || "",
+        condo: property.pricing?.condo || property.condo || "",
+        iptu: property.pricing?.iptu || property.iptu || "",
+        category: property.category || "",
+        type: property.type || "",
+        address: property.location?.address || property.address || "",
+        neighborhood: property.location?.neighborhood || property.neighborhood || "",
+        area: property.location?.area || property.area || "",
+        bedrooms: property.location?.bedrooms || property.bedrooms || "",
+        bathrooms: property.location?.bathrooms || property.bathrooms || "",
+        parkingSpaces: property.location?.parkingSpaces || property.parkingSpaces || "",
+        features: property.features || [],
+        photos: property.photos || [],
+        summary: property.content?.summary || property.summary || "",
+        description: property.content?.description || property.description || "",
+        status: property.status || "Ativo"
       });
+
+      if (property.type) {
+        setAvailableTypes((currentValue) =>
+          currentValue.includes(property.type)
+            ? currentValue
+            : [...currentValue, property.type],
+        );
+      }
+
+      if (Array.isArray(property.features)) {
+        setAvailableFeatures((currentValue) => {
+          const nextValues = [...currentValue];
+          property.features.forEach((feature) => {
+            if (!nextValues.includes(feature)) {
+              nextValues.push(feature);
+            }
+          });
+          return nextValues;
+        });
+      }
+    } else {
+      setFormData(defaultForm);
     }
-  }, [formData?.features, formData?.type, isOpen]);
+  }, [isOpen, property]);
 
   const typeOptions = useMemo(
     () => [
@@ -221,7 +247,9 @@ export default function PropertyFormModal({
     setIsSaving(true);
 
     try {
-      await onSave();
+      await onSave(formData);
+    } catch (error) {
+      console.error(error);
     } finally {
       setIsSaving(false);
     }

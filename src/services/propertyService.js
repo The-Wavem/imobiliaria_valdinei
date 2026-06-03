@@ -5,19 +5,66 @@ import {
   getDocs,
   increment,
   setDoc,
+  updateDoc,
 } from "firebase/firestore";
 import { db } from "./firebaseConfig.js";
 import { mapPropertyDocument } from "./properties.js";
 
 const PROPERTY_COLLECTION = "properties";
 
-export async function addProperty(propertyData) {
-  const reference = await addDoc(
-    collection(db, PROPERTY_COLLECTION),
-    propertyData,
-  );
-  return reference.id;
-}
+const formatPropertyData = (data) => ({
+  title: data.title || "",
+  code: data.code || "",
+  category: data.category || "",
+  type: data.type || "",
+  status: data.status || "Ativo",
+  pricing: {
+    price: Number(data.price || 0),
+    condo: Number(data.condo || 0),
+    iptu: Number(data.iptu || 0),
+  },
+  location: {
+    address: data.address || "",
+    neighborhood: data.neighborhood || "",
+    area: Number(data.area || 0),
+    bedrooms: Number(data.bedrooms || 0),
+    bathrooms: Number(data.bathrooms || 0),
+    parkingSpaces: Number(data.parkingSpaces || 0),
+  },
+  features: data.features || [],
+  photos: data.photos || [],
+  content: {
+    summary: data.summary || "",
+    description: data.description || "",
+  },
+  updatedAt: new Date().toISOString(),
+});
+
+export const addProperty = async (propertyData) => {
+  try {
+    const formattedData = formatPropertyData(propertyData);
+    formattedData.createdAt = new Date().toISOString();
+    formattedData.views = 0;
+    
+    const docRef = await addDoc(collection(db, PROPERTY_COLLECTION), formattedData);
+    return docRef.id;
+  } catch (error) {
+    console.error("Erro ao adicionar imóvel:", error);
+    throw error;
+  }
+};
+
+export const updateProperty = async (id, propertyData) => {
+  try {
+    const formattedData = formatPropertyData(propertyData);
+    const propertyRef = doc(db, PROPERTY_COLLECTION, id);
+    await updateDoc(propertyRef, formattedData);
+    return true;
+  } catch (error) {
+    console.error("Erro ao atualizar imóvel:", error);
+    throw error;
+  }
+};
 
 export async function getPropertiesStats() {
   const snapshot = await getDocs(collection(db, PROPERTY_COLLECTION));

@@ -3,82 +3,11 @@ import PropertyStats from "@sections/admin/properties/PropertyStats/PropertyStat
 import PropertyFilterBar from "@sections/admin/properties/PropertyFilterBar/PropertyFilterBar.jsx";
 import PropertyTable from "@sections/admin/properties/PropertyTable/PropertyTable.jsx";
 import PropertyFormModal from "@sections/admin/properties/PropertyFormModal/PropertyFormModal.jsx";
-import {
-  buildPropertyDocument,
-  savePropertyDocument,
-} from "@services/AdminCadastro";
-import { addProperty, getAllProperties } from "@services/propertyService.js";
-
-const emptyForm = {
-  title: "",
-  code: "",
-  category: "",
-  type: "",
-  price: "",
-  condo: "",
-  iptu: "",
-  address: "",
-  neighborhood: "",
-  area: "",
-  bedrooms: "",
-  bathrooms: "",
-  parkingSpaces: "",
-  imageUrl: "",
-  photos: [],
-  features: [],
-  summary: "",
-  description: "",
-};
-
-function createPropertyCode(nextId) {
-  return `IV-${String(nextId).padStart(4, "0")}`;
-}
-
-function normalizeForm(property = emptyForm) {
-  return {
-    ...emptyForm,
-    ...property,
-    price:
-      property.price !== undefined && property.price !== null
-        ? String(property.price)
-        : "",
-    condo:
-      property.condo !== undefined && property.condo !== null
-        ? String(property.condo)
-        : "",
-    iptu:
-      property.iptu !== undefined && property.iptu !== null
-        ? String(property.iptu)
-        : "",
-    area:
-      property.area !== undefined && property.area !== null
-        ? String(property.area)
-        : "",
-    bedrooms:
-      property.bedrooms !== undefined && property.bedrooms !== null
-        ? String(property.bedrooms)
-        : "",
-    bathrooms:
-      property.bathrooms !== undefined && property.bathrooms !== null
-        ? String(property.bathrooms)
-        : "",
-    parkingSpaces:
-      property.parkingSpaces !== undefined && property.parkingSpaces !== null
-        ? String(property.parkingSpaces)
-        : "",
-    photos: property.photos || (property.imageUrl ? [property.imageUrl] : []),
-    features: property.features || [],
-    summary: property.summary || "",
-    description: property.description || "",
-  };
-}
+import { addProperty, updateProperty, getAllProperties } from "@services/propertyService.js";
 
 export default function PropertyManager() {
   const [properties, setProperties] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState("create");
-  const [editingId, setEditingId] = useState(null);
-  const [formData, setFormData] = useState(emptyForm);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("Todos");
   const [currentPage, setCurrentPage] = useState(1);
@@ -157,40 +86,28 @@ export default function PropertyManager() {
   );
 
   const openCreateModal = () => {
-    setModalMode("create");
-    setEditingId(null);
-    setFormData(normalizeForm(emptyForm));
+    handleOpenModal(null);
     setCurrentPage(1);
-    setIsModalOpen(true);
   };
 
-  const openEditModal = (property) => {
-    setModalMode("edit");
-    setEditingId(property.id);
-    setFormData(normalizeForm(property));
-    setIsModalOpen(true);
-  };
-
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setModalMode("create");
-    setEditingId(null);
-    setFormData(normalizeForm(emptyForm));
-  };
-
-  const handleStatusToggle = (propertyId) => {
-    setProperties((currentValue) =>
-      currentValue.map((property) =>
-        property.id === propertyId
-          ? { ...property, active: !property.active }
-          : property,
-      ),
-    );
+  const handleStatusToggle = async (propertyId) => {
+    const property = properties.find((p) => p.id === propertyId || p.firestoreId === propertyId);
+    if (!property) return;
+    
+    const currentStatus = property.status === "Ativo" || property.active === true;
+    const newStatus = currentStatus ? "Inativo" : "Ativo";
+    
+    await updateProperty(property.firestoreId || propertyId, { 
+      status: newStatus,
+      active: !currentStatus 
+    });
+    
+    loadProperties();
   };
 
   const handleDelete = (propertyId) => {
     const propertyToDelete = properties.find(
-      (property) => property.id === propertyId,
+      (property) => property.id === propertyId || property.firestoreId === propertyId,
     );
     const confirmed = window.confirm(
       propertyToDelete
@@ -203,7 +120,7 @@ export default function PropertyManager() {
     }
 
     setProperties((currentValue) =>
-      currentValue.filter((property) => property.id !== propertyId),
+      currentValue.filter((property) => property.id !== propertyId && property.firestoreId !== propertyId),
     );
   };
 
@@ -217,119 +134,13 @@ export default function PropertyManager() {
     setCurrentPage(1);
   };
 
-  const handleSubmit = async () => {
-    const nextId =
-      properties.reduce(
-        (highestId, property) => Math.max(highestId, property.id),
-        0,
-      ) + 1;
-    const propertyId = modalMode === "edit" && editingId ? editingId : nextId;
-    const payload = {
-      id: propertyId,
-      title: formData.title.trim(),
-      code: formData.code.trim() || createPropertyCode(propertyId),
-      category: formData.category,
-      type: formData.type.trim() || "Imóvel",
-      price: Number(formData.price || 0),
-      condo: Number(formData.condo || 0),
-      iptu: Number(formData.iptu || 0),
-      address: formData.address.trim(),
-      neighborhood: formData.neighborhood.trim(),
-      area: Number(formData.area || 0),
-      bedrooms: Number(formData.bedrooms || 0),
-      bathrooms: Number(formData.bathrooms || 0),
-      parkingSpaces: Number(formData.parkingSpaces || 0),
-      imageUrl: formData.imageUrl.trim(),
-      thumbnail: formData.photos[0] || formData.imageUrl.trim() || "",
-      photos: formData.photos,
-      features: formData.features,
-      summary: formData.summary.trim(),
-      description: formData.description.trim(),
-      active:
-        modalMode === "edit"
-          ? (properties.find((property) => property.id === editingId)?.active ??
-            true)
-          : true,
-    };
-
-    const existingProperty =
-      modalMode === "edit"
-        ? properties.find((property) => property.id === editingId)
-        : null;
-
-    try {
-      const documentPayload = buildPropertyDocument(payload, {
-        propertyId,
-        active: existingProperty?.active ?? true,
-        existingProperty,
-      });
-
-      if (modalMode === "create") {
-        const savedId = await addProperty(documentPayload);
-
-        payload.firestoreId = savedId;
-      } else if (existingProperty?.firestoreId) {
-        const savedDocument = await savePropertyDocument(payload, {
-          propertyId,
-          active: existingProperty?.active ?? true,
-          firestoreId: existingProperty?.firestoreId,
-        });
-
-        payload.firestoreId = savedDocument.id;
-      }
-
-      setProperties((currentValue) => {
-        if (modalMode === "edit") {
-          return currentValue.map((property) =>
-            property.id === editingId
-              ? {
-                  ...property,
-                  ...payload,
-                  structuredDocument: documentPayload,
-                  firestoreId: property.firestoreId || payload.firestoreId,
-                  active: property.active,
-                }
-              : property,
-          );
-        }
-
-        return [
-          {
-            ...payload,
-            structuredDocument: documentPayload,
-          },
-          ...currentValue,
-        ];
-      });
-
-      setIsModalOpen(false);
-      setModalMode("create");
-      setEditingId(null);
-      setFormData(normalizeForm(emptyForm));
-
-      if (modalMode === "create") {
-        setCurrentPage(1);
-      }
-    } catch (error) {
-      console.error("Falha ao salvar o imóvel no banco:", error);
-
-      setProperties((currentValue) => {
-        if (modalMode === "edit") {
-          return currentValue.map((property) =>
-            property.id === editingId
-              ? { ...property, ...payload, active: property.active }
-              : property,
-          );
-        }
-
-        return [{ ...payload }, ...currentValue];
-      });
-
-      setIsModalOpen(false);
-      setModalMode("create");
-      setEditingId(null);
-      setFormData(normalizeForm(emptyForm));
+  const handleSaveProperty = async (formData) => {
+    if (editingProperty) {
+      await updateProperty(editingProperty.firestoreId || editingProperty.id, formData);
+    } else {
+      await addProperty(formData);
     }
+    handleCloseModal();
   };
 
   return (
@@ -366,10 +177,8 @@ export default function PropertyManager() {
         <PropertyFormModal
           isOpen={isModalOpen}
           onClose={handleCloseModal}
-          formData={formData}
-          setFormData={setFormData}
-          onSave={handleSubmit}
-          mode={modalMode}
+          property={editingProperty}
+          onSave={handleSaveProperty}
         />
       )}
     </main>
