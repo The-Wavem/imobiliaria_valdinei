@@ -33,7 +33,7 @@ export default function PrivateLayout() {
   }
 
   return (
-    <>
+    <div className={styles.shell}>
       <AdminSidebar />
       <div key={location.pathname} className={styles.pageTransition}>
         <Suspense
@@ -46,6 +46,6 @@ export default function PrivateLayout() {
           <Outlet />
         </Suspense>
       </div>
-    </>
+    </div>
   );
 }

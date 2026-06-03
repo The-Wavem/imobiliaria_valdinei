@@ -1,11 +1,33 @@
-import { MapPin, Heart, Bed, Bath, Maximize, Calendar } from "lucide-react";
+import React from "react";
 import { Link } from "react-router-dom";
-import Button from "@components/ui/Button/Button.jsx";
-import buttonStyles from "@components/ui/Button/Button.module.css";
-import ButtonFavorito from "@components/ui/Button_Favorito/Button_Favorito.jsx";
+import {
+  MapPin,
+  BedDouble,
+  Bath,
+  CarFront,
+  Ruler,
+  Bed,
+  Maximize,
+  Calendar,
+} from "lucide-react";
 import styles from "./PropertyCard.module.css";
+import buttonStyles from "../Button/Button.module.css";
+import Button from "../Button/Button";
+import ButtonFavorito from "../Button_Favorito/Button_Favorito";
 
 export default function PropertyCard({ property, onViewDetails }) {
+  const coverImage =
+    property.image ||
+    property.imageUrl ||
+    property.thumbnail ||
+    property.photos?.find(Boolean) ||
+    undefined;
+
+  // beds/baths/area podem vir como beds ou bedrooms dependendo da origem
+  const beds = property.beds ?? property.bedrooms ?? 0;
+  const baths = property.baths ?? property.bathrooms ?? 0;
+  const area = property.area ?? 0;
+
   return (
     <article className={styles.card}>
       <div className={styles.imageWrap}>
@@ -19,12 +41,21 @@ export default function PropertyCard({ property, onViewDetails }) {
             }
           }}
         >
-          <img
-            src={property.image}
-            alt={property.title}
-            className={styles.image}
-            referrerPolicy="no-referrer"
-          />
+          {coverImage ? (
+            <img
+              src={coverImage}
+              alt={property.title}
+              className={styles.image}
+              referrerPolicy="no-referrer"
+            />
+          ) : (
+            <div className={styles.imagePlaceholder}>
+              <img
+                src="https://static.vecteezy.com/system/resources/previews/016/916/479/large_2x/placeholder-icon-design-free-vector.jpg"
+                alt="Sem foto disponível"
+              />
+            </div>
+          )}
         </Link>
 
         <div className={styles.badges}>
@@ -66,21 +97,30 @@ export default function PropertyCard({ property, onViewDetails }) {
         </p>
 
         <div className={styles.stats}>
-          <div className={styles.statItem}>
-            <Bed size={16} />
-            <span>{property.beds}</span>
-          </div>
-
-          <div className={styles.statItem}>
-            <Bath size={16} />
-            <span>{property.baths}</span>
-          </div>
-
-          <div className={styles.statItem}>
-            <Maximize size={16} />
-            <span>{property.area}m²</span>
-          </div>
+          {beds > 0 && (
+            <div className={styles.statItem}>
+              <Bed size={16} />
+              <span>
+                {beds} quarto{beds !== 1 ? "s" : ""}
+              </span>
+            </div>
+          )}
+          {baths > 0 && (
+            <div className={styles.statItem}>
+              <Bath size={16} />
+              <span>
+                {baths} banheiro{baths !== 1 ? "s" : ""}
+              </span>
+            </div>
+          )}
+          {area > 0 && (
+            <div className={styles.statItem}>
+              <Maximize size={16} />
+              <span>{area}m²</span>
+            </div>
+          )}
         </div>
+
         <div className={styles.actions}>
           <Link
             to={`/imovel/${property.id}`}
@@ -94,11 +134,6 @@ export default function PropertyCard({ property, onViewDetails }) {
           >
             Ver Detalhes
           </Link>
-
-          <Button variant="primary" className={styles.visitButton}>
-            <Calendar size={18} />
-            Agendar Visita
-          </Button>
         </div>
       </div>
     </article>

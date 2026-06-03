@@ -32,6 +32,26 @@
   gap: 1.5rem;
 }
 
+.feedback {
+  padding: 0.95rem 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.feedbackSuccess {
+  background: rgba(34, 197, 94, 0.1);
+  color: #166534;
+  border: 1px solid rgba(34, 197, 94, 0.22);
+}
+
+.feedbackError {
+  background: rgba(239, 68, 68, 0.08);
+  color: #991b1b;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
 .inputGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -138,6 +158,10 @@
 
 .submitButton {
   width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
 }
 
 @media (max-width: 900px) {

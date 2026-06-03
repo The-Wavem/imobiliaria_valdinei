@@ -4,7 +4,7 @@ import Navbar from "./Navbar";
 import Footer from "./Footer";
 import CookieConsent from "@components/ui/CookieConsent/CookieConsent.jsx";
 import Loader from "@components/ui/Loader/Loader.jsx";
-import { trackPageAccess } from "@utils/analytics";
+import { trackPageView } from "@utils/analytics";
 import styles from "./PublicLayout.module.css";
 
 let lastTrackedPageViewSignature = null;
@@ -20,7 +20,11 @@ export default function PublicLayout() {
     }
 
     lastTrackedPageViewSignature = signature;
-    trackPageAccess(location.pathname);
+    const storedConsent = window.localStorage.getItem("@valdinei:consent_status");
+
+    if (storedConsent === "accepted") {
+      trackPageView();
+    }
   }, [location.pathname]);
 
   useEffect(() => {

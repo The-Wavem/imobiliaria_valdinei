@@ -1,19 +1,20 @@
-.overlay {
+.modalOverlay {
   position: fixed;
   inset: 0;
-  z-index: 80;
+  z-index: 99999;
+  width: 100vw;
+  height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1rem;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
+  background-color: rgba(0, 0, 0, 0.6);
+  overflow: hidden;
 }
 
-.modal {
-  width: min(56rem, 100%);
-  max-height: calc(100vh - 2rem);
-  overflow: auto;
+.modalContent {
+  width: min(56rem, calc(100vw - 2rem));
+  max-height: 90vh;
+  overflow-y: auto;
   background: var(--color-surface);
   border-radius: var(--radius-lg);
   box-shadow: 0 30px 80px rgba(15, 23, 42, 0.24);

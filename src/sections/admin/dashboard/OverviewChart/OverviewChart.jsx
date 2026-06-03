@@ -1,10 +1,10 @@
+import React, { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { ArrowUpRight, BarChart2 } from "lucide-react";
 import {
   Area,
   AreaChart,
   CartesianGrid,
-  LabelList,
   Legend,
   ResponsiveContainer,
   Tooltip,
@@ -37,31 +37,126 @@ const tooltipContentStyle = {
   color: "var(--color-text-main)",
 };
 
-const tooltipLabelStyle = {
-  color: "var(--color-brand-secondary)",
-  fontWeight: 700,
-  fontFamily: "var(--font-sans)",
-};
-
 const tooltipItemStyle = {
   color: "var(--color-text-muted)",
   fontFamily: "var(--font-sans)",
 };
 
-const totalLabelStyle = {
-  fill: "var(--color-brand-secondary)",
-  fontFamily: "var(--font-sans)",
-  fontSize: 12,
-  fontWeight: 700,
+const formatDataBR = (dateStr) => {
+  if (!dateStr) return "";
+
+  const parts = String(dateStr).split("-");
+
+  if (parts.length === 2) {
+    const monthIndex = parseInt(parts[1], 10) - 1;
+    const meses = [
+      "Jan",
+      "Fev",
+      "Mar",
+      "Abr",
+      "Mai",
+      "Jun",
+      "Jul",
+      "Ago",
+      "Set",
+      "Out",
+      "Nov",
+      "Dez",
+    ];
+    return meses[monthIndex] || dateStr;
+  }
+
+  if (parts.length === 3) {
+    const [, month, day] = parts;
+    return `${day}/${month}`;
+  }
+
+  return String(dateStr);
 };
 
-function formatPercent(value) {
-  return `${value.toFixed(1).replace(".", ",")}%`;
-}
+const formatDateToString = (date) => {
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+};
 
-export default function OverviewChart({ data, period, onPeriodChange, summary = {} }) {
-  const periodLabel = periodOptions.find((option) => option.value === period)?.label ?? "Últimos 7 dias";
-  const hasData = data.length > 0;
+export default function OverviewChart({ data = [], period, onPeriodChange }) {
+
+  const chartData = useMemo(() => {
+    if (period === "year") {
+      const currentYear = new Date().getFullYear();
+      const template = Array.from({ length: 12 }, (_, i) => {
+        return {
+          date: `${currentYear}-${String(i + 1).padStart(2, "0")}`,
+          acessos: 0,
+          novosClientes: 0,
+        };
+      });
+
+      data.forEach((curr) => {
+        if (!curr.date) return;
+        const monthStr = curr.date.substring(0, 7);
+        const target = template.find((t) => t.date === monthStr);
+        if (target) {
+          target.acessos += Number(curr.acessos) || 0;
+          target.novosClientes += Number(curr.novosClientes) || 0;
+        }
+      });
+      return template;
+    }
+
+    const daysCount = period === "7d" ? 7 : 30;
+    const today = new Date();
+
+    const template = Array.from({ length: daysCount }, (_, i) => {
+      const d = new Date(today);
+      d.setDate(today.getDate() - (daysCount - 1 - i));
+      return {
+        date: formatDateToString(d),
+        acessos: 0,
+        novosClientes: 0,
+      };
+    });
+
+    data.forEach((curr) => {
+      if (!curr.date) return;
+      const target = template.find((t) => t.date === curr.date);
+      if (target) {
+        target.acessos += Number(curr.acessos) || 0;
+        target.novosClientes += Number(curr.novosClientes) || 0;
+      }
+    });
+
+    return template;
+  }, [data, period]);
+
+  const hasData = data && data.length > 0;
+  const totalAcessos = chartData.reduce(
+    (acc, curr) => acc + (curr.acessos || 0),
+    0,
+  );
+  const totalNewClients = chartData.reduce(
+    (acc, curr) => acc + (curr.novosClientes || 0),
+    0,
+  );
+  const timeDivisor = chartData.length || 1;
+  const mediaAcessos = (totalAcessos / timeDivisor)
+    .toFixed(1)
+    .replace(".", ",");
+  const peakItem = hasData
+    ? chartData.reduce(
+        (max, curr) => (curr.acessos > max.acessos ? curr : max),
+        chartData[0],
+      )
+    : null;
+
+  const periodText =
+    {
+      "7d": "nos últimos 7 dias",
+      "30d": "nos últimos 30 dias",
+      year: "neste ano",
+    }[period] || "no período selecionado";
 
   return (
     <section className={styles.section} aria-label="Visão geral de tráfego">
@@ -69,9 +164,11 @@ export default function OverviewChart({ data, period, onPeriodChange, summary = 
         <div className={styles.header}>
           <div>
             <p className={styles.kicker}>Tráfego</p>
-            <h2 className={styles.title}>Acessos Diários</h2>
+            <h2 className={styles.title}>
+              Acessos {period === "year" ? "Mensais" : "Diários"}
+            </h2>
             <p className={styles.subtitle}>
-              Acompanhe os acessos únicos e recorrentes que aceitaram cookies em {periodLabel.toLowerCase()}.
+              Acompanhe o volume de acessos registrado {periodText}.
             </p>
           </div>
 
@@ -98,66 +195,94 @@ export default function OverviewChart({ data, period, onPeriodChange, summary = 
           <div className={styles.chartWrap}>
             {hasData ? (
               <ResponsiveContainer width="100%" height={360}>
-                <AreaChart data={data} margin={{ top: 24, right: 18, left: 0, bottom: 8 }}>
+                <AreaChart
+                  data={chartData}
+                  margin={{ top: 24, right: 18, left: 0, bottom: 8 }}
+                >
                   <defs>
-                    <linearGradient id="overviewGradientNew" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.5} />
-                      <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0.06} />
+                    <linearGradient
+                      id="colorAcessos"
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
+                      <stop
+                        offset="5%"
+                        stopColor="var(--color-primary)"
+                        stopOpacity={0.5}
+                      />
+                      <stop
+                        offset="95%"
+                        stopColor="var(--color-primary)"
+                        stopOpacity={0.06}
+                      />
                     </linearGradient>
-                    <linearGradient id="overviewGradientRecurring" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="var(--color-brand-secondary)" stopOpacity={0.45} />
-                      <stop offset="95%" stopColor="var(--color-brand-secondary)" stopOpacity={0.08} />
+                    <linearGradient id="colorNovos" x1="0" y1="0" x2="0" y2="1">
+                      <stop
+                        offset="5%"
+                        stopColor="var(--color-brand-secondary)"
+                        stopOpacity={0.45}
+                      />
+                      <stop
+                        offset="95%"
+                        stopColor="var(--color-brand-secondary)"
+                        stopOpacity={0.06}
+                      />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={axisTickStyle} />
-                  <YAxis axisLine={false} tickLine={false} tick={axisTickStyle} />
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="#F1F5F9"
+                    vertical={false}
+                  />
+                  <XAxis
+                    dataKey="date"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={axisTickStyle}
+                    tickFormatter={formatDataBR}
+                  />
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
+                    tick={axisTickStyle}
+                  />
                   <Tooltip
                     cursor={{ fill: "rgba(199, 156, 49, 0.06)" }}
                     contentStyle={tooltipContentStyle}
-                    labelStyle={tooltipLabelStyle}
                     itemStyle={tooltipItemStyle}
+                    labelFormatter={formatDataBR}
                   />
-                  <Legend verticalAlign="top" height={28} wrapperStyle={{ fontFamily: "var(--font-sans)" }} />
+                  <Legend
+                    verticalAlign="top"
+                    align="left"
+                    iconType="square"
+                    height={32}
+                  />
                   <Area
-                    dataKey="newClients"
-                    name="Novos / únicos"
-                    stackId="traffic"
+                    dataKey="acessos"
+                    name="Acessos Gerais"
                     type="monotone"
                     stroke="var(--color-primary)"
-                    fill="url(#overviewGradientNew)"
-                  >
-                    <LabelList
-                      content={({ x, y, width, payload }) => {
-                        const total = payload?.total ?? 0;
-
-                        return (
-                          <text
-                            x={(x || 0) + (width || 0) / 2}
-                            y={(y || 0) - 8}
-                            textAnchor="middle"
-                            style={totalLabelStyle}
-                          >
-                            {total}
-                          </text>
-                        );
-                      }}
-                    />
-                  </Area>
+                    fill="url(#colorAcessos)"
+                  />
                   <Area
-                    dataKey="frequentClients"
-                    name="Recorrentes"
-                    stackId="traffic"
+                    dataKey="novosClientes"
+                    name="Novos Clientes"
                     type="monotone"
                     stroke="var(--color-brand-secondary)"
-                    fill="url(#overviewGradientRecurring)"
+                    fill="url(#colorNovos)"
                   />
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
               <div className={styles.emptyState}>
                 <BarChart2 size={44} strokeWidth={1.5} />
-                <p>Nenhum acesso foi registrado ainda para comparar novos e recorrentes.</p>
+                <p>
+                  Nenhum acesso foi registrado ainda para exibir o gráfico do
+                  período.
+                </p>
               </div>
             )}
           </div>
@@ -170,9 +295,12 @@ export default function OverviewChart({ data, period, onPeriodChange, summary = 
 
             <div className={styles.summaryStatCard}>
               <span className={styles.summaryStatLabel}>Total de acessos</span>
-              <strong className={styles.summaryStatValue}>{numberFormatter.format(summary.total || 0)}</strong>
+              <strong className={styles.summaryStatValue}>
+                {numberFormatter.format(totalAcessos)}
+              </strong>
               <span className={styles.summaryStatHint}>
-                Média de {(summary.averagePerDay || 0).toFixed(1).replace(".", ",")} acessos por dia
+                Média de {mediaAcessos} acessos por{" "}
+                {period === "year" ? "mês" : "dia"}
               </span>
             </div>
 
@@ -180,19 +308,27 @@ export default function OverviewChart({ data, period, onPeriodChange, summary = 
               <div className={styles.summarySplitItem}>
                 <div className={styles.summarySplitRow}>
                   <span className={styles.summarySwatchNew} />
-                  <span>Novos / únicos</span>
+                  <span>Pico do período</span>
                 </div>
-                <strong>{formatPercent(summary.newShare || 0)}</strong>
-                <span>{numberFormatter.format(summary.newClients || 0)} acessos</span>
+                <strong>
+                  {peakItem && peakItem.acessos > 0
+                    ? numberFormatter.format(peakItem.acessos)
+                    : 0}
+                </strong>
+                <span>
+                  {peakItem && peakItem.acessos > 0
+                    ? formatDataBR(peakItem.date)
+                    : "Sem dados"}
+                </span>
               </div>
 
               <div className={styles.summarySplitItem}>
                 <div className={styles.summarySplitRow}>
                   <span className={styles.summarySwatchRecurring} />
-                  <span>Recorrentes</span>
+                  <span>Total de Aceites</span>
                 </div>
-                <strong>{formatPercent(summary.frequentShare || 0)}</strong>
-                <span>{numberFormatter.format(summary.frequentClients || 0)} acessos</span>
+                <strong>{numberFormatter.format(totalNewClients)}</strong>
+                <span>Total de termos de privacidade aceitos</span>
               </div>
             </div>
           </aside>

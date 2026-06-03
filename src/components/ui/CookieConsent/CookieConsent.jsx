@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import Button from "@components/ui/Button/Button.jsx";
-import { trackPageAccess } from "@utils/analytics";
+import { trackNewConsent, trackPageView } from "@utils/analytics";
 import styles from "./CookieConsent.module.css";
 
 const CONSENT_KEY = "@valdinei:consent_status";
@@ -19,10 +19,11 @@ export default function CookieConsent() {
     }
   }, []);
 
-  const handleAccept = () => {
+  const handleAccept = async () => {
     try {
       window.localStorage.setItem(CONSENT_KEY, "accepted");
-      trackPageAccess();
+      await trackNewConsent();
+      await trackPageView();
     } finally {
       setIsVisible(false);
     }

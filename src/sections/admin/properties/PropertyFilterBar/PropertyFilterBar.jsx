@@ -43,7 +43,7 @@ export default function PropertyFilterBar({
         <div className={styles.actionField}>
           <Button type="button" variant="primary" className={styles.addButton} onClick={onAddClick}>
             <Plus size={18} />
-            <span>+ Adicionar Imóvel</span>
+            <span>Adicionar Imóvel</span>
           </Button>
         </div>
       </div>

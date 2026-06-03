@@ -3,117 +3,48 @@ import PropertyStats from "@sections/admin/properties/PropertyStats/PropertyStat
 import PropertyFilterBar from "@sections/admin/properties/PropertyFilterBar/PropertyFilterBar.jsx";
 import PropertyTable from "@sections/admin/properties/PropertyTable/PropertyTable.jsx";
 import PropertyFormModal from "@sections/admin/properties/PropertyFormModal/PropertyFormModal.jsx";
-import { buildPropertyDocument, savePropertyDocument } from "@services/AdminCadastro";
-import { initialProperties } from "../../data/admin/propertiesSeed.js";
-
-const emptyForm = {
-  title: "",
-  code: "",
-  category: "",
-  type: "",
-  price: "",
-  condo: "",
-  iptu: "",
-  address: "",
-  neighborhood: "",
-  area: "",
-  bedrooms: "",
-  bathrooms: "",
-  parkingSpaces: "",
-  imageUrl: "",
-  photos: [],
-  features: [],
-  summary: "",
-  description: "",
-};
-
-const PROPERTIES_STORAGE_KEY = "@valdinei:properties";
-
-function readStoredProperties() {
-  if (typeof window === "undefined") {
-    return initialProperties;
-  }
-
-  try {
-    const rawValue = window.localStorage.getItem(PROPERTIES_STORAGE_KEY);
-
-    if (!rawValue) {
-      return initialProperties;
-    }
-
-    const parsedValue = JSON.parse(rawValue);
-    return Array.isArray(parsedValue) ? parsedValue : initialProperties;
-  } catch {
-    return initialProperties;
-  }
-}
-
-function createPropertyCode(nextId) {
-  return `IV-${String(nextId).padStart(4, "0")}`;
-}
-
-function normalizeForm(property = emptyForm) {
-  return {
-    ...emptyForm,
-    ...property,
-    price:
-      property.price !== undefined && property.price !== null
-        ? String(property.price)
-        : "",
-    condo:
-      property.condo !== undefined && property.condo !== null
-        ? String(property.condo)
-        : "",
-    iptu:
-      property.iptu !== undefined && property.iptu !== null
-        ? String(property.iptu)
-        : "",
-    area:
-      property.area !== undefined && property.area !== null
-        ? String(property.area)
-        : "",
-    bedrooms:
-      property.bedrooms !== undefined && property.bedrooms !== null
-        ? String(property.bedrooms)
-        : "",
-    bathrooms:
-      property.bathrooms !== undefined && property.bathrooms !== null
-        ? String(property.bathrooms)
-        : "",
-    parkingSpaces:
-      property.parkingSpaces !== undefined && property.parkingSpaces !== null
-        ? String(property.parkingSpaces)
-        : "",
-    photos: property.photos || (property.imageUrl ? [property.imageUrl] : []),
-    features: property.features || [],
-    summary: property.summary || "",
-    description: property.description || "",
-  };
-}
+import ConfirmDialog from "@components/ui/ConfirmDialog/ConfirmDialog.jsx";
+import { addProperty, updateProperty, getAllProperties, deleteProperty, togglePropertyStatus } from "@services/propertyService.js";
 
 export default function PropertyManager() {
-  const [properties, setProperties] = useState(() => readStoredProperties());
+  const [properties, setProperties] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState("create");
-  const [editingId, setEditingId] = useState(null);
-  const [formData, setFormData] = useState(emptyForm);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("Todos");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 6;
-
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    window.localStorage.setItem(PROPERTIES_STORAGE_KEY, JSON.stringify(properties));
-    window.dispatchEvent(new CustomEvent("valdinei:analytics-update", { detail: { type: "properties" } }));
-  }, [properties]);
+  const itemsPerPage = 8;
+  const [editingProperty, setEditingProperty] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [confirmDelete, setConfirmDelete] = useState({ isOpen: false, propertyId: null });
 
   const totalProperties = properties.length;
-  const ativos = useMemo(() => properties.filter((property) => property.active).length, [properties]);
+  const ativos = useMemo(
+    () => properties.filter((property) => property.active).length,
+    [properties],
+  );
   const inativos = totalProperties - ativos;
+
+  const loadProperties = async () => {
+    setIsLoading(true);
+    const data = await getAllProperties();
+    setProperties(data);
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    loadProperties();
+  }, []);
+
+  const handleOpenModal = (property = null) => {
+    setEditingProperty(property);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setEditingProperty(null);
+    setIsModalOpen(false);
+    loadProperties(); // Recarrega a tabela após fechar/salvar o modal
+  };
 
   const filteredProperties = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
@@ -129,7 +60,9 @@ export default function PropertyManager() {
             property.neighborhood,
           ]
             .filter(Boolean)
-            .some((field) => String(field).toLowerCase().includes(normalizedSearch))
+            .some((field) =>
+              String(field).toLowerCase().includes(normalizedSearch),
+            )
         : true;
 
       const matchesStatus =
@@ -143,60 +76,48 @@ export default function PropertyManager() {
     });
   }, [filterStatus, properties, searchTerm]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredProperties.length / itemsPerPage));
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredProperties.length / itemsPerPage),
+  );
   const safeCurrentPage = Math.min(currentPage, totalPages);
   const startIndex = (safeCurrentPage - 1) * itemsPerPage;
-  const visibleProperties = filteredProperties.slice(startIndex, startIndex + itemsPerPage);
+  const visibleProperties = filteredProperties.slice(
+    startIndex,
+    startIndex + itemsPerPage,
+  );
 
   const openCreateModal = () => {
-    setModalMode("create");
-    setEditingId(null);
-    setFormData(normalizeForm(emptyForm));
+    handleOpenModal(null);
     setCurrentPage(1);
-    setIsModalOpen(true);
   };
 
-  const openEditModal = (property) => {
-    setModalMode("edit");
-    setEditingId(property.id);
-    setFormData(normalizeForm(property));
-    setIsModalOpen(true);
+  const handleToggleStatus = async (id, currentStatus) => {
+    const newStatus = currentStatus === "Ativo" ? "Inativo" : "Ativo";
+    
+    // Agora usamos a função cirúrgica em vez da atualização completa!
+    await togglePropertyStatus(id, newStatus);
+    
+    loadProperties();
   };
 
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setModalMode("create");
-    setEditingId(null);
-    setFormData(normalizeForm(emptyForm));
+  // Quando clica no botão "Excluir" na tabela
+  const handleDeleteRequest = (id) => {
+    setConfirmDelete({ isOpen: true, propertyId: id });
   };
 
-  const handleStatusToggle = (propertyId) => {
-    setProperties((currentValue) =>
-      currentValue.map((property) =>
-        property.id === propertyId
-          ? { ...property, active: !property.active }
-          : property,
-      ),
-    );
-  };
-
-  const handleDelete = (propertyId) => {
-    const propertyToDelete = properties.find(
-      (property) => property.id === propertyId,
-    );
-    const confirmed = window.confirm(
-      propertyToDelete
-        ? `Excluir o imóvel ${propertyToDelete.code} - ${propertyToDelete.title}?`
-        : "Excluir este imóvel?",
-    );
-
-    if (!confirmed) {
-      return;
+  // Quando clica no botão "Confirmar" dentro do nosso alerta
+  const confirmDeleteAction = async () => {
+    if (confirmDelete.propertyId) {
+      try {
+        await deleteProperty(confirmDelete.propertyId);
+        setConfirmDelete({ isOpen: false, propertyId: null });
+        loadProperties(); // Atualiza a tabela imediatamente
+      } catch (error) {
+        console.error("Erro ao excluir:", error);
+        alert("Falha ao excluir o imóvel. Tente novamente.");
+      }
     }
-
-    setProperties((currentValue) =>
-      currentValue.filter((property) => property.id !== propertyId),
-    );
   };
 
   const handleSearchChange = (event) => {
@@ -209,122 +130,24 @@ export default function PropertyManager() {
     setCurrentPage(1);
   };
 
-  const handleSubmit = async () => {
-    const nextId =
-      properties.reduce(
-        (highestId, property) => Math.max(highestId, property.id),
-        0,
-      ) + 1;
-    const propertyId =
-      modalMode === "edit" && editingId ? editingId : nextId;
-    const payload = {
-      id: propertyId,
-      title: formData.title.trim(),
-      code: formData.code.trim() || createPropertyCode(propertyId),
-      category: formData.category,
-      type: formData.type.trim() || "Imóvel",
-      price: Number(formData.price || 0),
-      condo: Number(formData.condo || 0),
-      iptu: Number(formData.iptu || 0),
-      address: formData.address.trim(),
-      neighborhood: formData.neighborhood.trim(),
-      area: Number(formData.area || 0),
-      bedrooms: Number(formData.bedrooms || 0),
-      bathrooms: Number(formData.bathrooms || 0),
-      parkingSpaces: Number(formData.parkingSpaces || 0),
-      imageUrl: formData.imageUrl.trim(),
-      thumbnail: formData.photos[0] || formData.imageUrl.trim() || "",
-      photos: formData.photos,
-      features: formData.features,
-      summary: formData.summary.trim(),
-      description: formData.description.trim(),
-      active:
-        modalMode === "edit"
-          ? properties.find((property) => property.id === editingId)?.active ?? true
-          : true,
-    };
-
-    const existingProperty =
-      modalMode === "edit"
-        ? properties.find((property) => property.id === editingId)
-        : null;
-
-    try {
-      const documentPayload = buildPropertyDocument(payload, {
-        propertyId,
-        active: existingProperty?.active ?? true,
-        existingProperty,
-      });
-
-      if (modalMode === "create" || existingProperty?.firestoreId) {
-        const savedDocument = await savePropertyDocument(payload, {
-          propertyId,
-          active: existingProperty?.active ?? true,
-          firestoreId: existingProperty?.firestoreId,
-        });
-
-        payload.firestoreId = savedDocument.id;
-      }
-
-      setProperties((currentValue) => {
-        if (modalMode === "edit") {
-          return currentValue.map((property) =>
-            property.id === editingId
-              ? {
-                  ...property,
-                  ...payload,
-                  structuredDocument: documentPayload,
-                  firestoreId: property.firestoreId || payload.firestoreId,
-                  active: property.active,
-                }
-              : property,
-          );
-        }
-
-        return [
-          {
-            ...payload,
-            structuredDocument: documentPayload,
-          },
-          ...currentValue,
-        ];
-      });
-
-        setIsModalOpen(false);
-        setModalMode("create");
-        setEditingId(null);
-        setFormData(normalizeForm(emptyForm));
-
-        if (modalMode === "create") {
-          setCurrentPage(1);
-        }
-    } catch (error) {
-      console.error("Falha ao salvar o imóvel no banco:", error);
-
-      setProperties((currentValue) => {
-        if (modalMode === "edit") {
-          return currentValue.map((property) =>
-            property.id === editingId
-              ? { ...property, ...payload, active: property.active }
-              : property,
-          );
-        }
-
-        return [{ ...payload }, ...currentValue];
-      });
-
-      setIsModalOpen(false);
-      setModalMode("create");
-      setEditingId(null);
-      setFormData(normalizeForm(emptyForm));
+  const handleSaveProperty = async (formData) => {
+    if (editingProperty) {
+      await updateProperty(editingProperty.firestoreId || editingProperty.id, formData);
+    } else {
+      await addProperty(formData);
     }
+    handleCloseModal();
   };
 
   return (
     <main className="admin-container">
       <h1 className="admin-title">Imóveis</h1>
 
-      <PropertyStats total={totalProperties} ativos={ativos} inativos={inativos} />
+      <PropertyStats
+        total={totalProperties}
+        ativos={ativos}
+        inativos={inativos}
+      />
 
       <PropertyFilterBar
         searchTerm={searchTerm}
@@ -336,21 +159,33 @@ export default function PropertyManager() {
 
       <PropertyTable
         properties={visibleProperties}
+        isLoading={isLoading}
         currentPage={safeCurrentPage}
         totalPages={totalPages}
         onPageChange={setCurrentPage}
-        onEdit={openEditModal}
-        onDelete={handleDelete}
-        onToggleStatus={handleStatusToggle}
+        onEdit={handleOpenModal}
+        onDelete={handleDeleteRequest} // <-- LIGANDO O GATILHO AQUI
+        onToggleStatus={handleToggleStatus}
+        onRefresh={loadProperties}
       />
 
-      <PropertyFormModal
-        isOpen={isModalOpen}
-        onClose={closeModal}
-        formData={formData}
-        setFormData={setFormData}
-        onSave={handleSubmit}
-        mode={modalMode}
+      {isModalOpen && (
+        <PropertyFormModal
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          property={editingProperty}
+          onSave={handleSaveProperty}
+        />
+      )}
+
+      <ConfirmDialog
+        isOpen={confirmDelete.isOpen}
+        onClose={() => setConfirmDelete({ isOpen: false, propertyId: null })}
+        onConfirm={confirmDeleteAction}
+        title="Excluir Imóvel"
+        message="Tem certeza que deseja apagar este imóvel permanentemente? Esta ação não poderá ser desfeita."
+        confirmText="Sim, excluir"
+        cancelText="Cancelar"
       />
     </main>
   );
