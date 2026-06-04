@@ -1,9 +1,32 @@
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Search } from "lucide-react";
 import PropertyCard from "@components/ui/PropertyCard/PropertyCard.jsx";
 import { fetchPublishedProperties } from "@services/properties";
 import styles from "./FeaturedProperties.module.css";
+
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.15,
+    },
+  },
+};
+
+const cardItem = {
+  hidden: { opacity: 0, y: 30 },
+  show: { 
+    opacity: 1, 
+    y: 0, 
+    transition: { 
+      duration: 0.7, 
+      ease: [0.25, 0.46, 0.45, 0.94] 
+    } 
+  },
+};
 
 export default function FeaturedProperties({ onPropertyClick }) {
   const navigate = useNavigate();
@@ -64,15 +87,22 @@ export default function FeaturedProperties({ onPropertyClick }) {
           </button>
         </div>
 
-        <div className={styles.grid}>
+        <motion.div 
+          className={styles.grid}
+          variants={staggerContainer}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, margin: "-100px" }}
+        >
           {properties.map((property) => (
-            <PropertyCard
-              key={property.id}
-              property={property}
-              onViewDetails={() => onPropertyClick && onPropertyClick(property.id)}
-            />
+            <motion.div key={property.id} variants={cardItem}>
+              <PropertyCard
+                property={property}
+                onViewDetails={() => onPropertyClick && onPropertyClick(property.id)}
+              />
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );

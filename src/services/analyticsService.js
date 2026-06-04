@@ -1,5 +1,6 @@
-import { collection, doc, getDocs, increment, limit, orderBy, query, setDoc } from "firebase/firestore";
-import { db } from "./firebaseConfig.js";
+import { collection, doc, getDocs, increment, limit, orderBy, query, setDoc, where, documentId } from "firebase/firestore";
+import { logEvent } from "firebase/analytics";
+import { db, analytics } from "./firebaseConfig.js";
 
 const ANALYTICS_DAILY_COLLECTION = "analytics_daily";
 const ANALYTICS_FILTERS_COLLECTION = "analytics_filters";
@@ -69,14 +70,19 @@ async function updateDailyAnalytics(fieldName) {
   }
 }
 
-function normalizeFilterDocId(filterTag) {
-  return String(filterTag || "")
+function slugify(text) {
+  return String(text || "")
     .trim()
-    .replace(/\s+/g, "_")
-    .replace(/[^a-zA-Z0-9_-]/g, "_")
-    .replace(/_+/g, "_")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
     .replace(/^_+|_+$/g, "")
     .slice(0, 120);
+}
+
+function normalizeFilterDocId(filterTag) {
+  return slugify(filterTag);
 }
 
 function normalizeFilterLabel(key) {
@@ -147,14 +153,7 @@ function collectFilterEntries(filtersObj) {
 }
 
 function normalizeBairroDocId(bairro) {
-  return String(bairro || "")
-    .trim()
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 120);
+  return slugify(bairro);
 }
 
 function normalizeNeighborhoodName(value) {
@@ -200,32 +199,42 @@ function buildFallbackBairrosFromProperties(snapshot) {
 export async function getTopBairros() {
   const snapshot = await getDocs(
     query(
-      collection(db, ANALYTICS_BAIRROS_COLLECTION),
-      orderBy("count", "desc"),
-      limit(5),
-    ),
+      collection(db, ANALYTICS_FILTERS_COLLECTION),
+      where(documentId(), ">=", "localizacao_"),
+      where(documentId(), "<=", "localizacao_\uf8ff")
+    )
   );
 
   const bairros = snapshot.docs
     .map((documentSnapshot) => {
       const data = documentSnapshot.data() || {};
-      const name = String(data.name || documentSnapshot.id);
+      const rawName = String(data.name || documentSnapshot.id);
+      
+      // Remove o prefixo 'Localização:' ou 'localizacao_'
+      const cleanName = rawName.replace(/^Localização:\s*/i, "").trim();
+      
       const count = Number(data.count || 0) || 0;
 
       return {
-        name,
+        name: cleanName,
         count,
-        bairro: name,
+        bairro: cleanName,
         acessos: count,
       };
     })
-    .filter((item) => item.name && item.count > 0);
+    .filter((item) => item.name && item.count > 0)
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5);
 
   if (bairros.length > 0) {
     return bairros;
   }
 
-  const propertiesSnapshot = await getDocs(collection(db, PROPERTY_COLLECTION));
+  const propertiesQuery = query(
+    collection(db, PROPERTY_COLLECTION),
+    where("status", "==", "Ativo")
+  );
+  const propertiesSnapshot = await getDocs(propertiesQuery);
 
   return buildFallbackBairrosFromProperties(propertiesSnapshot);
 }
@@ -293,5 +302,134 @@ export async function trackBairroView(bairro) {
     );
   } catch (error) {
     console.error("Falha ao registrar bairro no Firestore:", error);
+  }
+}
+
+export async function logNeighborhoodView(neighborhoodName) {
+  if (typeof window === "undefined" || !neighborhoodName) {
+    return;
+  }
+
+  try {
+    const clean = String(neighborhoodName).trim();
+
+    if (!clean) {
+      return;
+    }
+
+    // Usa o prefixo "localizacao_" + slugify para ficar compatível com a query do gráfico do Admin
+    const docId = `localizacao_${slugify(clean)}`;
+    const humanLabel = `Localização: ${clean}`;
+
+    const docRef = doc(db, ANALYTICS_FILTERS_COLLECTION, docId);
+
+    setDoc(
+      docRef,
+      {
+        name: humanLabel,
+        count: increment(1),
+      },
+      { merge: true },
+    ).catch((err) => {
+      console.error("Erro no Analytics ao tentar gravar", humanLabel, err);
+    });
+  } catch (error) {
+    console.error("Falha ao registrar visualização de bairro no Firestore:", error);
+  }
+}
+
+export function logPropertyViewAnalytics(property) {
+  if (typeof window === "undefined" || !analytics || !property) {
+    return;
+  }
+
+  try {
+    logEvent(analytics, "view_item", {
+      currency: "BRL",
+      value: property.price,
+      items: [
+        {
+          item_id: property.id,
+          item_name: property.title,
+          item_category: property.location?.neighborhood,
+        },
+      ],
+    });
+  } catch (error) {
+    console.error("Falha ao registrar view_item no Firebase Analytics:", error);
+  }
+}
+
+export function logLeadSubmissionAnalytics(propertyId, propertyTitle) {
+  if (typeof window === "undefined" || !analytics || !propertyId) {
+    return;
+  }
+
+  try {
+    logEvent(analytics, "generate_lead", {
+      property_id: propertyId,
+      property_title: propertyTitle,
+    });
+  } catch (error) {
+    console.error("Falha ao registrar generate_lead no Firebase Analytics:", error);
+  }
+}
+
+export function logSearchAnalytics(searchParams) {
+  if (typeof window === "undefined" || !analytics || !searchParams) {
+    return;
+  }
+
+  try {
+    const { location, propertyType, priceMin, priceMax } = searchParams;
+    const term = location || propertyType || "todos";
+
+    logEvent(analytics, "search", {
+      search_term: term,
+      filter_neighborhood: location || "",
+      filter_property_type: propertyType || "",
+      filter_min_price: priceMin || "",
+      filter_max_price: priceMax || "",
+    });
+  } catch (error) {
+    console.error("Falha ao registrar search no Firebase Analytics:", error);
+  }
+}
+
+export function logAddToWishlistAnalytics(property) {
+  if (typeof window === "undefined" || !analytics || !property) {
+    return;
+  }
+
+  try {
+    logEvent(analytics, "add_to_wishlist", {
+      currency: "BRL",
+      value: property.price || 0,
+      items: [
+        {
+          item_id: property.id,
+          item_name: property.title,
+          item_category: property.location?.neighborhood,
+        },
+      ],
+    });
+  } catch (error) {
+    console.error("Falha ao registrar add_to_wishlist no Firebase Analytics:", error);
+  }
+}
+
+export function logWhatsAppClickAnalytics(propertyName, origin) {
+  if (typeof window === "undefined" || !analytics) {
+    return;
+  }
+
+  try {
+    logEvent(analytics, "generate_lead", {
+      method: "whatsapp",
+      item_name: propertyName || "Contato Geral",
+      content_type: origin,
+    });
+  } catch (error) {
+    console.error("Falha ao registrar WhatsApp click no Firebase Analytics:", error);
   }
 }

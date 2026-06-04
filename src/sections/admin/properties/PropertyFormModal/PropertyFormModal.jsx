@@ -9,6 +9,7 @@ import {
   Plus,
   Ruler,
   Save,
+  Star,
   Trash2,
   X,
   CarFront,
@@ -22,6 +23,7 @@ import styles from "./PropertyFormModal.module.css";
 
 const tabOptions = [
   { id: "basic", label: "Básico" },
+  { id: "structure", label: "Estrutura" },
   { id: "description", label: "Descrição" },
   { id: "location", label: "Localização" },
   { id: "features", label: "Características" },
@@ -51,7 +53,7 @@ const baseFeatures = [
 
 const defaultForm = {
   title: "", code: "", price: "", condo: "", iptu: "",
-  category: "", type: "", address: "", neighborhood: "",
+  category: "", type: "", cep: "", logradouro: "", numero: "", complemento: "", bairro: "", cidade: "", estado: "",
   area: "", bedrooms: "", bathrooms: "", parkingSpaces: "",
   features: [], photos: [], summary: "", description: "",
   status: "Inativo"
@@ -67,6 +69,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
   const [newType, setNewType] = useState("");
   const [newFeature, setNewFeature] = useState("");
   const [newPhotoUrl, setNewPhotoUrl] = useState("");
+  const [coverPhotoIndex, setCoverPhotoIndex] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
@@ -80,6 +83,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
     setNewType("");
     setNewFeature("");
     setNewPhotoUrl("");
+    setCoverPhotoIndex(0);
     setIsSaving(false);
 
     if (property) {
@@ -91,12 +95,17 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
         iptu: property.pricing?.iptu || property.iptu || "",
         category: property.category || "",
         type: property.type || "",
-        address: property.location?.address || property.address || "",
-        neighborhood: property.location?.neighborhood || property.neighborhood || "",
-        area: property.location?.area || property.area || "",
-        bedrooms: property.location?.bedrooms || property.bedrooms || "",
-        bathrooms: property.location?.bathrooms || property.bathrooms || "",
-        parkingSpaces: property.location?.parkingSpaces || property.parkingSpaces || "",
+        cep: property.location?.cep || property.cep || "",
+        logradouro: property.location?.logradouro || property.location?.street || property.street || property.location?.address || property.address || "",
+        numero: property.location?.numero || property.location?.number || property.number || "",
+        complemento: property.location?.complemento || property.location?.complement || property.complement || "",
+        bairro: property.location?.bairro || property.location?.neighborhood || property.neighborhood || "",
+        cidade: property.location?.cidade || property.location?.city || property.city || "",
+        estado: property.location?.estado || property.location?.state || property.state || "",
+        area: property.area || property.location?.area || "",
+        bedrooms: property.bedrooms || property.location?.bedrooms || "",
+        bathrooms: property.bathrooms || property.location?.bathrooms || "",
+        parkingSpaces: property.parkingSpaces || property.location?.parkingSpaces || "",
         features: property.features || [],
         photos: property.photos || [],
         summary: property.content?.summary || property.summary || "",
@@ -143,6 +152,50 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
     }));
   };
 
+  const handleCepChange = async (event) => {
+    let value = event.target.value.replace(/\D/g, "");
+    updateField("cep", value);
+
+    if (value.length === 8) {
+      try {
+        const response = await fetch(`https://viacep.com.br/ws/${value}/json/`);
+        const data = await response.json();
+        
+        if (!data.erro) {
+          setFormData((prev) => ({
+            ...prev,
+            logradouro: data.logradouro || prev.logradouro,
+            bairro: data.bairro || prev.bairro,
+            cidade: data.localidade || prev.cidade,
+            estado: data.uf || prev.estado,
+          }));
+        }
+      } catch (error) {
+        console.error("Erro ao buscar CEP:", error);
+      }
+    }
+  };
+
+  const handleAddFeature = () => {
+    const value = newFeature.trim();
+    if (!value) return;
+
+    setAvailableFeatures((currentValue) =>
+      currentValue.includes(value)
+        ? currentValue
+        : [...currentValue, value],
+    );
+
+    setFormData((currentValue) => ({
+      ...currentValue,
+      features: currentValue.features.includes(value)
+        ? currentValue.features
+        : [...currentValue.features, value],
+    }));
+
+    setNewFeature("");
+  };
+
   const addPhoto = (urlValue) => {
     const value = urlValue.trim();
 
@@ -170,6 +223,12 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
         imageUrl: nextPhotos[0] || "",
       };
     });
+
+    if (coverPhotoIndex === photoIndex) {
+      setCoverPhotoIndex(0);
+    } else if (coverPhotoIndex > photoIndex) {
+      setCoverPhotoIndex((prev) => prev - 1);
+    }
   };
 
   const toggleFeature = (feature) => {
@@ -224,7 +283,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
     return (
       formData.title.trim() !== "" ||
       formData.price !== "" ||
-      formData.address.trim() !== "" ||
+      formData.logradouro.trim() !== "" ||
       formData.photos.length > 0 ||
       formData.features.length > 0
     );
@@ -247,7 +306,63 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
     setIsSaving(true);
 
     try {
-      await onSave(formData);
+      const payload = { ...formData };
+      
+      // Reordenar fotos para garantir que a capa (coverPhotoIndex) seja a primeira
+      if (payload.photos.length > 1 && coverPhotoIndex > 0 && coverPhotoIndex < payload.photos.length) {
+        const photosCopy = [...payload.photos];
+        const [coverPhoto] = photosCopy.splice(coverPhotoIndex, 1);
+        photosCopy.unshift(coverPhoto);
+        payload.photos = photosCopy;
+      }
+      
+      const parts = [];
+      if (payload.logradouro) parts.push(payload.logradouro);
+      if (payload.numero) parts.push(payload.numero);
+      
+      let addressStr = parts.join(", ");
+      
+      const compBairro = [];
+      if (payload.complemento) compBairro.push(payload.complemento);
+      if (payload.bairro) compBairro.push(payload.bairro);
+      
+      if (compBairro.length > 0) {
+        addressStr += ` - ${compBairro.join(", ")}`;
+      }
+      
+      const cityState = [];
+      if (payload.cidade) cityState.push(payload.cidade);
+      if (payload.estado) cityState.push(payload.estado);
+      
+      if (cityState.length > 0) {
+        addressStr += `, ${cityState.join(" - ")}`;
+      }
+      
+      if (payload.cep) {
+        addressStr += `, ${payload.cep}`;
+      }
+
+      payload.location = {
+        cep: payload.cep,
+        logradouro: payload.logradouro,
+        numero: payload.numero,
+        complemento: payload.complemento,
+        bairro: payload.bairro,
+        cidade: payload.cidade,
+        estado: payload.estado,
+        address: addressStr
+      };
+
+      // Limpar campos de localização temporários da raiz
+      delete payload.cep;
+      delete payload.logradouro;
+      delete payload.numero;
+      delete payload.complemento;
+      delete payload.bairro;
+      delete payload.cidade;
+      delete payload.estado;
+
+      await onSave(payload);
     } catch (error) {
       console.error(error);
     } finally {
@@ -403,24 +518,9 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
           </section>
         ) : null}
 
-        {activeTab === "location" ? (
+        {activeTab === "structure" ? (
           <section className={styles.tabPanel}>
             <div className={styles.formGrid}>
-              <Input
-                label="Endereço"
-                icon={MapPin}
-                placeholder="Rua, avenida, número"
-                value={formData.address}
-                onChange={(event) => updateField("address", event.target.value)}
-              />
-              <Input
-                label="Bairro"
-                placeholder="Nome do bairro"
-                value={formData.neighborhood}
-                onChange={(event) =>
-                  updateField("neighborhood", event.target.value)
-                }
-              />
               <Input
                 label="Área (m²)"
                 icon={Ruler}
@@ -463,6 +563,60 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
           </section>
         ) : null}
 
+        {activeTab === "location" ? (
+          <section className={styles.tabPanel}>
+            <div className={styles.formGrid}>
+              <Input
+                label="CEP"
+                placeholder="Apenas números"
+                value={formData.cep}
+                onChange={handleCepChange}
+                maxLength={8}
+              />
+              <Input
+                label="Logradouro"
+                icon={MapPin}
+                placeholder="Rua, avenida..."
+                value={formData.logradouro}
+                onChange={(event) => updateField("logradouro", event.target.value)}
+              />
+              <Input
+                label="Número"
+                placeholder="Ex: 123"
+                value={formData.numero}
+                onChange={(event) => updateField("numero", event.target.value)}
+              />
+              <Input
+                label="Complemento"
+                placeholder="Ex: Apto 42"
+                value={formData.complemento}
+                onChange={(event) => updateField("complemento", event.target.value)}
+              />
+              <Input
+                label="Bairro"
+                placeholder="Nome do bairro"
+                value={formData.bairro}
+                onChange={(event) =>
+                  updateField("bairro", event.target.value)
+                }
+              />
+              <Input
+                label="Cidade"
+                placeholder="Sua cidade"
+                value={formData.cidade}
+                onChange={(event) => updateField("cidade", event.target.value)}
+              />
+              <Input
+                label="Estado (UF)"
+                placeholder="Ex: SP"
+                value={formData.estado}
+                onChange={(event) => updateField("estado", event.target.value)}
+                maxLength={2}
+              />
+            </div>
+          </section>
+        ) : null}
+
         {activeTab === "features" ? (
           <section className={styles.tabPanel}>
             <div className={styles.featureIntro}>
@@ -484,34 +638,19 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                 placeholder="Ex: Piso aquecido"
                 value={newFeature}
                 onChange={(event) => setNewFeature(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    handleAddFeature();
+                  }
+                }}
                 className={styles.featureToolbarInput}
               />
               <Button
                 type="button"
                 variant="primary"
                 className={styles.featureToolbarButton}
-                onClick={() => {
-                  const value = newFeature.trim();
-
-                  if (!value) {
-                    return;
-                  }
-
-                  setAvailableFeatures((currentValue) =>
-                    currentValue.includes(value)
-                      ? currentValue
-                      : [...currentValue, value],
-                  );
-
-                  setFormData((currentValue) => ({
-                    ...currentValue,
-                    features: currentValue.features.includes(value)
-                      ? currentValue.features
-                      : [...currentValue.features, value],
-                  }));
-
-                  setNewFeature("");
-                }}
+                onClick={handleAddFeature}
               >
                 Adicionar
               </Button>
@@ -588,30 +727,43 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
 
             <div className={styles.galleryShell}>
               <div className={styles.galleryGrid}>
-                {formData.photos.filter(Boolean).map((photoUrl, index) => (
-                  <div
-                    key={`${photoUrl}-${index}`}
-                    className={styles.thumbnailCard}
-                  >
-                    <img
-                      src={photoUrl || undefined}
-                      alt={`Mídia ${index + 1} do imóvel`}
-                    />
-
-                    {index === 0 ? (
-                      <span className={styles.coverBadge}>Capa</span>
-                    ) : null}
-
-                    <button
-                      type="button"
-                      className={styles.removePhotoButton}
-                      onClick={() => removePhoto(index)}
-                      aria-label={`Remover mídia ${index + 1}`}
+                {formData.photos.filter(Boolean).map((photoUrl, index) => {
+                  const isCover = index === coverPhotoIndex;
+                  return (
+                    <div
+                      key={`${photoUrl}-${index}`}
+                      className={`${styles.thumbnailCard} ${isCover ? styles.thumbnailCardCover : ""}`}
                     >
-                      <X size={14} />
-                    </button>
-                  </div>
-                ))}
+                      <img
+                        src={photoUrl || undefined}
+                        alt={`Mídia ${index + 1} do imóvel`}
+                      />
+
+                      <button
+                        type="button"
+                        className={`${styles.coverStarButton} ${isCover ? styles.coverStarButtonActive : styles.coverStarButtonInactive}`}
+                        onClick={() => setCoverPhotoIndex(index)}
+                        aria-label={isCover ? "Capa atual" : "Definir como capa"}
+                        title="Definir como capa"
+                      >
+                        <Star size={14} fill={isCover ? "currentColor" : "none"} />
+                      </button>
+
+                      {isCover ? (
+                        <span className={styles.coverBadge}>Capa</span>
+                      ) : null}
+
+                      <button
+                        type="button"
+                        className={styles.removePhotoButton}
+                        onClick={() => removePhoto(index)}
+                        aria-label={`Remover mídia ${index + 1}`}
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </section>

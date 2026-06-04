@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
+import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import Footer from "@components/layout/Footer.jsx";
 import FilterBar from "@components/ui/FilterBar/FilterBar.jsx";
 import CategoryHero from "@sections/listing/CategoryHero.jsx";
 import PropertyGrid from "@sections/listing/PropertyGrid.jsx";
 import { getPublicProperties } from "@services/propertyService.js";
+import { extractNeighborhood } from "@utils/address.js";
 
 export default function Buy() {
   const [filters, setFilters] = useState({});
@@ -35,7 +37,6 @@ export default function Buy() {
 
   const filteredProperties = useMemo(() => {
     return properties.filter((property) => {
-      const loc = property.location || {};
       const pricing = property.pricing || {};
       const feat = property.features || [];
 
@@ -56,12 +57,24 @@ export default function Buy() {
       const areaMin = Number(filters.areaMin || 0);
       const areaMax = Number(filters.areaMax || Number.POSITIVE_INFINITY);
 
+      const loc = typeof property.location === "object" ? property.location : {};
       const propAddress = (loc.address || "").toLowerCase();
       const propNeighborhood = (loc.neighborhood || "").toLowerCase();
+      const propBairro = (loc.bairro || "").toLowerCase();
+      
+      // Nova extração direta baseada na string (se for string)
+      const propExtractedBairro = extractNeighborhood(property.location).toLowerCase();
+      const rawLocationString = typeof property.location === "string" ? property.location.toLowerCase() : "";
+
+      const searchLoc = searchLocation.toLowerCase();
+
       const matchesLocation =
-        !searchLocation ||
-        propAddress.includes(searchLocation) ||
-        propNeighborhood.includes(searchLocation);
+        !searchLoc ||
+        propExtractedBairro === searchLoc ||
+        propBairro === searchLoc ||
+        propNeighborhood === searchLoc ||
+        propAddress.includes(searchLoc) ||
+        rawLocationString.includes(searchLoc);
 
       const matchesType =
         !propertyType ||
@@ -106,17 +119,37 @@ export default function Buy() {
     });
   }, [properties, filters]);
 
+  const staggerContainer = {
+    hidden: { opacity: 0 },
+    show: { opacity: 1, transition: { staggerChildren: 0.15, delayChildren: 0.1 } },
+  };
+
+  const fadeUpItem = {
+    hidden: { opacity: 0, y: 30 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] } },
+  };
+
   return (
-    <main className="pageTransition">
-      <CategoryHero category="Comprar" />
-      <FilterBar onSearch={setFilters} onAdvancedFiltersApply={setFilters} />
-      <PropertyGrid
-        properties={filteredProperties}
-        title="Imóveis para Comprar"
-        onPropertyClick={handlePropertyClick}
-        isLoading={isLoading}
-      />
-      <Footer />
-    </main>
+    <motion.main 
+      className="pageTransition"
+      variants={staggerContainer}
+      initial="hidden"
+      animate="show"
+    >
+      <motion.div variants={fadeUpItem}>
+        <CategoryHero category="Comprar" />
+      </motion.div>
+      <motion.div variants={fadeUpItem} style={{ position: "relative", zIndex: 10 }}>
+        <FilterBar onSearch={setFilters} onAdvancedFiltersApply={setFilters} properties={properties} />
+      </motion.div>
+      <motion.div variants={fadeUpItem}>
+        <PropertyGrid
+          properties={filteredProperties}
+          title="Imóveis para Comprar"
+          onPropertyClick={handlePropertyClick}
+          isLoading={isLoading}
+        />
+      </motion.div>
+    </motion.main>
   );
 }

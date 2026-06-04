@@ -4,11 +4,23 @@
   display: flex;
   align-items: center;
   padding: 6rem 1.5rem 4rem;
+  overflow: hidden;
+}
+
+.heroBackground {
+  position: absolute;
+  inset: 0;
   background-image: linear-gradient(90deg, rgba(20, 20, 60, 0.92), rgba(20, 20, 60, 0.56)), url('/backgroundHero.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  overflow: hidden;
+  z-index: 0;
+  animation: kenBurns 20s ease-in-out infinite alternate;
+}
+
+@keyframes kenBurns {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.05); }
 }
 
 .overlay {
@@ -16,11 +28,12 @@
   inset: 0;
   background: linear-gradient(180deg, rgba(20, 20, 60, 0.15), rgba(20, 20, 60, 0.52));
   pointer-events: none;
+  z-index: 1;
 }
 
 .container {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   width: min(1180px, 100%);
   margin: 0 auto;
   display: grid;

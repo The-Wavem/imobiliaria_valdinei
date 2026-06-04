@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { BedDouble, Home as HomeIcon, MapPin, DollarSign } from "lucide-react";
 import Button from "@components/ui/Button/Button.jsx";
 import Input from "@components/ui/Input/Input.jsx";
@@ -28,6 +29,29 @@ const initialFilters = {
   quartos: "",
 };
 
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.15,
+      delayChildren: 0.2,
+    },
+  },
+};
+
+const fadeUpItem = {
+  hidden: { opacity: 0, y: 30 },
+  show: { 
+    opacity: 1, 
+    y: 0, 
+    transition: { 
+      duration: 0.8, 
+      ease: [0.25, 0.46, 0.45, 0.94] 
+    } 
+  },
+};
+
 export default function Hero() {
   const [searchTab, setSearchTab] = useState("Alugar");
   const [filters, setFilters] = useState(initialFilters);
@@ -50,10 +74,16 @@ export default function Hero() {
 
   return (
     <section className={styles.hero}>
+      <div className={styles.heroBackground} />
       <div className={styles.overlay} />
 
-      <div className={styles.container}>
-        <div className={styles.searchCard}>
+      <motion.div 
+        className={styles.container}
+        variants={staggerContainer}
+        initial="hidden"
+        animate="show"
+      >
+        <motion.div className={styles.searchCard} variants={fadeUpItem}>
           <div className={styles.cardHeader}>
             <span className={styles.kicker}>Imobiliária Valdinei</span>
             <h1>{searchTab === "Alugar" ? "Alugue o lar ideal" : "Compre o lar ideal"}</h1>
@@ -117,22 +147,22 @@ export default function Hero() {
               Buscar imóveis
             </Button>
           </div>
-        </div>
+        </motion.div>
 
         <div className={styles.copy}>
-          <span className={styles.sideLabel}>Curitiba e região</span>
-          <h2>O lar perfeito para sua família viver os melhores momentos.</h2>
-          <p>
+          <motion.span className={styles.sideLabel} variants={fadeUpItem}>Curitiba e região</motion.span>
+          <motion.h2 variants={fadeUpItem}>O lar perfeito para sua família viver os melhores momentos.</motion.h2>
+          <motion.p variants={fadeUpItem}>
             Encontre o imóvel dos seus sonhos com a segurança e transparência
             que você merece.
-          </p>
+          </motion.p>
 
-          <div className={styles.actions}>
+          <motion.div className={styles.actions} variants={fadeUpItem}>
             <Button variant="primary">Falar com corretor</Button>
             <Button variant="outline">Ver imóveis</Button>
-          </div>
+          </motion.div>
         </div>
-      </div>
+      </motion.div>
     </section>
   );
 }

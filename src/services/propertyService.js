@@ -5,42 +5,53 @@ import {
   doc,
   getDocs,
   increment,
+  query,
   setDoc,
   updateDoc,
+  where,
 } from "firebase/firestore";
 import { db } from "./firebaseConfig.js";
 import { mapPropertyDocument } from "./properties.js";
 
 const PROPERTY_COLLECTION = "properties";
 
-const formatPropertyData = (data) => ({
-  title: data.title || "",
-  code: data.code || "",
-  category: data.category || "",
-  type: data.type || "",
-  status: data.status || "Inativo",
-  active: (data.status || "Inativo") === "Ativo",
-  pricing: {
-    price: Number(data.price || 0),
-    condo: Number(data.condo || 0),
-    iptu: Number(data.iptu || 0),
-  },
-  location: {
-    address: data.address || "",
-    neighborhood: data.neighborhood || "",
-    area: Number(data.area || 0),
-    bedrooms: Number(data.bedrooms || 0),
-    bathrooms: Number(data.bathrooms || 0),
-    parkingSpaces: Number(data.parkingSpaces || 0),
-  },
-  features: data.features || [],
-  photos: data.photos || [],
-  content: {
-    summary: data.summary || "",
-    description: data.description || "",
-  },
-  updatedAt: new Date().toISOString(),
-});
+const formatPropertyData = (data) => {
+  const loc = data.location || {};
+  return {
+    title: data.title || "",
+    code: data.code || "",
+    category: data.category || "",
+    type: data.type || "",
+    status: data.status || "Inativo",
+    active: (data.status || "Inativo") === "Ativo",
+    pricing: {
+      price: Number(data.price || data.pricing?.price || 0),
+      condo: Number(data.condo || data.pricing?.condo || 0),
+      iptu: Number(data.iptu || data.pricing?.iptu || 0),
+    },
+    area: Number(data.area || loc.area || 0),
+    bedrooms: Number(data.bedrooms || loc.bedrooms || 0),
+    bathrooms: Number(data.bathrooms || loc.bathrooms || 0),
+    parkingSpaces: Number(data.parkingSpaces || loc.parkingSpaces || 0),
+    location: {
+      cep: loc.cep || data.cep || "",
+      logradouro: loc.logradouro || loc.street || data.logradouro || data.street || "",
+      numero: loc.numero || loc.number || data.numero || data.number || "",
+      complemento: loc.complemento || loc.complement || data.complemento || data.complement || "",
+      bairro: loc.bairro || loc.neighborhood || data.bairro || data.neighborhood || "",
+      cidade: loc.cidade || loc.city || data.cidade || data.city || "",
+      estado: loc.estado || loc.state || data.estado || data.state || "",
+      address: loc.address || data.address || "",
+    },
+    features: data.features || [],
+    photos: data.photos || [],
+    content: {
+      summary: data.summary || data.content?.summary || "",
+      description: data.description || data.content?.description || "",
+    },
+    updatedAt: new Date().toISOString(),
+  };
+};
 
 export const addProperty = async (propertyData) => {
   try {
@@ -97,7 +108,11 @@ export async function getPropertiesStats() {
 
 export async function getPublicProperties(categoryParam) {
   try {
-    const snapshot = await getDocs(collection(db, PROPERTY_COLLECTION));
+    const propertiesQuery = query(
+      collection(db, PROPERTY_COLLECTION),
+      where("status", "==", "Ativo")
+    );
+    const snapshot = await getDocs(propertiesQuery);
 
     return snapshot.docs.map(mapPropertyDocument).filter((property) => {
       const matchesCategory =

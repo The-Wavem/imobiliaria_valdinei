@@ -4,6 +4,8 @@ import { motion as motionFactory } from "framer-motion";
 import styles from "./PropertyDetail.module.css";
 import { trackBairroView } from "@utils/analytics";
 import { incrementPropertyViews } from "@/services/propertyService";
+import { logPropertyViewAnalytics, logNeighborhoodView } from "@/services/analyticsService";
+import { extractNeighborhood } from "@utils/address.js";
   
 import Breadcrumb from "@components/ui/Breadcrumb/Breadcrumb.jsx";
 import PropertyGallery from "@sections/property-detail/PropertyGallery";
@@ -52,6 +54,7 @@ export default function PropertyDetail() {
   const [property, setProperty] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Efeito 1: responsável APENAS por carregar o imóvel do Firebase
   useEffect(() => {
     let isMounted = true;
 
@@ -61,11 +64,9 @@ export default function PropertyDetail() {
 
         if (isMounted) {
           setProperty(item);
-
-          if (item?.bairro) {
-            await trackBairroView(item.bairro);
-          }
-          await incrementPropertyViews(item.id);
+          // Métricas de visualização não dependem do bairro — disparam imediatamente
+          incrementPropertyViews(item.id);
+          logPropertyViewAnalytics(item);
         }
       } finally {
         if (isMounted) {
@@ -80,6 +81,19 @@ export default function PropertyDetail() {
       isMounted = false;
     };
   }, [id]);
+
+  // Efeito 2: reage APÓS o state 'property' estar 100% hidratado no React
+  // Dependência [property] garante que só executa quando o objeto existir de verdade
+  useEffect(() => {
+    if (!property || !property.location) return;
+
+    const bairroName = extractNeighborhood(property.location);
+
+    if (!bairroName) return;
+
+    logNeighborhoodView(bairroName);
+    trackBairroView(bairroName);
+  }, [property]);
 
   if (isLoading) {
     return (

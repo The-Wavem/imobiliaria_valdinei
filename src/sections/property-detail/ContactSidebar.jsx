@@ -2,6 +2,7 @@ import { useState } from "react";
 import { MessageCircle, CheckCircle2, X, Phone, User, Loader2 } from "lucide-react";
 import { createPortal } from "react-dom";
 import { addLead } from "@services/leadService";
+import { logWhatsAppClickAnalytics } from "@services/analyticsService.js";
 import styles from "./ContactSidebar.module.css";
 
 const VALDINEI_PHONE = import.meta.env.VITE_VALDINEI_PHONE;
@@ -92,6 +93,8 @@ export default function ContactSidebar({
         clientName: form.name.trim(),
         clientPhone: form.phone.trim(),
       });
+
+      logWhatsAppClickAnalytics(propertyTitle || "Imóvel", "sidebar_imovel");
 
       setTimeout(() => {
         window.open(

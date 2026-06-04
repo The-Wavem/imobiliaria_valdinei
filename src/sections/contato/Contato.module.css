@@ -229,8 +229,105 @@
   box-shadow: 0 0 0 4px rgba(199, 156, 49, 0.14);
 }
 
+.fieldGroup {
+  display: grid;
+  gap: 0.3rem;
+}
+
+/* Mensagem de erro embaixo do campo */
+.fieldError {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding-left: 0.25rem;
+  color: #dc2626;
+  font-size: 0.8rem;
+  font-weight: 600;
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Borda vermelha nos campos Input (usa a classe wrapper) */
+.inputError {
+  --input-border-color: #fca5a5;
+  --input-focus-shadow: 0 0 0 4px rgba(220, 38, 38, 0.12);
+  border-color: #fca5a5 !important;
+}
+
+/* Borda vermelha nos campos nativos (assunto e mensagem) */
+.fieldHasError .textControl,
+.fieldHasError .textarea {
+  border-color: #fca5a5 !important;
+  box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.08) !important;
+}
+
+/* Contador de caracteres da mensagem */
+.charCount {
+  margin-left: 0.5rem;
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.charCountWarn {
+  color: #f59e0b;
+  font-weight: 700;
+}
+
 .submitButton {
   margin-top: 0.2rem;
+  min-width: 196px;
+  justify-content: center;
+  transition: opacity 0.2s ease;
+}
+
+.submitButton:disabled {
+  opacity: 0.72;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.spinner {
+  animation: spin 0.75s linear infinite;
+  flex-shrink: 0;
+}
+
+.successBanner {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-top: 1.5rem;
+  padding: 1rem 1.25rem;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 16px;
+  color: #15803d;
+  font-size: 0.97rem;
+  font-weight: 600;
+}
+
+.errorBanner {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-top: 1.5rem;
+  padding: 1rem 1.25rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 16px;
+  color: #dc2626;
+  font-size: 0.97rem;
+  font-weight: 600;
 }
 
 @media (max-width: 1024px) {

@@ -22,15 +22,18 @@ const counterGroups = [
 
 const amenities = ["Piscina", "Churrasqueira", "Elevador", "Pet Friendly", "Mobiliado"];
 
-export default function AdvancedFilters({ onClose, onApply }) {
+export default function AdvancedFilters({ initialFilters, onClose, onApply }) {
   const [selectedCounters, setSelectedCounters] = useState({
-    bedrooms: "Qualquer",
-    bathrooms: "Qualquer",
-    parking: "Qualquer",
+    bedrooms: initialFilters?.bedrooms || "Qualquer",
+    bathrooms: initialFilters?.bathrooms || "Qualquer",
+    parking: initialFilters?.parking || "Qualquer",
   });
 
-  const [selectedAmenities, setSelectedAmenities] = useState([]);
-  const [areaRange, setAreaRange] = useState({ min: "", max: "" });
+  const [selectedAmenities, setSelectedAmenities] = useState(initialFilters?.amenities || []);
+  const [areaRange, setAreaRange] = useState({ 
+    min: initialFilters?.areaMin || "", 
+    max: initialFilters?.areaMax || "" 
+  });
 
   const toggleAmenity = (amenity) => {
     setSelectedAmenities((current) =>
