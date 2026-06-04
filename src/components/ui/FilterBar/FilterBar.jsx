@@ -1,9 +1,9 @@
-import { useState } from "react";
-import { MapPin, Home, DollarSign, Search, SlidersHorizontal } from "lucide-react";
+import { useState, useEffect } from "react";
+import { MapPin, Home, DollarSign, Search, SlidersHorizontal, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import Button from "@components/ui/Button/Button.jsx";
 import Input from "@components/ui/Input/Input.jsx";
 import Select from "@components/ui/Select/Select.jsx";
-import Modal from "@components/ui/Modal/Modal.jsx";
 import AdvancedFilters from "@components/ui/FilterBar/AdvancedFilters.jsx";
 import { trackFilterUsage } from "@utils/analytics";
 import { logSearchAnalytics } from "@services/analyticsService.js";
@@ -18,7 +18,8 @@ const typeOptions = [
 ];
 
 export default function FilterBar({ onSearch, onAdvancedFiltersApply }) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [isStuck, setIsStuck] = useState(false);
   const [filters, setFilters] = useState({
     location: "",
     propertyType: "",
@@ -33,6 +34,14 @@ export default function FilterBar({ onSearch, onAdvancedFiltersApply }) {
     areaMin: "",
     areaMax: "",
   });
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsStuck(window.scrollY > 40);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const handleFieldChange = (field) => (event) => {
     const value = typeof event === "string" ? event : event?.target?.value;
@@ -59,9 +68,9 @@ export default function FilterBar({ onSearch, onAdvancedFiltersApply }) {
   };
 
   return (
-    <>
-      <section className={styles.bar}>
-        <div className={styles.container}>
+    <section className={`${styles.bar} ${isStuck ? styles.isStuck : ""}`}>
+      <div className={styles.container}>
+        <div className={styles.topRow}>
           <Input
             icon={MapPin}
             label="Localização"
@@ -113,20 +122,32 @@ export default function FilterBar({ onSearch, onAdvancedFiltersApply }) {
               Buscar
             </Button>
 
-            <Button variant="outline" className={styles.filtersButton} onClick={() => setIsModalOpen(true)}>
-              <SlidersHorizontal size={18} />
-              Mais Filtros
+            <Button variant="outline" className={styles.filtersButton} onClick={() => setIsExpanded(!isExpanded)}>
+              {isExpanded ? <X size={18} /> : <SlidersHorizontal size={18} />}
+              {isExpanded ? "Fechar" : "Mais Filtros"}
             </Button>
           </div>
         </div>
-      </section>
 
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Filtros Avançados">
-        <AdvancedFilters
-          onClose={() => setIsModalOpen(false)}
-          onApply={handleApplyAdvancedFilters}
-        />
-      </Modal>
-    </>
+        <AnimatePresence>
+          {isExpanded && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+              style={{ overflow: "hidden" }}
+            >
+              <div className={styles.advancedFiltersWrapper}>
+                <AdvancedFilters
+                  onClose={() => setIsExpanded(false)}
+                  onApply={handleApplyAdvancedFilters}
+                />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </section>
   );
 }
