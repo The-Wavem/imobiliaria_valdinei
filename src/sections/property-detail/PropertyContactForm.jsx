@@ -4,6 +4,7 @@ import Button from "@components/ui/Button/Button.jsx";
 import Loader from "@components/ui/Loader/Loader.jsx";
 import inputStyles from "@components/ui/Input/Input.module.css";
 import { addLead } from "@services/leadService.js";
+import { logLeadSubmissionAnalytics } from "@/services/analyticsService.js";
 import styles from "./PropertyContactForm.module.css";
 
 export default function PropertyContactForm({ property }) {
@@ -37,6 +38,8 @@ export default function PropertyContactForm({ property }) {
         propertyId: property?.id || "",
         propertyTitle: property?.title || "",
       });
+
+      logLeadSubmissionAnalytics(property?.id, property?.title);
 
       setName("");
       setEmail("");

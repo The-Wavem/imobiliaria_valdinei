@@ -4,6 +4,7 @@ import { motion as motionFactory } from "framer-motion";
 import styles from "./PropertyDetail.module.css";
 import { trackBairroView } from "@utils/analytics";
 import { incrementPropertyViews } from "@/services/propertyService";
+import { logPropertyViewAnalytics } from "@/services/analyticsService";
   
 import Breadcrumb from "@components/ui/Breadcrumb/Breadcrumb.jsx";
 import PropertyGallery from "@sections/property-detail/PropertyGallery";
@@ -66,6 +67,7 @@ export default function PropertyDetail() {
             await trackBairroView(item.bairro);
           }
           await incrementPropertyViews(item.id);
+          logPropertyViewAnalytics(item);
         }
       } finally {
         if (isMounted) {

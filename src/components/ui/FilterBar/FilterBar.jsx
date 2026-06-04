@@ -6,6 +6,7 @@ import Select from "@components/ui/Select/Select.jsx";
 import Modal from "@components/ui/Modal/Modal.jsx";
 import AdvancedFilters from "@components/ui/FilterBar/AdvancedFilters.jsx";
 import { trackFilterUsage } from "@utils/analytics";
+import { logSearchAnalytics } from "@services/analyticsService.js";
 import styles from "./FilterBar.module.css";
 
 const typeOptions = [
@@ -45,6 +46,7 @@ export default function FilterBar({ onSearch, onAdvancedFiltersApply }) {
   const handleSearch = () => {
     const currentFilters = { ...filters, ...advancedFilters };
     trackFilterUsage(currentFilters);
+    logSearchAnalytics(currentFilters);
     onSearch?.(currentFilters);
   };
 
@@ -52,6 +54,7 @@ export default function FilterBar({ onSearch, onAdvancedFiltersApply }) {
     setAdvancedFilters(nextAdvancedFilters);
     const currentFilters = { ...filters, ...nextAdvancedFilters };
     trackFilterUsage(currentFilters);
+    logSearchAnalytics(currentFilters);
     onAdvancedFiltersApply?.(currentFilters);
   };
 

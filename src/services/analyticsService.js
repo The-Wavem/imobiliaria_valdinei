@@ -1,5 +1,6 @@
-import { collection, doc, getDocs, increment, limit, orderBy, query, setDoc } from "firebase/firestore";
-import { db } from "./firebaseConfig.js";
+import { collection, doc, getDocs, increment, limit, orderBy, query, setDoc, where } from "firebase/firestore";
+import { logEvent } from "firebase/analytics";
+import { db, analytics } from "./firebaseConfig.js";
 
 const ANALYTICS_DAILY_COLLECTION = "analytics_daily";
 const ANALYTICS_FILTERS_COLLECTION = "analytics_filters";
@@ -225,7 +226,11 @@ export async function getTopBairros() {
     return bairros;
   }
 
-  const propertiesSnapshot = await getDocs(collection(db, PROPERTY_COLLECTION));
+  const propertiesQuery = query(
+    collection(db, PROPERTY_COLLECTION),
+    where("status", "==", "Ativo")
+  );
+  const propertiesSnapshot = await getDocs(propertiesQuery);
 
   return buildFallbackBairrosFromProperties(propertiesSnapshot);
 }
@@ -293,5 +298,101 @@ export async function trackBairroView(bairro) {
     );
   } catch (error) {
     console.error("Falha ao registrar bairro no Firestore:", error);
+  }
+}
+
+export function logPropertyViewAnalytics(property) {
+  if (typeof window === "undefined" || !analytics || !property) {
+    return;
+  }
+
+  try {
+    logEvent(analytics, "view_item", {
+      currency: "BRL",
+      value: property.price,
+      items: [
+        {
+          item_id: property.id,
+          item_name: property.title,
+          item_category: property.location?.neighborhood,
+        },
+      ],
+    });
+  } catch (error) {
+    console.error("Falha ao registrar view_item no Firebase Analytics:", error);
+  }
+}
+
+export function logLeadSubmissionAnalytics(propertyId, propertyTitle) {
+  if (typeof window === "undefined" || !analytics || !propertyId) {
+    return;
+  }
+
+  try {
+    logEvent(analytics, "generate_lead", {
+      property_id: propertyId,
+      property_title: propertyTitle,
+    });
+  } catch (error) {
+    console.error("Falha ao registrar generate_lead no Firebase Analytics:", error);
+  }
+}
+
+export function logSearchAnalytics(searchParams) {
+  if (typeof window === "undefined" || !analytics || !searchParams) {
+    return;
+  }
+
+  try {
+    const { location, propertyType, priceMin, priceMax } = searchParams;
+    const term = location || propertyType || "todos";
+
+    logEvent(analytics, "search", {
+      search_term: term,
+      filter_neighborhood: location || "",
+      filter_property_type: propertyType || "",
+      filter_min_price: priceMin || "",
+      filter_max_price: priceMax || "",
+    });
+  } catch (error) {
+    console.error("Falha ao registrar search no Firebase Analytics:", error);
+  }
+}
+
+export function logAddToWishlistAnalytics(property) {
+  if (typeof window === "undefined" || !analytics || !property) {
+    return;
+  }
+
+  try {
+    logEvent(analytics, "add_to_wishlist", {
+      currency: "BRL",
+      value: property.price || 0,
+      items: [
+        {
+          item_id: property.id,
+          item_name: property.title,
+          item_category: property.location?.neighborhood,
+        },
+      ],
+    });
+  } catch (error) {
+    console.error("Falha ao registrar add_to_wishlist no Firebase Analytics:", error);
+  }
+}
+
+export function logWhatsAppClickAnalytics(propertyName, origin) {
+  if (typeof window === "undefined" || !analytics) {
+    return;
+  }
+
+  try {
+    logEvent(analytics, "generate_lead", {
+      method: "whatsapp",
+      item_name: propertyName || "Contato Geral",
+      content_type: origin,
+    });
+  } catch (error) {
+    console.error("Falha ao registrar WhatsApp click no Firebase Analytics:", error);
   }
 }
