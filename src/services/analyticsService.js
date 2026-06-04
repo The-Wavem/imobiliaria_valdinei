@@ -305,6 +305,37 @@ export async function trackBairroView(bairro) {
   }
 }
 
+export async function logNeighborhoodView(neighborhoodName) {
+  if (typeof window === "undefined" || !neighborhoodName) {
+    return;
+  }
+
+  try {
+    const clean = String(neighborhoodName).trim();
+
+    if (!clean) {
+      return;
+    }
+
+    // Usa o prefixo "localizacao_" + slugify para ficar compatível com a query do gráfico do Admin
+    const docId = `localizacao_${slugify(clean)}`;
+    const humanLabel = `Localização: ${clean}`;
+
+    const docRef = doc(db, ANALYTICS_FILTERS_COLLECTION, docId);
+
+    await setDoc(
+      docRef,
+      {
+        name: humanLabel,
+        count: increment(1),
+      },
+      { merge: true },
+    );
+  } catch (error) {
+    console.error("Falha ao registrar visualização de bairro no Firestore:", error);
+  }
+}
+
 export function logPropertyViewAnalytics(property) {
   if (typeof window === "undefined" || !analytics || !property) {
     return;

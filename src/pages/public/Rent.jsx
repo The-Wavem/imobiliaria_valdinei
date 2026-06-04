@@ -56,10 +56,14 @@ export default function Rent() {
       const areaMax = Number(filters.areaMax || Number.POSITIVE_INFINITY);
       const propAddress = (loc.address || "").toLowerCase();
       const propNeighborhood = (loc.neighborhood || "").toLowerCase();
+      const propBairro = (loc.bairro || "").toLowerCase();
+      const searchLoc = searchLocation.toLowerCase();
+
       const matchesLocation =
-        !searchLocation ||
-        propAddress.includes(searchLocation) ||
-        propNeighborhood.includes(searchLocation);
+        !searchLoc ||
+        propBairro === searchLoc ||
+        propNeighborhood === searchLoc ||
+        propAddress.includes(searchLoc);
       const matchesType =
         !propertyType ||
         (property.type &&
@@ -118,7 +122,7 @@ export default function Rent() {
         <CategoryHero category="Alugar" />
       </motion.div>
       <motion.div variants={fadeUpItem} style={{ position: "relative", zIndex: 10 }}>
-        <FilterBar onSearch={setFilters} onAdvancedFiltersApply={setFilters} />
+        <FilterBar onSearch={setFilters} onAdvancedFiltersApply={setFilters} properties={properties} />
       </motion.div>
       <motion.div variants={fadeUpItem}>
         <PropertyGrid

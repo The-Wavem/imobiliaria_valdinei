@@ -1,9 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { MapPin, Home, DollarSign, Search, SlidersHorizontal, X, Eraser } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactSlider from "react-slider";
 import Button from "@components/ui/Button/Button.jsx";
-import Input from "@components/ui/Input/Input.jsx";
 import Select from "@components/ui/Select/Select.jsx";
 import AdvancedFilters from "@components/ui/FilterBar/AdvancedFilters.jsx";
 import { trackFilterUsage } from "@utils/analytics";
@@ -18,7 +17,7 @@ const typeOptions = [
   { value: "terreno", label: "Terreno" },
 ];
 
-export default function FilterBar({ onSearch, onAdvancedFiltersApply }) {
+export default function FilterBar({ onSearch, onAdvancedFiltersApply, properties = [] }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isStuck, setIsStuck] = useState(false);
   const [filters, setFilters] = useState({
@@ -35,6 +34,22 @@ export default function FilterBar({ onSearch, onAdvancedFiltersApply }) {
     areaMin: "",
     areaMax: "",
   });
+
+  // Gera lista de bairros unicos dinamicamente a partir dos imoveis carregados
+  const locationOptions = useMemo(() => {
+    const rawBairros = properties.map(
+      (p) => p?.location?.bairro || p?.location?.neighborhood
+    );
+
+    // .filter(Boolean) elimina undefined, null e "" antes de entrar no Set
+    const unique = [...new Set(rawBairros.filter(Boolean))]
+      .sort((a, b) => a.localeCompare(b, "pt-BR"));
+
+    return [
+      { value: "", label: "Todos os Bairros" },
+      ...unique.map((bairro) => ({ value: bairro, label: bairro })),
+    ];
+  }, [properties]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -143,10 +158,10 @@ export default function FilterBar({ onSearch, onAdvancedFiltersApply }) {
     <section className={`${styles.bar} ${isStuck ? styles.isStuck : ""}`}>
       <div className={styles.container}>
         <div className={styles.topRow}>
-          <Input
+          <Select
             icon={MapPin}
             label="Localização"
-            placeholder="Cidade ou Bairro"
+            options={locationOptions}
             value={filters.location}
             onChange={handleFieldChange("location")}
             className={`${styles.fieldItem} ${filters.location ? styles.activeFilter : ""}`}

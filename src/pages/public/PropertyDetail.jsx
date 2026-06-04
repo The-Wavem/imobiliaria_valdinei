@@ -4,7 +4,7 @@ import { motion as motionFactory } from "framer-motion";
 import styles from "./PropertyDetail.module.css";
 import { trackBairroView } from "@utils/analytics";
 import { incrementPropertyViews } from "@/services/propertyService";
-import { logPropertyViewAnalytics } from "@/services/analyticsService";
+import { logPropertyViewAnalytics, logNeighborhoodView } from "@/services/analyticsService";
   
 import Breadcrumb from "@components/ui/Breadcrumb/Breadcrumb.jsx";
 import PropertyGallery from "@sections/property-detail/PropertyGallery";
@@ -63,10 +63,16 @@ export default function PropertyDetail() {
         if (isMounted) {
           setProperty(item);
 
-          if (item?.bairro) {
-            await trackBairroView(item.bairro);
+          // Fallback robusto: tenta location.bairro (schema novo) e cai para location.neighborhood (schema antigo)
+          const bairroName = item?.location?.bairro || item?.location?.neighborhood;
+
+          // Guarda de segurança: só registra se o bairro existir de verdade
+          if (bairroName) {
+            logNeighborhoodView(bairroName);
+            trackBairroView(bairroName);
           }
-          await incrementPropertyViews(item.id);
+
+          incrementPropertyViews(item.id);
           logPropertyViewAnalytics(item);
         }
       } finally {
