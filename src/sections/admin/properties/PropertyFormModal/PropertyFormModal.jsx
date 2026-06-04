@@ -52,7 +52,7 @@ const baseFeatures = [
 
 const defaultForm = {
   title: "", code: "", price: "", condo: "", iptu: "",
-  category: "", type: "", cep: "", street: "", number: "", complement: "", neighborhood: "", city: "", state: "",
+  category: "", type: "", cep: "", logradouro: "", numero: "", complemento: "", bairro: "", cidade: "", estado: "",
   area: "", bedrooms: "", bathrooms: "", parkingSpaces: "",
   features: [], photos: [], summary: "", description: "",
   status: "Inativo"
@@ -93,16 +93,16 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
         category: property.category || "",
         type: property.type || "",
         cep: property.location?.cep || property.cep || "",
-        street: property.location?.street || property.street || property.location?.address || property.address || "",
-        number: property.location?.number || property.number || "",
-        complement: property.location?.complement || property.complement || "",
-        neighborhood: property.location?.neighborhood || property.neighborhood || "",
-        city: property.location?.city || property.city || "",
-        state: property.location?.state || property.state || "",
-        area: property.location?.area || property.area || "",
-        bedrooms: property.location?.bedrooms || property.bedrooms || "",
-        bathrooms: property.location?.bathrooms || property.bathrooms || "",
-        parkingSpaces: property.location?.parkingSpaces || property.parkingSpaces || "",
+        logradouro: property.location?.logradouro || property.location?.street || property.street || property.location?.address || property.address || "",
+        numero: property.location?.numero || property.location?.number || property.number || "",
+        complemento: property.location?.complemento || property.location?.complement || property.complement || "",
+        bairro: property.location?.bairro || property.location?.neighborhood || property.neighborhood || "",
+        cidade: property.location?.cidade || property.location?.city || property.city || "",
+        estado: property.location?.estado || property.location?.state || property.state || "",
+        area: property.area || property.location?.area || "",
+        bedrooms: property.bedrooms || property.location?.bedrooms || "",
+        bathrooms: property.bathrooms || property.location?.bathrooms || "",
+        parkingSpaces: property.parkingSpaces || property.location?.parkingSpaces || "",
         features: property.features || [],
         photos: property.photos || [],
         summary: property.content?.summary || property.summary || "",
@@ -161,10 +161,10 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
         if (!data.erro) {
           setFormData((prev) => ({
             ...prev,
-            street: data.logradouro || prev.street,
-            neighborhood: data.bairro || prev.neighborhood,
-            city: data.localidade || prev.city,
-            state: data.uf || prev.state,
+            logradouro: data.logradouro || prev.logradouro,
+            bairro: data.bairro || prev.bairro,
+            cidade: data.localidade || prev.cidade,
+            estado: data.uf || prev.estado,
           }));
         }
       } catch (error) {
@@ -274,7 +274,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
     return (
       formData.title.trim() !== "" ||
       formData.price !== "" ||
-      formData.street.trim() !== "" ||
+      formData.logradouro.trim() !== "" ||
       formData.photos.length > 0 ||
       formData.features.length > 0
     );
@@ -300,17 +300,22 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
       const payload = { ...formData };
       
       const parts = [];
-      if (payload.street) parts.push(payload.street);
-      if (payload.number) parts.push(payload.number);
+      if (payload.logradouro) parts.push(payload.logradouro);
+      if (payload.numero) parts.push(payload.numero);
+      
       let addressStr = parts.join(", ");
       
-      if (payload.neighborhood) {
-        addressStr += ` - ${payload.neighborhood}`;
+      const compBairro = [];
+      if (payload.complemento) compBairro.push(payload.complemento);
+      if (payload.bairro) compBairro.push(payload.bairro);
+      
+      if (compBairro.length > 0) {
+        addressStr += ` - ${compBairro.join(", ")}`;
       }
       
       const cityState = [];
-      if (payload.city) cityState.push(payload.city);
-      if (payload.state) cityState.push(payload.state);
+      if (payload.cidade) cityState.push(payload.cidade);
+      if (payload.estado) cityState.push(payload.estado);
       
       if (cityState.length > 0) {
         addressStr += `, ${cityState.join(" - ")}`;
@@ -322,31 +327,23 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
 
       payload.location = {
         cep: payload.cep,
-        street: payload.street,
-        number: payload.number,
-        complement: payload.complement,
-        neighborhood: payload.neighborhood,
-        city: payload.city,
-        state: payload.state,
-        fullAddress: addressStr,
-        area: payload.area,
-        bedrooms: payload.bedrooms,
-        bathrooms: payload.bathrooms,
-        parkingSpaces: payload.parkingSpaces,
+        logradouro: payload.logradouro,
+        numero: payload.numero,
+        complemento: payload.complemento,
+        bairro: payload.bairro,
+        cidade: payload.cidade,
+        estado: payload.estado,
+        address: addressStr
       };
 
-      // Limpar campos de localização da raiz para manter o payload do Firestore limpo
+      // Limpar campos de localização temporários da raiz
       delete payload.cep;
-      delete payload.street;
-      delete payload.number;
-      delete payload.complement;
-      delete payload.neighborhood;
-      delete payload.city;
-      delete payload.state;
-      delete payload.area;
-      delete payload.bedrooms;
-      delete payload.bathrooms;
-      delete payload.parkingSpaces;
+      delete payload.logradouro;
+      delete payload.numero;
+      delete payload.complemento;
+      delete payload.bairro;
+      delete payload.cidade;
+      delete payload.estado;
 
       await onSave(payload);
     } catch (error) {
@@ -563,40 +560,40 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                 label="Logradouro"
                 icon={MapPin}
                 placeholder="Rua, avenida..."
-                value={formData.street}
-                onChange={(event) => updateField("street", event.target.value)}
+                value={formData.logradouro}
+                onChange={(event) => updateField("logradouro", event.target.value)}
               />
               <Input
                 label="Número"
                 placeholder="Ex: 123"
-                value={formData.number}
-                onChange={(event) => updateField("number", event.target.value)}
+                value={formData.numero}
+                onChange={(event) => updateField("numero", event.target.value)}
               />
               <Input
                 label="Complemento"
                 placeholder="Ex: Apto 42"
-                value={formData.complement}
-                onChange={(event) => updateField("complement", event.target.value)}
+                value={formData.complemento}
+                onChange={(event) => updateField("complemento", event.target.value)}
               />
               <Input
                 label="Bairro"
                 placeholder="Nome do bairro"
-                value={formData.neighborhood}
+                value={formData.bairro}
                 onChange={(event) =>
-                  updateField("neighborhood", event.target.value)
+                  updateField("bairro", event.target.value)
                 }
               />
               <Input
                 label="Cidade"
                 placeholder="Sua cidade"
-                value={formData.city}
-                onChange={(event) => updateField("city", event.target.value)}
+                value={formData.cidade}
+                onChange={(event) => updateField("cidade", event.target.value)}
               />
               <Input
                 label="Estado (UF)"
                 placeholder="Ex: SP"
-                value={formData.state}
-                onChange={(event) => updateField("state", event.target.value)}
+                value={formData.estado}
+                onChange={(event) => updateField("estado", event.target.value)}
                 maxLength={2}
               />
             </div>
