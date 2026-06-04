@@ -34,6 +34,40 @@ function sanitizePhone(phone) {
   return String(phone || "").replace(/\D/g, "");
 }
 
+/**
+ * Resolve o texto de origem/imóvel do lead de forma inteligente.
+ * Prioridade:
+ *  1. Se veio de um imóvel → mostra o título do imóvel
+ *  2. Se veio de formulário de contato → mostra a origem
+ *  3. Se veio de WhatsApp direto → mostra isso
+ *  4. Fallback genérico
+ *
+ * Retorna: { label: string, isProperty: boolean }
+ */
+function resolveLeadOrigin(lead) {
+  const propTitle =
+    lead.propertyTitle ||
+    lead.client?.property;
+
+  // Lead com imóvel identificado (agendamento de visita, formulário do imóvel)
+  if (propTitle && propTitle.trim()) {
+    return { label: propTitle.trim(), isProperty: true };
+  }
+
+  // Lead do formulário de contato geral
+  const origin = lead.origin || lead.origem || "";
+  if (origin) {
+    return { label: origin, isProperty: false };
+  }
+
+  // Lead via WhatsApp direto
+  if (lead.requestType === "WhatsApp Direto") {
+    return { label: "WhatsApp Direto", isProperty: false };
+  }
+
+  return { label: "Contato Geral", isProperty: false };
+}
+
 function buildWhatsAppUrl(name, phone, property) {
   const message = `Olá ${name}, vi que você solicitou informações sobre o imóvel ${property}. Como posso ajudar?`;
   return `https://wa.me/55${sanitizePhone(phone)}?text=${encodeURIComponent(message)}`;
@@ -95,7 +129,7 @@ export default function LeadsTable({
               <tr>
                 <th>Data</th>
                 <th>Cliente</th>
-                <th>Imóvel</th>
+                <th>Origem / Imóvel</th>
                 <th>Tipo de Solicitação</th>
                 <th>Status</th>
                 <th>Ações</th>
@@ -103,12 +137,12 @@ export default function LeadsTable({
             </thead>
             <tbody>
               {leads.map((lead) => {
-                const clientName = lead.name || lead.client?.name || "Sem Nome";
+                const clientName  = lead.name  || lead.client?.name  || "Sem Nome";
                 const clientPhone = lead.phone || lead.client?.phone || "";
                 const clientEmail = lead.email || lead.client?.email || "";
-                const propTitle = lead.propertyTitle || lead.client?.property || "Imóvel não especificado";
-                const reqType = lead.source || lead.requestType || "Contato";
+                const reqType     = lead.source || lead.requestType || "Contato";
                 const formattedDate = formatLeadDate(lead.createdAt, lead.date);
+                const origin = resolveLeadOrigin(lead);
 
                 return (
                   <tr key={lead.id} className={`${styles.tableRow} ${getRequestRowClass(lead.status)}`.trim()}>
@@ -123,7 +157,9 @@ export default function LeadsTable({
                     </td>
                     <td>
                       <div className={styles.propertyCell}>
-                        <strong>{propTitle}</strong>
+                        <strong className={origin.isProperty ? styles.originProperty : styles.originContact}>
+                          {origin.label}
+                        </strong>
                         <span>{clientEmail}</span>
                       </div>
                     </td>
@@ -150,7 +186,7 @@ export default function LeadsTable({
                           type="button"
                           variant="outline"
                           className={`${styles.actionButton} ${styles.whatsappButton}`}
-                          onClick={() => window.open(buildWhatsAppUrl(clientName, clientPhone, propTitle), "_blank", "noopener,noreferrer")}
+                          onClick={() => window.open(buildWhatsAppUrl(clientName, clientPhone, origin.label), "_blank", "noopener,noreferrer")}
                           aria-label={`Abrir WhatsApp para ${clientName}`}
                         >
                           <MessageCircle size={16} />

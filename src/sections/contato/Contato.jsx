@@ -9,11 +9,17 @@ import {
   MessageCircle,
   Loader2,
   CheckCircle2,
+  AlertCircle,
 } from "lucide-react";
 import Button from "@components/ui/Button/Button.jsx";
 import Input from "@components/ui/Input/Input.jsx";
 import { addLead } from "@services/leadService.js";
 import { logWhatsAppClickAnalytics } from "@services/analyticsService.js";
+import {
+  validateContactForm,
+  sanitizeFormData,
+  FIELD_LIMITS,
+} from "@utils/validation.js";
 import styles from "./Contato.module.css";
 
 const initialFormState = {
@@ -44,35 +50,69 @@ const itemVariants = {
 
 export default function ContatoSection() {
   const [formData, setFormData] = useState(initialFormState);
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [touched, setTouched] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
+  // Marca o campo como "tocado" ao sair dele (onBlur) e valida imediatamente
+  const handleBlur = (field) => () => {
+    setTouched((prev) => ({ ...prev, [field]: true }));
+    const errors = validateContactForm(formData);
+    setFieldErrors(errors);
+  };
+
   const handleFieldChange = (field) => (event) => {
     const { value } = event.target;
-    setFormData((currentData) => ({ ...currentData, [field]: value }));
+
+    // Respeita o limite máximo de caracteres sem deixar digitar além
+    const limit = FIELD_LIMITS[field]?.max;
+    if (limit && value.length > limit) return;
+
+    const updated = { ...formData, [field]: value };
+    setFormData(updated);
+
+    // Só revalida em tempo real se o campo já foi tocado
+    if (touched[field]) {
+      setFieldErrors(validateContactForm(updated));
+    }
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     setErrorMsg("");
+
+    // Marca todos os campos como tocados e valida de uma vez
+    const allTouched = Object.fromEntries(Object.keys(formData).map((k) => [k, true]));
+    setTouched(allTouched);
+
+    const errors = validateContactForm(formData);
+    setFieldErrors(errors);
+
+    // Bloqueia o envio se houver qualquer erro
+    if (Object.keys(errors).length > 0) return;
+
     setIsLoading(true);
 
     try {
+      const clean = sanitizeFormData(formData);
+
       await addLead({
-        name: formData.name.trim(),
-        email: formData.email.trim(),
-        phone: formData.phone.trim(),
-        subject: formData.subject.trim(),
-        message: formData.message.trim(),
+        name: clean.name,
+        email: clean.email,
+        phone: clean.phone,
+        subject: clean.subject,
+        message: clean.message,
         origin: "Página de Contato",
         status: "Novo",
       });
 
       setFormData(initialFormState);
+      setFieldErrors({});
+      setTouched({});
       setIsSuccess(true);
 
-      // Esconde a mensagem de sucesso após 6 segundos
       setTimeout(() => setIsSuccess(false), 6000);
     } catch (err) {
       console.error("Erro ao enviar mensagem:", err);
@@ -81,6 +121,10 @@ export default function ContatoSection() {
       setIsLoading(false);
     }
   };
+
+  // Helper: retorna a classe de erro para campos nativos (assunto/mensagem)
+  const fieldClass = (field) =>
+    touched[field] && fieldErrors[field] ? styles.fieldHasError : "";
 
   return (
     <section className={styles.page}>
@@ -174,7 +218,7 @@ export default function ContatoSection() {
               </motion.div>
             )}
 
-            {/* Banner de erro */}
+            {/* Banner de erro de envio */}
             {errorMsg && (
               <motion.div
                 className={styles.errorBanner}
@@ -182,67 +226,108 @@ export default function ContatoSection() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
               >
+                <AlertCircle size={18} />
                 {errorMsg}
               </motion.div>
             )}
 
             <form className={styles.form} onSubmit={handleSubmit} noValidate>
-              <Input
-                icon={UserRound}
-                label="Nome Completo"
-                placeholder="Seu nome"
-                value={formData.name}
-                onChange={handleFieldChange("name")}
-                type="text"
-                className={styles.fullWidthField}
-                required
-              />
-
-              <div className={styles.inlineFields}>
+              {/* NOME */}
+              <div className={styles.fieldGroup}>
                 <Input
-                  icon={Mail}
-                  label="E-mail"
-                  placeholder="seu@email.com"
-                  value={formData.email}
-                  onChange={handleFieldChange("email")}
-                  type="email"
-                  required
+                  icon={UserRound}
+                  label="Nome Completo"
+                  placeholder="Seu nome"
+                  value={formData.name}
+                  onChange={handleFieldChange("name")}
+                  onBlur={handleBlur("name")}
+                  type="text"
+                  className={`${styles.fullWidthField} ${touched.name && fieldErrors.name ? styles.inputError : ""}`}
                 />
-
-                <Input
-                  icon={Phone}
-                  label="Telefone"
-                  placeholder="(00) 00000-0000"
-                  value={formData.phone}
-                  onChange={handleFieldChange("phone")}
-                  type="tel"
-                />
+                {touched.name && fieldErrors.name && (
+                  <span className={styles.fieldError}>{fieldErrors.name}</span>
+                )}
               </div>
 
-              <label className={styles.textField}>
-                <span className={styles.fieldLabel}>Assunto</span>
-                <div className={styles.textControl}>
-                  <MessageSquareText size={16} />
-                  <input
-                    type="text"
-                    placeholder="Ex: Dúvida sobre imóvel"
-                    value={formData.subject}
-                    onChange={handleFieldChange("subject")}
+              {/* E-MAIL + TELEFONE */}
+              <div className={styles.inlineFields}>
+                <div className={styles.fieldGroup}>
+                  <Input
+                    icon={Mail}
+                    label="E-mail"
+                    placeholder="seu@email.com"
+                    value={formData.email}
+                    onChange={handleFieldChange("email")}
+                    onBlur={handleBlur("email")}
+                    type="email"
+                    className={touched.email && fieldErrors.email ? styles.inputError : ""}
                   />
+                  {touched.email && fieldErrors.email && (
+                    <span className={styles.fieldError}>{fieldErrors.email}</span>
+                  )}
                 </div>
-              </label>
 
-              <label className={styles.textField}>
-                <span className={styles.fieldLabel}>Mensagem</span>
-                <textarea
-                  className={styles.textarea}
-                  placeholder="Como podemos ajudar?"
-                  rows="6"
-                  value={formData.message}
-                  onChange={handleFieldChange("message")}
-                  required
-                />
-              </label>
+                <div className={styles.fieldGroup}>
+                  <Input
+                    icon={Phone}
+                    label="Telefone"
+                    placeholder="(00) 00000-0000"
+                    value={formData.phone}
+                    onChange={handleFieldChange("phone")}
+                    onBlur={handleBlur("phone")}
+                    type="tel"
+                    className={touched.phone && fieldErrors.phone ? styles.inputError : ""}
+                  />
+                  {touched.phone && fieldErrors.phone && (
+                    <span className={styles.fieldError}>{fieldErrors.phone}</span>
+                  )}
+                </div>
+              </div>
+
+              {/* ASSUNTO */}
+              <div className={styles.fieldGroup}>
+                <label className={`${styles.textField} ${fieldClass("subject")}`}>
+                  <span className={styles.fieldLabel}>Assunto</span>
+                  <div className={styles.textControl}>
+                    <MessageSquareText size={16} />
+                    <input
+                      type="text"
+                      placeholder="Ex: Dúvida sobre imóvel"
+                      value={formData.subject}
+                      onChange={handleFieldChange("subject")}
+                      onBlur={handleBlur("subject")}
+                      maxLength={FIELD_LIMITS.subject.max}
+                    />
+                  </div>
+                </label>
+                {touched.subject && fieldErrors.subject && (
+                  <span className={styles.fieldError}>{fieldErrors.subject}</span>
+                )}
+              </div>
+
+              {/* MENSAGEM */}
+              <div className={styles.fieldGroup}>
+                <label className={styles.textField}>
+                  <span className={styles.fieldLabel}>
+                    Mensagem
+                    <span className={`${styles.charCount} ${formData.message.length > FIELD_LIMITS.message.max * 0.85 ? styles.charCountWarn : ""}`}>
+                      {" "}{formData.message.length}/{FIELD_LIMITS.message.max}
+                    </span>
+                  </span>
+                  <textarea
+                    className={`${styles.textarea} ${fieldClass("message")}`}
+                    placeholder="Como podemos ajudar?"
+                    rows="6"
+                    value={formData.message}
+                    onChange={handleFieldChange("message")}
+                    onBlur={handleBlur("message")}
+                    maxLength={FIELD_LIMITS.message.max}
+                  />
+                </label>
+                {touched.message && fieldErrors.message && (
+                  <span className={styles.fieldError}>{fieldErrors.message}</span>
+                )}
+              </div>
 
               <Button
                 variant="primary"

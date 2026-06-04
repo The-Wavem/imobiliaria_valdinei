@@ -124,6 +124,16 @@
   font-weight: 600;
 }
 
+/* Lead vinculado a um imóvel específico: cor do brand principal (dourado) */
+.originProperty {
+  color: var(--color-brand-primary) !important;
+}
+
+/* Lead de contato geral ou WhatsApp: cor neutra azul escuro */
+.originContact {
+  color: var(--color-brand-secondary) !important;
+}
+
 .requestBadge {
   display: inline-flex;
   align-items: center;

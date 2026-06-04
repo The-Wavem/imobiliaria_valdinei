@@ -1,6 +1,19 @@
 import Modal from "@components/ui/Modal/Modal.jsx";
 import styles from "./LeadDetailsModal.module.css";
 
+// Mesma lógica do LeadsTable — resolve o label e o tipo de origem do lead
+function resolveLeadOrigin(lead) {
+  const propTitle = lead.propertyTitle || lead.client?.property;
+  if (propTitle && propTitle.trim()) return { label: propTitle.trim(), isProperty: true };
+
+  const origin = lead.origin || lead.origem || "";
+  if (origin) return { label: origin, isProperty: false };
+
+  if (lead.requestType === "WhatsApp Direto") return { label: "WhatsApp Direto", isProperty: false };
+
+  return { label: "Contato Geral", isProperty: false };
+}
+
 export default function LeadDetailsModal({ isOpen, onClose, lead }) {
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Detalhes da Solicitação" variant="admin">
@@ -9,7 +22,7 @@ export default function LeadDetailsModal({ isOpen, onClose, lead }) {
           const clientName = lead.name || lead.client?.name || "Sem Nome";
           const clientPhone = lead.phone || lead.client?.phone || "Não informado";
           const clientEmail = lead.email || lead.client?.email || "Não informado";
-          const propTitle = lead.propertyTitle || lead.client?.property || "Imóvel não especificado";
+          const origin = resolveLeadOrigin(lead);
           const reqType = lead.source || lead.requestType || "Contato";
 
           return (
@@ -31,8 +44,10 @@ export default function LeadDetailsModal({ isOpen, onClose, lead }) {
                 </div>
 
                 <div className={styles.detailCard}>
-                  <span className={styles.detailLabel}>Imóvel de Interesse</span>
-                  <strong>{propTitle}</strong>
+                  <span className={styles.detailLabel}>
+                    {origin.isProperty ? "Imóvel de Interesse" : "Origem do Contato"}
+                  </span>
+                  <strong>{origin.label}</strong>
                 </div>
               </div>
 
