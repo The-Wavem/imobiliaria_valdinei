@@ -323,14 +323,18 @@ export async function logNeighborhoodView(neighborhoodName) {
 
     const docRef = doc(db, ANALYTICS_FILTERS_COLLECTION, docId);
 
-    await setDoc(
+    console.log("Gravando analytics para:", humanLabel);
+
+    setDoc(
       docRef,
       {
         name: humanLabel,
         count: increment(1),
       },
       { merge: true },
-    );
+    ).catch((err) => {
+      console.error("Erro no Analytics ao tentar gravar", humanLabel, err);
+    });
   } catch (error) {
     console.error("Falha ao registrar visualização de bairro no Firestore:", error);
   }

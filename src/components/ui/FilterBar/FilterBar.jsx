@@ -35,9 +35,12 @@ export default function FilterBar({ onSearch, onAdvancedFiltersApply, properties
     areaMax: "",
   });
 
+  console.log("Properties no FilterBar:", properties);
+
   // Gera lista de bairros unicos dinamicamente a partir dos imoveis carregados
   const locationOptions = useMemo(() => {
-    const rawBairros = properties.map(
+    const propertiesArray = properties || [];
+    const rawBairros = propertiesArray.map(
       (p) => p?.location?.bairro || p?.location?.neighborhood
     );
 
@@ -45,9 +48,12 @@ export default function FilterBar({ onSearch, onAdvancedFiltersApply, properties
     const unique = [...new Set(rawBairros.filter(Boolean))]
       .sort((a, b) => a.localeCompare(b, "pt-BR"));
 
+    // Adiciona o Mock na marra para testar se a UI está renderizando options corretamente
+    const finalOptions = [...unique, "Bairro de Teste (Mock)"];
+
     return [
       { value: "", label: "Todos os Bairros" },
-      ...unique.map((bairro) => ({ value: bairro, label: bairro })),
+      ...finalOptions.map((bairro) => ({ value: bairro, label: bairro })),
     ];
   }, [properties]);
 

@@ -53,6 +53,7 @@ export default function PropertyDetail() {
   const [property, setProperty] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Efeito 1: responsável APENAS por carregar o imóvel do Firebase
   useEffect(() => {
     let isMounted = true;
 
@@ -62,16 +63,7 @@ export default function PropertyDetail() {
 
         if (isMounted) {
           setProperty(item);
-
-          // Fallback robusto: tenta location.bairro (schema novo) e cai para location.neighborhood (schema antigo)
-          const bairroName = item?.location?.bairro || item?.location?.neighborhood;
-
-          // Guarda de segurança: só registra se o bairro existir de verdade
-          if (bairroName) {
-            logNeighborhoodView(bairroName);
-            trackBairroView(bairroName);
-          }
-
+          // Métricas de visualização não dependem do bairro — disparam imediatamente
           incrementPropertyViews(item.id);
           logPropertyViewAnalytics(item);
         }
@@ -88,6 +80,20 @@ export default function PropertyDetail() {
       isMounted = false;
     };
   }, [id]);
+
+  // Efeito 2: reage APÓS o state 'property' estar 100% hidratado no React
+  // Dependência [property] garante que só executa quando o objeto existir de verdade
+  useEffect(() => {
+    // Trava forte: não dispara se o objeto ou o campo específico não existirem
+    if (!property || !property.location || !property.location.bairro) {
+      return;
+    }
+
+    const bairroName = property.location.bairro;
+
+    logNeighborhoodView(bairroName);
+    trackBairroView(bairroName);
+  }, [property]);
 
   if (isLoading) {
     return (
