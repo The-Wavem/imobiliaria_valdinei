@@ -18,7 +18,7 @@
   display: flex;
   flex-direction: column;
   padding: 1.35rem 1.4rem;
-  background: var(--color-surface);
+  background: #ffffff;
   border-radius: 32px;
   box-shadow: 0 28px 70px rgba(15, 23, 42, 0.09);
   border: 1px solid rgba(20, 20, 60, 0.08);
@@ -27,7 +27,7 @@
 }
 
 .isStuck .container {
-  background: rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   box-shadow: 0 16px 32px rgba(15, 23, 42, 0.08);
@@ -38,6 +38,28 @@
   gap: 0.9rem;
   align-items: end;
   width: 100%;
+}
+
+/* Feedback Visual de Filtro Ativo */
+.activeFilter {
+  --select-border: var(--color-primary);
+  --select-label: var(--color-primary);
+  border-radius: 1rem;
+}
+
+/* Para Select Component */
+button.activeFilter {
+  background-color: rgba(199, 156, 49, 0.06) !important;
+}
+
+/* Para Input Component */
+label.activeFilter > div {
+  border-color: var(--color-primary) !important;
+  background-color: rgba(199, 156, 49, 0.06) !important;
+}
+label.activeFilter > span:first-child {
+  color: var(--color-primary) !important;
+  font-weight: 800 !important;
 }
 
 .advancedFiltersWrapper {
@@ -116,10 +138,22 @@
 }
 
 .searchButton,
-.filtersButton {
+.filtersButton,
+.clearButton {
   min-height: 3.5rem;
   gap: 0.5rem;
   white-space: nowrap;
+}
+
+.clearButton {
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.2);
+  background: rgba(239, 68, 68, 0.05);
+}
+
+.clearButton:hover {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.4);
 }
 
 @media (max-width: 1024px) {

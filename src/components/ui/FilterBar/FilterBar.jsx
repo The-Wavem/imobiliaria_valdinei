@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { MapPin, Home, DollarSign, Search, SlidersHorizontal, X } from "lucide-react";
+import { MapPin, Home, DollarSign, Search, SlidersHorizontal, X, Eraser } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Button from "@components/ui/Button/Button.jsx";
 import Input from "@components/ui/Input/Input.jsx";
@@ -59,6 +59,42 @@ export default function FilterBar({ onSearch, onAdvancedFiltersApply }) {
     onSearch?.(currentFilters);
   };
 
+  const handleClearFilters = () => {
+    const emptyFilters = {
+      location: "",
+      propertyType: "",
+      priceMin: "",
+      priceMax: "",
+    };
+    const emptyAdvanced = {
+      bedrooms: "Qualquer",
+      bathrooms: "Qualquer",
+      parking: "Qualquer",
+      amenities: [],
+      areaMin: "",
+      areaMax: "",
+    };
+    setFilters(emptyFilters);
+    setAdvancedFilters(emptyAdvanced);
+    
+    const combinedEmpty = { ...emptyFilters, ...emptyAdvanced };
+    onSearch?.(combinedEmpty);
+    if (onAdvancedFiltersApply) {
+      onAdvancedFiltersApply(combinedEmpty);
+    }
+  };
+
+  const hasActiveFilters =
+    Boolean(filters.location) ||
+    Boolean(filters.propertyType) ||
+    Boolean(filters.priceMin) ||
+    Boolean(filters.priceMax) ||
+    Object.entries(advancedFilters).some(([key, val]) => {
+      if (key === "amenities") return val.length > 0;
+      if (key === "areaMin" || key === "areaMax") return Boolean(val);
+      return val !== "Qualquer";
+    });
+
   const handleApplyAdvancedFilters = (nextAdvancedFilters) => {
     setAdvancedFilters(nextAdvancedFilters);
     const currentFilters = { ...filters, ...nextAdvancedFilters };
@@ -77,7 +113,7 @@ export default function FilterBar({ onSearch, onAdvancedFiltersApply }) {
             placeholder="Cidade ou Bairro"
             value={filters.location}
             onChange={handleFieldChange("location")}
-            className={styles.fieldItem}
+            className={`${styles.fieldItem} ${filters.location ? styles.activeFilter : ""}`}
           />
 
           <Select
@@ -86,7 +122,7 @@ export default function FilterBar({ onSearch, onAdvancedFiltersApply }) {
             options={typeOptions}
             value={filters.propertyType}
             onChange={handleFieldChange("propertyType")}
-            className={styles.fieldItem}
+            className={`${styles.fieldItem} ${filters.propertyType ? styles.activeFilter : ""}`}
           />
 
           <div className={styles.priceGroup}>
@@ -102,7 +138,7 @@ export default function FilterBar({ onSearch, onAdvancedFiltersApply }) {
                 value={filters.priceMin}
                 onChange={handleFieldChange("priceMin")}
                 type="text"
-                className={styles.priceInput}
+                className={`${styles.priceInput} ${filters.priceMin ? styles.activeFilter : ""}`}
               />
 
               <Input
@@ -111,12 +147,28 @@ export default function FilterBar({ onSearch, onAdvancedFiltersApply }) {
                 value={filters.priceMax}
                 onChange={handleFieldChange("priceMax")}
                 type="text"
-                className={styles.priceInput}
+                className={`${styles.priceInput} ${filters.priceMax ? styles.activeFilter : ""}`}
               />
             </div>
           </div>
 
           <div className={styles.actions}>
+            <AnimatePresence>
+              {hasActiveFilters && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Button variant="outline" className={styles.clearButton} onClick={handleClearFilters}>
+                    <Eraser size={18} />
+                    Limpar
+                  </Button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             <Button variant="primary" className={styles.searchButton} onClick={handleSearch}>
               <Search size={18} />
               Buscar
