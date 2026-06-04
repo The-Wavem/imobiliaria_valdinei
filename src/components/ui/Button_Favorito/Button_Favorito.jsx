@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Heart } from "lucide-react";
+import { logAddToWishlistAnalytics } from "@services/analyticsService.js";
 import styles from "./Button_Favorito.module.css";
 
 const STORAGE_KEY = "imobiliaria-valdinei:favorites";
@@ -48,6 +49,10 @@ export default function ButtonFavorito({ property }) {
 
     writeFavorites(nextFavorites);
     setIsFavorite(!alreadyFavorite);
+
+    if (!alreadyFavorite) {
+      logAddToWishlistAnalytics(property);
+    }
   }
 
   return (

@@ -337,3 +337,62 @@ export function logLeadSubmissionAnalytics(propertyId, propertyTitle) {
     console.error("Falha ao registrar generate_lead no Firebase Analytics:", error);
   }
 }
+
+export function logSearchAnalytics(searchParams) {
+  if (typeof window === "undefined" || !analytics || !searchParams) {
+    return;
+  }
+
+  try {
+    const { location, propertyType, priceMin, priceMax } = searchParams;
+    const term = location || propertyType || "todos";
+
+    logEvent(analytics, "search", {
+      search_term: term,
+      filter_neighborhood: location || "",
+      filter_property_type: propertyType || "",
+      filter_min_price: priceMin || "",
+      filter_max_price: priceMax || "",
+    });
+  } catch (error) {
+    console.error("Falha ao registrar search no Firebase Analytics:", error);
+  }
+}
+
+export function logAddToWishlistAnalytics(property) {
+  if (typeof window === "undefined" || !analytics || !property) {
+    return;
+  }
+
+  try {
+    logEvent(analytics, "add_to_wishlist", {
+      currency: "BRL",
+      value: property.price || 0,
+      items: [
+        {
+          item_id: property.id,
+          item_name: property.title,
+          item_category: property.location?.neighborhood,
+        },
+      ],
+    });
+  } catch (error) {
+    console.error("Falha ao registrar add_to_wishlist no Firebase Analytics:", error);
+  }
+}
+
+export function logWhatsAppClickAnalytics(propertyName, origin) {
+  if (typeof window === "undefined" || !analytics) {
+    return;
+  }
+
+  try {
+    logEvent(analytics, "generate_lead", {
+      method: "whatsapp",
+      item_name: propertyName || "Contato Geral",
+      content_type: origin,
+    });
+  } catch (error) {
+    console.error("Falha ao registrar WhatsApp click no Firebase Analytics:", error);
+  }
+}

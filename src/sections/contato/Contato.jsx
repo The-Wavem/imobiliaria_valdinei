@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Mail, MessageSquareText, Phone, Send, UserRound, MessageCircle } from "lucide-react";
 import Button from "@components/ui/Button/Button.jsx";
 import Input from "@components/ui/Input/Input.jsx";
+import { logWhatsAppClickAnalytics } from "@services/analyticsService.js";
 import styles from "./Contato.module.css";
 
 const initialFormState = {
@@ -81,7 +82,12 @@ export default function ContatoSection() {
               </div>
             </div>
 
-            <Button variant="primary" type="button" className={styles.whatsappButton}>
+            <Button
+              variant="primary"
+              type="button"
+              className={styles.whatsappButton}
+              onClick={() => logWhatsAppClickAnalytics("Contato Geral", "pagina_contato")}
+            >
               <MessageCircle size={18} />
               Falar pelo WhatsApp
             </Button>
