@@ -9,6 +9,7 @@ import {
   Plus,
   Ruler,
   Save,
+  Star,
   Trash2,
   X,
   CarFront,
@@ -68,6 +69,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
   const [newType, setNewType] = useState("");
   const [newFeature, setNewFeature] = useState("");
   const [newPhotoUrl, setNewPhotoUrl] = useState("");
+  const [coverPhotoIndex, setCoverPhotoIndex] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
@@ -81,6 +83,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
     setNewType("");
     setNewFeature("");
     setNewPhotoUrl("");
+    setCoverPhotoIndex(0);
     setIsSaving(false);
 
     if (property) {
@@ -220,6 +223,12 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
         imageUrl: nextPhotos[0] || "",
       };
     });
+
+    if (coverPhotoIndex === photoIndex) {
+      setCoverPhotoIndex(0);
+    } else if (coverPhotoIndex > photoIndex) {
+      setCoverPhotoIndex((prev) => prev - 1);
+    }
   };
 
   const toggleFeature = (feature) => {
@@ -298,6 +307,14 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
 
     try {
       const payload = { ...formData };
+      
+      // Reordenar fotos para garantir que a capa (coverPhotoIndex) seja a primeira
+      if (payload.photos.length > 1 && coverPhotoIndex > 0 && coverPhotoIndex < payload.photos.length) {
+        const photosCopy = [...payload.photos];
+        const [coverPhoto] = photosCopy.splice(coverPhotoIndex, 1);
+        photosCopy.unshift(coverPhoto);
+        payload.photos = photosCopy;
+      }
       
       const parts = [];
       if (payload.logradouro) parts.push(payload.logradouro);
@@ -710,30 +727,43 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
 
             <div className={styles.galleryShell}>
               <div className={styles.galleryGrid}>
-                {formData.photos.filter(Boolean).map((photoUrl, index) => (
-                  <div
-                    key={`${photoUrl}-${index}`}
-                    className={styles.thumbnailCard}
-                  >
-                    <img
-                      src={photoUrl || undefined}
-                      alt={`Mídia ${index + 1} do imóvel`}
-                    />
-
-                    {index === 0 ? (
-                      <span className={styles.coverBadge}>Capa</span>
-                    ) : null}
-
-                    <button
-                      type="button"
-                      className={styles.removePhotoButton}
-                      onClick={() => removePhoto(index)}
-                      aria-label={`Remover mídia ${index + 1}`}
+                {formData.photos.filter(Boolean).map((photoUrl, index) => {
+                  const isCover = index === coverPhotoIndex;
+                  return (
+                    <div
+                      key={`${photoUrl}-${index}`}
+                      className={`${styles.thumbnailCard} ${isCover ? styles.thumbnailCardCover : ""}`}
                     >
-                      <X size={14} />
-                    </button>
-                  </div>
-                ))}
+                      <img
+                        src={photoUrl || undefined}
+                        alt={`Mídia ${index + 1} do imóvel`}
+                      />
+
+                      <button
+                        type="button"
+                        className={`${styles.coverStarButton} ${isCover ? styles.coverStarButtonActive : styles.coverStarButtonInactive}`}
+                        onClick={() => setCoverPhotoIndex(index)}
+                        aria-label={isCover ? "Capa atual" : "Definir como capa"}
+                        title="Definir como capa"
+                      >
+                        <Star size={14} fill={isCover ? "currentColor" : "none"} />
+                      </button>
+
+                      {isCover ? (
+                        <span className={styles.coverBadge}>Capa</span>
+                      ) : null}
+
+                      <button
+                        type="button"
+                        className={styles.removePhotoButton}
+                        onClick={() => removePhoto(index)}
+                        aria-label={`Remover mídia ${index + 1}`}
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </section>
