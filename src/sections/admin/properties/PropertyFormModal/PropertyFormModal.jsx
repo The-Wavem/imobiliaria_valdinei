@@ -22,6 +22,7 @@ import styles from "./PropertyFormModal.module.css";
 
 const tabOptions = [
   { id: "basic", label: "Básico" },
+  { id: "structure", label: "Estrutura" },
   { id: "description", label: "Descrição" },
   { id: "location", label: "Localização" },
   { id: "features", label: "Características" },
@@ -51,7 +52,7 @@ const baseFeatures = [
 
 const defaultForm = {
   title: "", code: "", price: "", condo: "", iptu: "",
-  category: "", type: "", address: "", neighborhood: "",
+  category: "", type: "", cep: "", street: "", number: "", complement: "", neighborhood: "", city: "", state: "",
   area: "", bedrooms: "", bathrooms: "", parkingSpaces: "",
   features: [], photos: [], summary: "", description: "",
   status: "Inativo"
@@ -91,8 +92,13 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
         iptu: property.pricing?.iptu || property.iptu || "",
         category: property.category || "",
         type: property.type || "",
-        address: property.location?.address || property.address || "",
+        cep: property.location?.cep || property.cep || "",
+        street: property.location?.street || property.street || "",
+        number: property.location?.number || property.number || "",
+        complement: property.location?.complement || property.complement || "",
         neighborhood: property.location?.neighborhood || property.neighborhood || "",
+        city: property.location?.city || property.city || "",
+        state: property.location?.state || property.state || "",
         area: property.location?.area || property.area || "",
         bedrooms: property.location?.bedrooms || property.bedrooms || "",
         bathrooms: property.location?.bathrooms || property.bathrooms || "",
@@ -141,6 +147,50 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
       ...currentValue,
       [field]: value,
     }));
+  };
+
+  const handleCepChange = async (event) => {
+    let value = event.target.value.replace(/\D/g, "");
+    updateField("cep", value);
+
+    if (value.length === 8) {
+      try {
+        const response = await fetch(`https://viacep.com.br/ws/${value}/json/`);
+        const data = await response.json();
+        
+        if (!data.erro) {
+          setFormData((prev) => ({
+            ...prev,
+            street: data.logradouro || prev.street,
+            neighborhood: data.bairro || prev.neighborhood,
+            city: data.localidade || prev.city,
+            state: data.uf || prev.state,
+          }));
+        }
+      } catch (error) {
+        console.error("Erro ao buscar CEP:", error);
+      }
+    }
+  };
+
+  const handleAddFeature = () => {
+    const value = newFeature.trim();
+    if (!value) return;
+
+    setAvailableFeatures((currentValue) =>
+      currentValue.includes(value)
+        ? currentValue
+        : [...currentValue, value],
+    );
+
+    setFormData((currentValue) => ({
+      ...currentValue,
+      features: currentValue.features.includes(value)
+        ? currentValue.features
+        : [...currentValue.features, value],
+    }));
+
+    setNewFeature("");
   };
 
   const addPhoto = (urlValue) => {
@@ -224,7 +274,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
     return (
       formData.title.trim() !== "" ||
       formData.price !== "" ||
-      formData.address.trim() !== "" ||
+      formData.street.trim() !== "" ||
       formData.photos.length > 0 ||
       formData.features.length > 0
     );
@@ -403,24 +453,9 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
           </section>
         ) : null}
 
-        {activeTab === "location" ? (
+        {activeTab === "structure" ? (
           <section className={styles.tabPanel}>
             <div className={styles.formGrid}>
-              <Input
-                label="Endereço"
-                icon={MapPin}
-                placeholder="Rua, avenida, número"
-                value={formData.address}
-                onChange={(event) => updateField("address", event.target.value)}
-              />
-              <Input
-                label="Bairro"
-                placeholder="Nome do bairro"
-                value={formData.neighborhood}
-                onChange={(event) =>
-                  updateField("neighborhood", event.target.value)
-                }
-              />
               <Input
                 label="Área (m²)"
                 icon={Ruler}
@@ -463,6 +498,60 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
           </section>
         ) : null}
 
+        {activeTab === "location" ? (
+          <section className={styles.tabPanel}>
+            <div className={styles.formGrid}>
+              <Input
+                label="CEP"
+                placeholder="Apenas números"
+                value={formData.cep}
+                onChange={handleCepChange}
+                maxLength={8}
+              />
+              <Input
+                label="Logradouro"
+                icon={MapPin}
+                placeholder="Rua, avenida..."
+                value={formData.street}
+                onChange={(event) => updateField("street", event.target.value)}
+              />
+              <Input
+                label="Número"
+                placeholder="Ex: 123"
+                value={formData.number}
+                onChange={(event) => updateField("number", event.target.value)}
+              />
+              <Input
+                label="Complemento"
+                placeholder="Ex: Apto 42"
+                value={formData.complement}
+                onChange={(event) => updateField("complement", event.target.value)}
+              />
+              <Input
+                label="Bairro"
+                placeholder="Nome do bairro"
+                value={formData.neighborhood}
+                onChange={(event) =>
+                  updateField("neighborhood", event.target.value)
+                }
+              />
+              <Input
+                label="Cidade"
+                placeholder="Sua cidade"
+                value={formData.city}
+                onChange={(event) => updateField("city", event.target.value)}
+              />
+              <Input
+                label="Estado (UF)"
+                placeholder="Ex: SP"
+                value={formData.state}
+                onChange={(event) => updateField("state", event.target.value)}
+                maxLength={2}
+              />
+            </div>
+          </section>
+        ) : null}
+
         {activeTab === "features" ? (
           <section className={styles.tabPanel}>
             <div className={styles.featureIntro}>
@@ -484,34 +573,19 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                 placeholder="Ex: Piso aquecido"
                 value={newFeature}
                 onChange={(event) => setNewFeature(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    handleAddFeature();
+                  }
+                }}
                 className={styles.featureToolbarInput}
               />
               <Button
                 type="button"
                 variant="primary"
                 className={styles.featureToolbarButton}
-                onClick={() => {
-                  const value = newFeature.trim();
-
-                  if (!value) {
-                    return;
-                  }
-
-                  setAvailableFeatures((currentValue) =>
-                    currentValue.includes(value)
-                      ? currentValue
-                      : [...currentValue, value],
-                  );
-
-                  setFormData((currentValue) => ({
-                    ...currentValue,
-                    features: currentValue.features.includes(value)
-                      ? currentValue.features
-                      : [...currentValue.features, value],
-                  }));
-
-                  setNewFeature("");
-                }}
+                onClick={handleAddFeature}
               >
                 Adicionar
               </Button>
