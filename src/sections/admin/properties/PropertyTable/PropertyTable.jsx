@@ -50,7 +50,7 @@ export default function PropertyTable({
                 <th>Imóvel</th>
                 <th>Tipo / Categoria</th>
                 <th>Status</th>
-                <th>Views</th> {/* <-- NOVA COLUNA */}
+                <th>Views</th>
                 <th>Ações</th>
               </tr>
             </thead>
@@ -191,8 +191,6 @@ export default function PropertyTable({
               ) : (
                 <tr className={styles.emptyRow}>
                   <td colSpan={6}>
-                    {" "}
-                    {/* Mudamos para 6 colunas para alinhar certinho */}
                     <div className={styles.emptyState}>
                       <strong>Nenhum imóvel encontrado</strong>
                       <span>

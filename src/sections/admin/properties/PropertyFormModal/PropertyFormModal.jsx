@@ -93,7 +93,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
         category: property.category || "",
         type: property.type || "",
         cep: property.location?.cep || property.cep || "",
-        street: property.location?.street || property.street || "",
+        street: property.location?.street || property.street || property.location?.address || property.address || "",
         number: property.location?.number || property.number || "",
         complement: property.location?.complement || property.complement || "",
         neighborhood: property.location?.neighborhood || property.neighborhood || "",
@@ -297,7 +297,58 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
     setIsSaving(true);
 
     try {
-      await onSave(formData);
+      const payload = { ...formData };
+      
+      const parts = [];
+      if (payload.street) parts.push(payload.street);
+      if (payload.number) parts.push(payload.number);
+      let addressStr = parts.join(", ");
+      
+      if (payload.neighborhood) {
+        addressStr += ` - ${payload.neighborhood}`;
+      }
+      
+      const cityState = [];
+      if (payload.city) cityState.push(payload.city);
+      if (payload.state) cityState.push(payload.state);
+      
+      if (cityState.length > 0) {
+        addressStr += `, ${cityState.join(" - ")}`;
+      }
+      
+      if (payload.cep) {
+        addressStr += `, ${payload.cep}`;
+      }
+
+      payload.location = {
+        cep: payload.cep,
+        street: payload.street,
+        number: payload.number,
+        complement: payload.complement,
+        neighborhood: payload.neighborhood,
+        city: payload.city,
+        state: payload.state,
+        fullAddress: addressStr,
+        area: payload.area,
+        bedrooms: payload.bedrooms,
+        bathrooms: payload.bathrooms,
+        parkingSpaces: payload.parkingSpaces,
+      };
+
+      // Limpar campos de localização da raiz para manter o payload do Firestore limpo
+      delete payload.cep;
+      delete payload.street;
+      delete payload.number;
+      delete payload.complement;
+      delete payload.neighborhood;
+      delete payload.city;
+      delete payload.state;
+      delete payload.area;
+      delete payload.bedrooms;
+      delete payload.bathrooms;
+      delete payload.parkingSpaces;
+
+      await onSave(payload);
     } catch (error) {
       console.error(error);
     } finally {
