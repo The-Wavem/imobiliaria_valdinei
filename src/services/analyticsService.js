@@ -1,5 +1,6 @@
-import { collection, doc, getDocs, increment, limit, orderBy, query, setDoc } from "firebase/firestore";
-import { db } from "./firebaseConfig.js";
+import { collection, doc, getDocs, increment, limit, orderBy, query, setDoc, where } from "firebase/firestore";
+import { logEvent } from "firebase/analytics";
+import { db, analytics } from "./firebaseConfig.js";
 
 const ANALYTICS_DAILY_COLLECTION = "analytics_daily";
 const ANALYTICS_FILTERS_COLLECTION = "analytics_filters";
@@ -225,7 +226,11 @@ export async function getTopBairros() {
     return bairros;
   }
 
-  const propertiesSnapshot = await getDocs(collection(db, PROPERTY_COLLECTION));
+  const propertiesQuery = query(
+    collection(db, PROPERTY_COLLECTION),
+    where("status", "==", "Ativo")
+  );
+  const propertiesSnapshot = await getDocs(propertiesQuery);
 
   return buildFallbackBairrosFromProperties(propertiesSnapshot);
 }
@@ -293,5 +298,42 @@ export async function trackBairroView(bairro) {
     );
   } catch (error) {
     console.error("Falha ao registrar bairro no Firestore:", error);
+  }
+}
+
+export function logPropertyViewAnalytics(property) {
+  if (typeof window === "undefined" || !analytics || !property) {
+    return;
+  }
+
+  try {
+    logEvent(analytics, "view_item", {
+      currency: "BRL",
+      value: property.price,
+      items: [
+        {
+          item_id: property.id,
+          item_name: property.title,
+          item_category: property.location?.neighborhood,
+        },
+      ],
+    });
+  } catch (error) {
+    console.error("Falha ao registrar view_item no Firebase Analytics:", error);
+  }
+}
+
+export function logLeadSubmissionAnalytics(propertyId, propertyTitle) {
+  if (typeof window === "undefined" || !analytics || !propertyId) {
+    return;
+  }
+
+  try {
+    logEvent(analytics, "generate_lead", {
+      property_id: propertyId,
+      property_title: propertyTitle,
+    });
+  } catch (error) {
+    console.error("Falha ao registrar generate_lead no Firebase Analytics:", error);
   }
 }

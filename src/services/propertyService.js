@@ -5,8 +5,10 @@ import {
   doc,
   getDocs,
   increment,
+  query,
   setDoc,
   updateDoc,
+  where,
 } from "firebase/firestore";
 import { db } from "./firebaseConfig.js";
 import { mapPropertyDocument } from "./properties.js";
@@ -97,7 +99,11 @@ export async function getPropertiesStats() {
 
 export async function getPublicProperties(categoryParam) {
   try {
-    const snapshot = await getDocs(collection(db, PROPERTY_COLLECTION));
+    const propertiesQuery = query(
+      collection(db, PROPERTY_COLLECTION),
+      where("status", "==", "Ativo")
+    );
+    const snapshot = await getDocs(propertiesQuery);
 
     return snapshot.docs.map(mapPropertyDocument).filter((property) => {
       const matchesCategory =

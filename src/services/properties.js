@@ -1,4 +1,4 @@
-import { collection, doc, getDoc, getDocs } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, query, where } from "firebase/firestore";
 import { db } from "./firebaseConfig";
 import { PROPERTY_COLLECTION } from "./AdminCadastro";
 
@@ -61,7 +61,11 @@ export function mapPropertyDocument(snapshot) {
 }
 
 export async function fetchPublishedProperties() {
-  const snapshot = await getDocs(collection(db, PROPERTY_COLLECTION));
+  const propertiesQuery = query(
+    collection(db, PROPERTY_COLLECTION),
+    where("status", "==", "Ativo")
+  );
+  const snapshot = await getDocs(propertiesQuery);
 
   return snapshot.docs
     .map(mapPropertyDocument)
@@ -76,14 +80,19 @@ export async function fetchPublishedProperties() {
 }
 
 export async function fetchPropertyById(propertyId) {
-  const reference = doc(db, PROPERTY_COLLECTION, propertyId);
-  const snapshot = await getDoc(reference);
+  try {
+    const reference = doc(db, PROPERTY_COLLECTION, propertyId);
+    const snapshot = await getDoc(reference);
 
-  if (!snapshot.exists()) {
+    if (!snapshot.exists()) {
+      return null;
+    }
+
+    const property = mapPropertyDocument(snapshot);
+
+    return property.active ? property : null;
+  } catch (error) {
+    console.error("Erro ao buscar imóvel por ID:", error);
     return null;
   }
-
-  const property = mapPropertyDocument(snapshot);
-
-  return property.active ? property : null;
 }
