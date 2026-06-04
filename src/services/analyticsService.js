@@ -1,4 +1,4 @@
-import { collection, doc, getDocs, increment, limit, orderBy, query, setDoc, where } from "firebase/firestore";
+import { collection, doc, getDocs, increment, limit, orderBy, query, setDoc, where, documentId } from "firebase/firestore";
 import { logEvent } from "firebase/analytics";
 import { db, analytics } from "./firebaseConfig.js";
 
@@ -70,14 +70,19 @@ async function updateDailyAnalytics(fieldName) {
   }
 }
 
-function normalizeFilterDocId(filterTag) {
-  return String(filterTag || "")
+function slugify(text) {
+  return String(text || "")
     .trim()
-    .replace(/\s+/g, "_")
-    .replace(/[^a-zA-Z0-9_-]/g, "_")
-    .replace(/_+/g, "_")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
     .replace(/^_+|_+$/g, "")
     .slice(0, 120);
+}
+
+function normalizeFilterDocId(filterTag) {
+  return slugify(filterTag);
 }
 
 function normalizeFilterLabel(key) {
@@ -148,14 +153,7 @@ function collectFilterEntries(filtersObj) {
 }
 
 function normalizeBairroDocId(bairro) {
-  return String(bairro || "")
-    .trim()
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 120);
+  return slugify(bairro);
 }
 
 function normalizeNeighborhoodName(value) {
@@ -201,26 +199,32 @@ function buildFallbackBairrosFromProperties(snapshot) {
 export async function getTopBairros() {
   const snapshot = await getDocs(
     query(
-      collection(db, ANALYTICS_BAIRROS_COLLECTION),
-      orderBy("count", "desc"),
-      limit(5),
-    ),
+      collection(db, ANALYTICS_FILTERS_COLLECTION),
+      where(documentId(), ">=", "localizacao_"),
+      where(documentId(), "<=", "localizacao_\uf8ff")
+    )
   );
 
   const bairros = snapshot.docs
     .map((documentSnapshot) => {
       const data = documentSnapshot.data() || {};
-      const name = String(data.name || documentSnapshot.id);
+      const rawName = String(data.name || documentSnapshot.id);
+      
+      // Remove o prefixo 'Localização:' ou 'localizacao_'
+      const cleanName = rawName.replace(/^Localização:\s*/i, "").trim();
+      
       const count = Number(data.count || 0) || 0;
 
       return {
-        name,
+        name: cleanName,
         count,
-        bairro: name,
+        bairro: cleanName,
         acessos: count,
       };
     })
-    .filter((item) => item.name && item.count > 0);
+    .filter((item) => item.name && item.count > 0)
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5);
 
   if (bairros.length > 0) {
     return bairros;

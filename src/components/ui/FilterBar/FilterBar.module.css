@@ -106,29 +106,68 @@ label.activeFilter > span:first-child {
   text-transform: uppercase;
 }
 
-.priceInputs {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.45rem;
-  align-items: start;
+/* --- Range Slider Styles --- */
+
+.sliderContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  padding: 0.85rem 0.6rem 0;
+  margin-top: 0.4rem;
 }
 
-.priceInput {
-  min-width: 0;
+.slider {
+  width: 100%;
+  height: 6px;
+  background: transparent;
+  border-radius: 4px;
 }
 
-.priceInput :global(.label) {
-  font-size: 0.72rem;
+.track {
+  height: 6px;
+  border-radius: 4px;
+  top: 5px; /* centers with thumb */
 }
 
-.priceInput :global(.control) {
-  min-height: 3.05rem;
-  padding: 0.7rem 0.85rem;
-  border-radius: 14px;
+.trackInactive {
+  background: rgba(20, 20, 60, 0.08);
 }
 
-.priceInput :global(.input) {
-  font-size: 0.93rem;
+.trackActive {
+  background: var(--color-primary);
+}
+
+.thumb {
+  width: 18px;
+  height: 18px;
+  background: #ffffff;
+  border: 3px solid var(--color-primary);
+  border-radius: 50%;
+  cursor: grab;
+  top: -1px;
+  outline: none;
+  box-shadow: 0 4px 10px rgba(199, 156, 49, 0.3);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.thumb:hover,
+.thumb:focus {
+  transform: scale(1.15);
+  box-shadow: 0 6px 14px rgba(199, 156, 49, 0.4);
+}
+
+.thumb:active {
+  cursor: grabbing;
+  transform: scale(1.1);
+}
+
+.sliderLabels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--color-primary);
+  margin-top: 0.2rem;
 }
 
 .actions {
@@ -149,9 +188,22 @@ label.activeFilter > span:first-child {
   color: #ef4444;
   border-color: rgba(239, 68, 68, 0.2);
   background: rgba(239, 68, 68, 0.05);
+  transition: opacity 0.3s ease, transform 0.3s ease, background 0.3s ease, border-color 0.3s ease;
 }
 
-.clearButton:hover {
+.clearButtonHidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.95);
+}
+
+.clearButtonVisible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: scale(1);
+}
+
+.clearButtonVisible:hover {
   background: rgba(239, 68, 68, 0.1);
   border-color: rgba(239, 68, 68, 0.4);
 }
@@ -188,14 +240,5 @@ label.activeFilter > span:first-child {
 
   .actions {
     flex-direction: column;
-  }
-
-  .priceInputs {
-    grid-template-columns: 1fr;
-  }
-
-  .priceInput :global(.control) {
-    min-height: 3.2rem;
-    padding: 0.75rem 0.9rem;
   }
 }
