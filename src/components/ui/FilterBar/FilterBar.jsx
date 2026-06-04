@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { MapPin, Home, DollarSign, Search, SlidersHorizontal, X, Eraser } from "lucide-react";
+import { MapPin, Home, DollarSign, Search, SlidersHorizontal, X, Eraser, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactSlider from "react-slider";
 import Button from "@components/ui/Button/Button.jsx";
@@ -21,6 +21,7 @@ const typeOptions = [
 export default function FilterBar({ onSearch, onAdvancedFiltersApply, properties = [] }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isStuck, setIsStuck] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
   const [filters, setFilters] = useState({
     location: "",
     propertyType: "",
@@ -105,10 +106,16 @@ export default function FilterBar({ onSearch, onAdvancedFiltersApply, properties
     logSearchAnalytics(currentFilters);
   };
 
-  const handleSearch = () => {
-    const currentFilters = { ...filters, ...advancedFilters };
-    trackAndLogSearch(currentFilters);
-    onSearch?.(currentFilters);
+  const handleSearch = async () => {
+    setIsSearching(true);
+    try {
+      const currentFilters = { ...filters, ...advancedFilters };
+      trackAndLogSearch(currentFilters);
+      await onSearch?.(currentFilters);
+    } finally {
+      // Mantém o spinner por ao menos 600ms para o usuário sentir o feedback
+      setTimeout(() => setIsSearching(false), 600);
+    }
   };
 
   const handleClearFilters = () => {
@@ -224,9 +231,18 @@ export default function FilterBar({ onSearch, onAdvancedFiltersApply, properties
               Limpar
             </Button>
 
-            <Button variant="primary" className={styles.searchButton} onClick={handleSearch}>
-              <Search size={18} />
-              Buscar
+            <Button
+              variant="primary"
+              className={styles.searchButton}
+              onClick={handleSearch}
+              disabled={isSearching}
+            >
+              {isSearching ? (
+                <Loader2 size={18} className={styles.spinner} />
+              ) : (
+                <Search size={18} />
+              )}
+              {isSearching ? "Buscando..." : "Buscar"}
             </Button>
 
             <Button variant="outline" className={styles.filtersButton} onClick={() => setIsExpanded(!isExpanded)}>

@@ -27,8 +27,6 @@
 }
 
 .isStuck .container {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   box-shadow: 0 16px 32px rgba(15, 23, 42, 0.08);
 }
@@ -206,6 +204,29 @@ label.activeFilter > span:first-child {
 .clearButtonVisible:hover {
   background: rgba(239, 68, 68, 0.1);
   border-color: rgba(239, 68, 68, 0.4);
+}
+
+/* Reserva largura fixa para o botão Buscar evitando Layout Shift ao trocar Ícone + Texto */
+.searchButton {
+  min-width: 130px;
+  justify-content: center;
+  transition: opacity 0.2s ease;
+}
+
+.searchButton:disabled {
+  opacity: 0.72;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.spinner {
+  animation: spin 0.75s linear infinite;
+  flex-shrink: 0;
 }
 
 @media (max-width: 1024px) {

@@ -1,7 +1,18 @@
 import { useState } from "react";
-import { Mail, MessageSquareText, Phone, Send, UserRound, MessageCircle } from "lucide-react";
+import { motion } from "framer-motion";
+import {
+  Mail,
+  MessageSquareText,
+  Phone,
+  Send,
+  UserRound,
+  MessageCircle,
+  Loader2,
+  CheckCircle2,
+} from "lucide-react";
 import Button from "@components/ui/Button/Button.jsx";
 import Input from "@components/ui/Input/Input.jsx";
+import { addLead } from "@services/leadService.js";
 import { logWhatsAppClickAnalytics } from "@services/analyticsService.js";
 import styles from "./Contato.module.css";
 
@@ -13,28 +24,73 @@ const initialFormState = {
   message: "",
 };
 
+// Variantes de animação encadeada
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.12, delayChildren: 0.1 },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 24 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] },
+  },
+};
+
 export default function ContatoSection() {
   const [formData, setFormData] = useState(initialFormState);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
   const handleFieldChange = (field) => (event) => {
     const { value } = event.target;
-
-    setFormData((currentData) => ({
-      ...currentData,
-      [field]: value,
-    }));
+    setFormData((currentData) => ({ ...currentData, [field]: value }));
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    alert("Mensagem enviada com sucesso!");
-    setFormData(initialFormState);
+    setErrorMsg("");
+    setIsLoading(true);
+
+    try {
+      await addLead({
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        phone: formData.phone.trim(),
+        subject: formData.subject.trim(),
+        message: formData.message.trim(),
+        origin: "Página de Contato",
+        status: "Novo",
+      });
+
+      setFormData(initialFormState);
+      setIsSuccess(true);
+
+      // Esconde a mensagem de sucesso após 6 segundos
+      setTimeout(() => setIsSuccess(false), 6000);
+    } catch (err) {
+      console.error("Erro ao enviar mensagem:", err);
+      setErrorMsg("Ops! Não conseguimos enviar sua mensagem. Tente novamente.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <section className={styles.page}>
       <header className={styles.hero}>
-        <div className={styles.heroInner}>
+        <motion.div
+          className={styles.heroInner}
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        >
           <p className={styles.heroEyebrow}>Contato</p>
           <h2 className={styles.heroTitle}>
             Fale <span>Conosco</span>
@@ -42,44 +98,49 @@ export default function ContatoSection() {
           <p className={styles.heroText}>
             Estamos prontos para entender e atender suas necessidades. Entre em contato conosco hoje mesmo.
           </p>
-        </div>
+        </motion.div>
       </header>
 
       <div className={styles.contentWrap}>
-        <div className={styles.container}>
-          <div className={styles.infoColumn}>
+        <motion.div
+          className={styles.container}
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.1 }}
+        >
+          {/* Coluna de informações */}
+          <motion.div className={styles.infoColumn} variants={itemVariants}>
             <div>
               <h2 className={styles.sectionTitle}>
                 Informações de <span>Contato</span>
               </h2>
-
               <p className={styles.sectionText}>
-                Nossa equipe está à disposição para encontrar o imóvel perfeito para você ou gerenciar seu patrimônio imobiliário com total transparência.
+                Nossa equipe está à disposição para encontrar o imóvel perfeito para você ou gerenciar
+                seu patrimônio imobiliário com total transparência.
               </p>
             </div>
 
             <div className={styles.contactCards}>
-              <div className={styles.contactCard}>
+              <motion.div className={styles.contactCard} variants={itemVariants}>
                 <div className={styles.contactIcon}>
                   <Phone size={26} />
                 </div>
-
                 <div>
                   <span className={styles.contactLabel}>Telefone</span>
                   <strong className={styles.contactValue}>(41) 99999-9999</strong>
                 </div>
-              </div>
+              </motion.div>
 
-              <div className={styles.contactCard}>
+              <motion.div className={styles.contactCard} variants={itemVariants}>
                 <div className={styles.contactIcon}>
                   <Mail size={26} />
                 </div>
-
                 <div>
                   <span className={styles.contactLabel}>E-mail</span>
                   <strong className={styles.contactValue}>contato@valdineisouza.com.br</strong>
                 </div>
-              </div>
+              </motion.div>
             </div>
 
             <Button
@@ -91,14 +152,41 @@ export default function ContatoSection() {
               <MessageCircle size={18} />
               Falar pelo WhatsApp
             </Button>
-          </div>
+          </motion.div>
 
-          <div className={styles.formCard}>
+          {/* Card do formulário */}
+          <motion.div className={styles.formCard} variants={itemVariants}>
             <h2 className={styles.formTitle}>
               Envie uma <span>Mensagem</span>
             </h2>
 
-            <form className={styles.form} onSubmit={handleSubmit}>
+            {/* Banner de sucesso */}
+            {isSuccess && (
+              <motion.div
+                className={styles.successBanner}
+                initial={{ opacity: 0, y: -10, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.97 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+              >
+                <CheckCircle2 size={20} />
+                Sua mensagem foi enviada! Entraremos em contato em breve.
+              </motion.div>
+            )}
+
+            {/* Banner de erro */}
+            {errorMsg && (
+              <motion.div
+                className={styles.errorBanner}
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                {errorMsg}
+              </motion.div>
+            )}
+
+            <form className={styles.form} onSubmit={handleSubmit} noValidate>
               <Input
                 icon={UserRound}
                 label="Nome Completo"
@@ -107,6 +195,7 @@ export default function ContatoSection() {
                 onChange={handleFieldChange("name")}
                 type="text"
                 className={styles.fullWidthField}
+                required
               />
 
               <div className={styles.inlineFields}>
@@ -117,6 +206,7 @@ export default function ContatoSection() {
                   value={formData.email}
                   onChange={handleFieldChange("email")}
                   type="email"
+                  required
                 />
 
                 <Input
@@ -150,16 +240,26 @@ export default function ContatoSection() {
                   rows="6"
                   value={formData.message}
                   onChange={handleFieldChange("message")}
+                  required
                 />
               </label>
 
-              <Button variant="primary" type="submit" className={styles.submitButton}>
-                <Send size={18} />
-                Enviar Mensagem
+              <Button
+                variant="primary"
+                type="submit"
+                className={styles.submitButton}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <Loader2 size={18} className={styles.spinner} />
+                ) : (
+                  <Send size={18} />
+                )}
+                {isLoading ? "Enviando..." : "Enviar Mensagem"}
               </Button>
             </form>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </div>
     </section>
   );
