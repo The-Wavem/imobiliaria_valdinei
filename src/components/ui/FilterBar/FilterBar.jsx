@@ -7,6 +7,7 @@ import Select from "@components/ui/Select/Select.jsx";
 import AdvancedFilters from "@components/ui/FilterBar/AdvancedFilters.jsx";
 import { trackFilterUsage } from "@utils/analytics";
 import { logSearchAnalytics } from "@services/analyticsService.js";
+import { extractNeighborhood } from "@utils/address.js";
 import styles from "./FilterBar.module.css";
 
 const typeOptions = [
@@ -35,25 +36,18 @@ export default function FilterBar({ onSearch, onAdvancedFiltersApply, properties
     areaMax: "",
   });
 
-  console.log("Properties no FilterBar:", properties);
-
   // Gera lista de bairros unicos dinamicamente a partir dos imoveis carregados
   const locationOptions = useMemo(() => {
     const propertiesArray = properties || [];
-    const rawBairros = propertiesArray.map(
-      (p) => p?.location?.bairro || p?.location?.neighborhood
-    );
+    const rawBairros = propertiesArray.map((p) => extractNeighborhood(p.location));
 
     // .filter(Boolean) elimina undefined, null e "" antes de entrar no Set
     const unique = [...new Set(rawBairros.filter(Boolean))]
       .sort((a, b) => a.localeCompare(b, "pt-BR"));
 
-    // Adiciona o Mock na marra para testar se a UI está renderizando options corretamente
-    const finalOptions = [...unique, "Bairro de Teste (Mock)"];
-
     return [
       { value: "", label: "Todos os Bairros" },
-      ...finalOptions.map((bairro) => ({ value: bairro, label: bairro })),
+      ...unique.map((bairro) => ({ value: bairro, label: bairro })),
     ];
   }, [properties]);
 

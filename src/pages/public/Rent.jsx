@@ -6,6 +6,7 @@ import FilterBar from "@components/ui/FilterBar/FilterBar.jsx";
 import CategoryHero from "@sections/listing/CategoryHero.jsx";
 import PropertyGrid from "@sections/listing/PropertyGrid.jsx";
 import { getPublicProperties } from "@services/propertyService.js";
+import { extractNeighborhood } from "@utils/address.js";
 
 export default function Rent() {
   const [filters, setFilters] = useState({});
@@ -35,7 +36,6 @@ export default function Rent() {
 
   const filteredProperties = useMemo(() => {
     return properties.filter((property) => {
-      const loc = property.location || {};
       const pricing = property.pricing || {};
       const feat = property.features || [];
       const searchLocation = (filters.location || "").trim().toLowerCase();
@@ -54,16 +54,24 @@ export default function Rent() {
       const amenities = filters.amenities || [];
       const areaMin = Number(filters.areaMin || 0);
       const areaMax = Number(filters.areaMax || Number.POSITIVE_INFINITY);
+      const loc = typeof property.location === "object" ? property.location : {};
       const propAddress = (loc.address || "").toLowerCase();
       const propNeighborhood = (loc.neighborhood || "").toLowerCase();
       const propBairro = (loc.bairro || "").toLowerCase();
+      
+      // Nova extração direta baseada na string (se for string)
+      const propExtractedBairro = extractNeighborhood(property.location).toLowerCase();
+      const rawLocationString = typeof property.location === "string" ? property.location.toLowerCase() : "";
+
       const searchLoc = searchLocation.toLowerCase();
 
       const matchesLocation =
         !searchLoc ||
+        propExtractedBairro === searchLoc ||
         propBairro === searchLoc ||
         propNeighborhood === searchLoc ||
-        propAddress.includes(searchLoc);
+        propAddress.includes(searchLoc) ||
+        rawLocationString.includes(searchLoc);
       const matchesType =
         !propertyType ||
         (property.type &&

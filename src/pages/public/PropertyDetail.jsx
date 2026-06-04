@@ -5,6 +5,7 @@ import styles from "./PropertyDetail.module.css";
 import { trackBairroView } from "@utils/analytics";
 import { incrementPropertyViews } from "@/services/propertyService";
 import { logPropertyViewAnalytics, logNeighborhoodView } from "@/services/analyticsService";
+import { extractNeighborhood } from "@utils/address.js";
   
 import Breadcrumb from "@components/ui/Breadcrumb/Breadcrumb.jsx";
 import PropertyGallery from "@sections/property-detail/PropertyGallery";
@@ -84,12 +85,11 @@ export default function PropertyDetail() {
   // Efeito 2: reage APÓS o state 'property' estar 100% hidratado no React
   // Dependência [property] garante que só executa quando o objeto existir de verdade
   useEffect(() => {
-    // Trava forte: não dispara se o objeto ou o campo específico não existirem
-    if (!property || !property.location || !property.location.bairro) {
-      return;
-    }
+    if (!property || !property.location) return;
 
-    const bairroName = property.location.bairro;
+    const bairroName = extractNeighborhood(property.location);
+
+    if (!bairroName) return;
 
     logNeighborhoodView(bairroName);
     trackBairroView(bairroName);

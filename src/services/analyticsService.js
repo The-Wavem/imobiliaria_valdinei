@@ -323,8 +323,6 @@ export async function logNeighborhoodView(neighborhoodName) {
 
     const docRef = doc(db, ANALYTICS_FILTERS_COLLECTION, docId);
 
-    console.log("Gravando analytics para:", humanLabel);
-
     setDoc(
       docRef,
       {
