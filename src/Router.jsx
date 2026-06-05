@@ -12,6 +12,7 @@ const NotFound = lazy(() => import("@pages/public/NotFound.jsx"));
 const Dashboard = lazy(() => import("@pages/admin/Dashboard.jsx"));
 const PropertyManager = lazy(() => import("@pages/admin/PropertyManager.jsx"));
 const LeadsManager = lazy(() => import("@pages/admin/LeadsManager.jsx"));
+const CapturaUrl = lazy(() => import("@pages/admin/CapturaUrl.jsx"));
 const Login = lazy(() => import("@pages/admin/Login.jsx"));
 const Favorito = lazy(() => import("@/pages/public/Favorito.jsx"));
 const Contato = lazy(() => import("@/pages/public/Contato.jsx"));
@@ -55,6 +56,7 @@ export default function Router() {
           <Route path="/admin/dashboard" element={<Dashboard />} />
           <Route path="/admin/imoveis" element={<PropertyManager />} />
           <Route path="/admin/leads" element={<LeadsManager />} />
+          <Route path="/admin/campanhas" element={<CapturaUrl />} />
           <Route path="/admin/solicitacoes" element={<LeadsManager />} />
           <Route path="/admin/visitas" element={<Dashboard />} />
         </Route>

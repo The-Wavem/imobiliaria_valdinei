@@ -2,7 +2,7 @@ import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { signOut, updatePassword } from "firebase/auth";
 import {
-  CalendarDays,
+  Link2,
   Home,
   LayoutDashboard,
   LogOut,
@@ -21,6 +21,7 @@ const navigationItems = [
   { label: "Dashboard", path: "/admin/dashboard", icon: LayoutDashboard },
   { label: "Imóveis", path: "/admin/imoveis", icon: Home },
   { label: "Leads", path: "/admin/leads", icon: Users },
+  { label: "Links e Campanhas", path: "/admin/campanhas", icon: Link2 },
   // { label: "Visitas", path: "/admin/visitas", icon: CalendarDays },
 ];
 

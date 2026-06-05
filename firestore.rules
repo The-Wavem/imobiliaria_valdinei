@@ -47,5 +47,11 @@ service cloud.firestore {
       allow read, delete: if isAdmin();
       allow create, update: if true;
     }
+
+    // Regras para links de campanha (UTM)
+    match /campaign_links/{linkId} {
+      // Apenas o Admin pode criar, ler e deletar links de campanha
+      allow read, create, delete: if isAdmin();
+    }
   }
 }
