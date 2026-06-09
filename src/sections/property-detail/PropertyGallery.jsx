@@ -1,32 +1,39 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation } from "swiper/modules";
+import { Navigation, Pagination } from "swiper/modules";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import "swiper/css";
 import styles from "./PropertyGallery.module.css";
 
-export default function PropertyGallery({ images = [], title }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [activeIndex, setActiveIndex] = useState(0);
+export default function PropertyGallery({ 
+  images = [], 
+  title, 
+  isOpen, 
+  onClose, 
+  initialIndex = 0, 
+  onOpenGallery 
+}) {
+  const [modalIndex, setModalIndex] = useState(initialIndex);
   const swiperRef = useRef(null);
   const safeImages = images.filter(Boolean);
 
-  const openGallery = (index) => {
-    setActiveIndex(index || 0);
-    setIsOpen(true);
-  };
+  useEffect(() => {
+    if (isOpen) {
+      setModalIndex(initialIndex);
+    }
+  }, [isOpen, initialIndex]);
 
   if (safeImages.length === 0) return null;
 
   return (
     <div className={styles.gallery}>
       <Swiper
-        modules={[Navigation]}
+        modules={[Navigation, Pagination]}
         navigation
+        pagination={{ clickable: true }}
         spaceBetween={10}
         slidesPerView={1}
-        onSlideChange={(sw) => setActiveIndex(sw.activeIndex)}
       >
         {safeImages.map((src, idx) => (
           <SwiperSlide key={idx}>
@@ -34,7 +41,7 @@ export default function PropertyGallery({ images = [], title }) {
               src={src}
               alt={`${title} - ${idx + 1}`}
               className={styles.image}
-              onClick={() => openGallery(idx)}
+              onClick={() => onOpenGallery && onOpenGallery(idx)}
             />
           </SwiperSlide>
         ))}
@@ -45,11 +52,11 @@ export default function PropertyGallery({ images = [], title }) {
           className={styles.modalOverlay}
           role="dialog"
           aria-modal="true"
-          onClick={(e) => { if (e.target === e.currentTarget) setIsOpen(false); }}
+          onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
         >
           <button
             className={styles.closeBtn}
-            onClick={() => setIsOpen(false)}
+            onClick={onClose}
             aria-label="Fechar galeria"
           >
             <X size={18} />
@@ -66,11 +73,11 @@ export default function PropertyGallery({ images = [], title }) {
           <div className={styles.modalSwiperWrap}>
             <Swiper
               modules={[]}
-              initialSlide={activeIndex}
+              initialSlide={initialIndex}
               spaceBetween={20}
               slidesPerView={1}
               onSwiper={(swiper) => { swiperRef.current = swiper; }}
-              onSlideChange={(sw) => setActiveIndex(sw.activeIndex)}
+              onSlideChange={(sw) => setModalIndex(sw.activeIndex)}
             >
               {safeImages.map((src, idx) => (
                 <SwiperSlide key={idx}>
@@ -95,7 +102,7 @@ export default function PropertyGallery({ images = [], title }) {
           </button>
 
           <div className={styles.modalCounter}>
-            {activeIndex + 1} / {safeImages.length}
+            {modalIndex + 1} / {safeImages.length}
           </div>
         </div>,
         document.body

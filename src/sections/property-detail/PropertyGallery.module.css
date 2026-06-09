@@ -36,6 +36,26 @@
   font-weight: 700;
 }
 
+/* ── Pagination Customization ── */
+.gallery :global(.swiper-pagination-bullets) {
+  bottom: 1.5rem !important;
+}
+
+.gallery :global(.swiper-pagination-bullet) {
+  width: 8px;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.5);
+  opacity: 1;
+  transition: all 0.3s ease;
+  margin: 0 6px !important;
+}
+
+.gallery :global(.swiper-pagination-bullet-active) {
+  width: 24px;
+  border-radius: 4px;
+  background: var(--color-primary);
+}
+
 /* ── Modal fullscreen ── */
 .modalOverlay {
   position: fixed;

@@ -1,0 +1,89 @@
+.mosaicContainer {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 0.65rem;
+  height: min(480px, 65vh);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin-bottom: 2rem;
+  box-shadow: 0 12px 30px rgba(16, 24, 40, 0.04);
+}
+
+.mainPhoto {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.sidePhotos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 0.65rem;
+  height: 100%;
+}
+
+.photoWrapper {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.mainPhoto:hover .image,
+.photoWrapper:hover .image {
+  transform: scale(1.06);
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(16, 24, 40, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.3s ease;
+}
+
+.photoWrapper:hover .overlay {
+  background: rgba(16, 24, 40, 0.55);
+}
+
+.overlayText {
+  color: #ffffff;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+@media (max-width: 900px) {
+  .mosaicContainer {
+    grid-template-columns: 1fr;
+    grid-template-rows: 60% 40%;
+    height: min(600px, 75vh);
+  }
+}
+
+@media (max-width: 480px) {
+  .mosaicContainer {
+    grid-template-rows: 55% 45%;
+    gap: 0.4rem;
+  }
+  
+  .sidePhotos {
+    gap: 0.4rem;
+  }
+}
