@@ -138,6 +138,7 @@ export default function LeadsManager() {
       ) : (
         <LeadsTable
           leads={paginatedLeads}
+          allLeads={leads}
           totalItems={filteredLeads.length}
           currentPage={safeCurrentPage}
           totalPages={totalPages}
@@ -152,6 +153,7 @@ export default function LeadsManager() {
         isOpen={isDetailsOpen}
         onClose={closeDetails}
         lead={selectedRequest}
+        allLeads={leads}
       />
     </main>
   );

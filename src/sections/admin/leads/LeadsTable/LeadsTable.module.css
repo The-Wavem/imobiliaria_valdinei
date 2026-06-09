@@ -116,6 +116,27 @@
   line-height: 1.25;
 }
 
+.clientHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.recurrenceBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.5rem;
+  background-color: rgba(245, 158, 11, 0.15); /* orange-500 equivalent */
+  color: #b45309; /* amber-700 */
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
 .clientCell span,
 .propertyCell span,
 .dateCell {

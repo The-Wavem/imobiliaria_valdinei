@@ -1,3 +1,4 @@
+import { History } from "lucide-react";
 import Modal from "@components/ui/Modal/Modal.jsx";
 import styles from "./LeadDetailsModal.module.css";
 
@@ -14,7 +15,7 @@ function resolveLeadOrigin(lead) {
   return { label: "Contato Geral", isProperty: false };
 }
 
-export default function LeadDetailsModal({ isOpen, onClose, lead }) {
+export default function LeadDetailsModal({ isOpen, onClose, lead, allLeads = [] }) {
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Detalhes da Solicitação" variant="admin">
       {lead ? (
@@ -24,6 +25,10 @@ export default function LeadDetailsModal({ isOpen, onClose, lead }) {
           const clientEmail = lead.email || lead.client?.email || "Não informado";
           const origin = resolveLeadOrigin(lead);
           const reqType = lead.source || lead.requestType || "Contato";
+
+          const leadHistory = allLeads
+            .filter((l) => (l.email || l.client?.email) && (l.email === clientEmail || l.client?.email === clientEmail))
+            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
           return (
             <div className={styles.detailsModal}>
@@ -67,6 +72,32 @@ export default function LeadDetailsModal({ isOpen, onClose, lead }) {
                 <div className={styles.messageBlock}>
                   <span className={styles.detailLabel}>Mensagem</span>
                   <div className={styles.messageArea}>{lead.message || "Nenhuma mensagem enviada."}</div>
+                </div>
+              )}
+
+              {leadHistory.length > 1 && (
+                <div className={styles.historySection}>
+                  <h4 className={styles.historyTitle}>
+                    <History size={18} /> Histórico do Cliente
+                  </h4>
+                  <div className={styles.timeline}>
+                    {leadHistory.map((item) => {
+                      const itemOrigin = resolveLeadOrigin(item);
+                      const itemType = item.source || item.requestType || "Contato";
+                      return (
+                        <div key={item.id} className={styles.timelineItem}>
+                          <div className={styles.timelineDate}>
+                            {new Date(item.createdAt).toLocaleString("pt-BR")}
+                          </div>
+                          <div className={styles.timelineContent}>
+                            <div>Origem: <strong>{itemOrigin.label}</strong></div>
+                            <div>Tipo: <strong>{itemType}</strong></div>
+                            <span className={styles.timelineStatus}>{item.status}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
             </div>
