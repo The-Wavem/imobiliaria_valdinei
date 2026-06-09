@@ -156,15 +156,17 @@ export default function LeadsTable({
                 const reqType     = lead.source || lead.requestType || "Contato";
                 const formattedDate = formatLeadDate(lead.createdAt, lead.date);
                 const origin = resolveLeadOrigin(lead);
+                const isUnread = lead.status === "Novo";
 
                 return (
-                  <tr key={lead.id} className={`${styles.tableRow} ${getRequestRowClass(lead.status)}`.trim()}>
+                  <tr key={lead.id} className={`${styles.tableRow} ${getRequestRowClass(lead.status)} ${isUnread ? styles.unreadRow : ""}`.trim()}>
                     <td>
                       <div className={styles.dateCell}>{formattedDate}</div>
                     </td>
                     <td>
                       <div className={styles.clientCell}>
                         <div className={styles.clientHeader}>
+                          {isUnread && <span className={styles.unreadDot} />}
                           <strong>{clientName}</strong>
                           {clientEmail && emailFrequency[clientEmail] > 1 && (
                             <span className={styles.recurrenceBadge}>

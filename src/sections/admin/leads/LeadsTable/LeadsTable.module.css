@@ -101,6 +101,27 @@
   box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05);
 }
 
+.unreadRow td {
+  background: rgba(199, 156, 49, 0.04);
+}
+
+.unreadRow:hover td {
+  background: rgba(199, 156, 49, 0.08);
+}
+
+.unreadRow .dateCell,
+.unreadRow .clientCell strong,
+.unreadRow .propertyCell strong {
+  font-weight: 700;
+  color: var(--color-brand-secondary);
+}
+
+.unreadRow .clientCell span,
+.unreadRow .propertyCell span {
+  color: var(--color-text-main);
+  font-weight: 600;
+}
+
 .dateCell,
 .clientCell,
 .propertyCell {
@@ -121,6 +142,15 @@
   align-items: center;
   gap: 0.5rem;
   flex-wrap: wrap;
+}
+
+.unreadDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--color-brand-primary, #2563eb);
+  flex-shrink: 0;
+  box-shadow: 0 0 0 2px rgba(199, 156, 49, 0.2);
 }
 
 .recurrenceBadge {
