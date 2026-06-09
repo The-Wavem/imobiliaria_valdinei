@@ -99,6 +99,122 @@
 .submitButton {
   width: 100%;
   padding-block: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+/* Validation & Feedback Styles */
+
+.fieldWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.fieldError {
+  color: #ef4444;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.inputError {
+  border-color: #ef4444 !important;
+}
+
+.formError {
+  padding: 1rem;
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.successMessage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 3rem 1rem;
+  background: rgba(34, 197, 94, 0.05);
+  border: 1px dashed rgba(34, 197, 94, 0.3);
+  border-radius: 16px;
+  gap: 1rem;
+}
+
+.successIcon {
+  color: #22c55e;
+}
+
+.successMessage h4 {
+  margin: 0;
+  color: var(--color-secondary);
+  font-size: 1.5rem;
+}
+
+.successMessage p {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.textField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.fieldLabel {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-secondary);
+}
+
+.textControl {
+  position: relative;
+  display: flex;
+}
+
+.textareaIcon {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  color: #94a3b8;
+}
+
+.textarea {
+  width: 100%;
+  padding: 1rem 1rem 1rem 3rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  background: #ffffff;
+  color: var(--color-secondary);
+  font-family: inherit;
+  font-size: 1rem;
+  resize: vertical;
+  min-height: 120px;
+  transition: all 0.2s ease;
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 4px rgba(var(--color-primary-rgb), 0.1);
 }
 
 @media (max-width: 1024px) {
