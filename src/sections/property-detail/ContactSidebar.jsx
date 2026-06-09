@@ -1,27 +1,26 @@
 import { useState } from "react";
-import { MessageCircle, CheckCircle2, X, Phone, User, Loader2 } from "lucide-react";
+import { MessageCircle, CheckCircle2, X, Phone, User, Loader2, MessageSquareText } from "lucide-react";
 import { createPortal } from "react-dom";
 import { addLead } from "@services/leadService";
 import { logWhatsAppClickAnalytics } from "@services/analyticsService.js";
+import { validateName, validatePhone, sanitizeFormData } from "@utils/validation.js";
 import styles from "./ContactSidebar.module.css";
 
 const VALDINEI_PHONE = import.meta.env.VITE_VALDINEI_PHONE;
 
-function buildWhatsAppMessage({ propertyTitle, propertyCode, propertyPrice, clientName, clientPhone }) {
-  const price = Number(propertyPrice).toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  });
-
+function buildWhatsAppMessage({ propertyTitle, propertyCode, propertyPrice, clientName, clientMessage, propertyLink }) {
+  const price = propertyPrice ? Number(propertyPrice).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : 'Sob consulta';
+  const customMessage = clientMessage ? `\n\n💬 *Minha mensagem:*\n_${clientMessage}_` : '';
+  
   return encodeURIComponent(
-    `Olá Valdinei! 👋\n\nTenho interesse no imóvel abaixo:\n\n` +
+    `Olá Valdinei! 👋\n\n` +
+    `Meu nome é *${clientName}* e fiquei muito interessado(a) no imóvel abaixo:\n\n` +
     `🏠 *${propertyTitle}*\n` +
-    `📋 Código: ${propertyCode}\n` +
-    `💰 Valor: ${price}\n\n` +
-    `Meus dados:\n` +
-    `👤 Nome: ${clientName}\n` +
-    `📱 Telefone: ${clientPhone}\n\n` +
-    `Gostaria de mais informações e agendar uma visita. Aguardo seu contato!`
+    `📋 *Código:* ${propertyCode || 'N/A'}\n` +
+    `💰 *Valor:* ${price}\n` +
+    `🔗 *Link:* ${propertyLink}\n` +
+    customMessage +
+    `\n\nGostaria de receber mais informações ou agendar uma visita. Aguardo seu retorno!`
   );
 }
 
@@ -38,11 +37,11 @@ export default function ContactSidebar({
   const [isSuccess, setIsSuccess] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState(false);
-  const [form, setForm] = useState({ name: "", phone: "" });
+  const [form, setForm] = useState({ name: "", phone: "", message: "" });
   const [errors, setErrors] = useState({});
 
   const openModal = () => {
-    setForm({ name: "", phone: "" });
+    setForm({ name: "", phone: "", message: "" });
     setErrors({});
     setIsSuccess(false);
     setSaveError(false);
@@ -59,10 +58,26 @@ export default function ContactSidebar({
 
   const validate = () => {
     const next = {};
-    if (!form.name.trim()) next.name = "Informe seu nome";
-    if (!form.phone.trim()) next.phone = "Informe seu WhatsApp";
+    const nameError = validateName(form.name);
+    const phoneError = validatePhone(form.phone);
+    
+    if (!form.name.trim()) {
+      next.name = "Informe seu nome";
+    } else if (nameError) {
+      next.name = nameError;
+    }
+
+    if (!form.phone.trim()) {
+      next.phone = "Informe seu WhatsApp";
+    } else if (phoneError) {
+      next.phone = phoneError;
+    }
+    
     return next;
   };
+
+  const isFormEmpty = !form.name.trim() || !form.phone.trim();
+  const isButtonDisabled = isSaving || isFormEmpty;
 
   const handleConfirm = async () => {
     const validationErrors = validate();
@@ -75,23 +90,28 @@ export default function ContactSidebar({
     setSaveError(false);
 
     try {
+      const cleanData = sanitizeFormData(form);
+
       await addLead({
-        name: form.name.trim(),
-        phone: form.phone.trim(),
+        name: cleanData.name,
+        phone: cleanData.phone,
         email: "",
-        propertyId,
-        propertyTitle,
+        message: cleanData.message || "Interesse via botão de WhatsApp",
+        origin: "Sidebar de Detalhes do Imóvel",
+        propertyId: propertyId || "",
+        propertyTitle: propertyTitle || "",
         propertyCode: code,
-        source: "WhatsApp Direto",
-        message: "Interesse via botão de WhatsApp"
+        status: "Novo",
+        createdAt: new Date().toISOString()
       });
 
       const messageText = buildWhatsAppMessage({
         propertyTitle: propertyTitle || "Imóvel",
         propertyCode: code,
         propertyPrice: price,
-        clientName: form.name.trim(),
-        clientPhone: form.phone.trim(),
+        clientName: cleanData.name,
+        clientMessage: cleanData.message,
+        propertyLink: `https://valdineiimoveis.com.br/imoveis/${propertyId || ''}`,
       });
 
       logWhatsAppClickAnalytics(propertyTitle || "Imóvel", "sidebar_imovel");
@@ -105,6 +125,7 @@ export default function ContactSidebar({
       }, 300);
 
       setIsSuccess(true);
+      setForm({ name: "", phone: "", message: "" });
     } catch (error) {
       console.error("Falha ao salvar lead:", error);
       setSaveError(true);
@@ -119,7 +140,9 @@ export default function ContactSidebar({
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === "Enter") handleConfirm();
+    if (e.key === "Enter" && !isButtonDisabled && e.target.tagName !== "TEXTAREA") {
+      handleConfirm();
+    }
   };
 
   return (
@@ -250,6 +273,22 @@ export default function ContactSidebar({
                       <span className={styles.fieldError}>{errors.phone}</span>
                     )}
                   </label>
+                  
+                  <label className={styles.fieldWrap}>
+                    <span className={styles.fieldLabel}>
+                      <MessageSquareText size={13} />
+                      Sua mensagem (opcional)
+                    </span>
+                    <textarea
+                      className={styles.fieldTextarea}
+                      placeholder="Quer deixar alguma dúvida registrada?"
+                      value={form.message}
+                      onChange={updateField("message")}
+                      onKeyDown={handleKeyDown}
+                      disabled={isSaving}
+                      rows="3"
+                    />
+                  </label>
                 </div>
 
                 {saveError && (
@@ -260,9 +299,9 @@ export default function ContactSidebar({
 
                 <div className={styles.modalActions}>
                   <button
-                    className={styles.whatsappBtn}
+                    className={`${styles.whatsappBtn} ${isButtonDisabled ? styles.whatsappBtnDisabled : ""}`}
                     onClick={handleConfirm}
-                    disabled={isSaving}
+                    disabled={isButtonDisabled}
                   >
                     {isSaving ? (
                       <>
