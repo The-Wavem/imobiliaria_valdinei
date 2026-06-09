@@ -55,16 +55,18 @@ export default function LeadsManager() {
     return [...leads].filter((lead) => {
       const name = lead.name || lead.client?.name || "";
       const property = lead.propertyTitle || lead.client?.property || "";
+      const email = lead.email || lead.client?.email || "";
+      
       const matchesSearch = normalizedSearch
-        ? name.toLowerCase().includes(normalizedSearch) || property.toLowerCase().includes(normalizedSearch)
+        ? name.toLowerCase().includes(normalizedSearch) || 
+          property.toLowerCase().includes(normalizedSearch) ||
+          email.toLowerCase().includes(normalizedSearch)
         : true;
 
-      const matchesStatus =
-        filterStatus === "Todos" || lead.status === filterStatus;
+      const matchesStatus = filterStatus === "Todos" || lead.status === filterStatus;
       
-      const type = lead.source || lead.requestType || "";
-      const matchesType =
-        filterType === "Todos" || type === filterType;
+      const originRaw = lead.origin || lead.origem || lead.requestType || lead.source || "Contato";
+      const matchesType = filterType === "Todos" || originRaw.toLowerCase().includes(filterType.toLowerCase());
 
       return matchesSearch && matchesStatus && matchesType;
     });
