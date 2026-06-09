@@ -11,6 +11,7 @@ import Breadcrumb from "@components/ui/Breadcrumb/Breadcrumb.jsx";
 import PropertyGallery from "@sections/property-detail/PropertyGallery";
 import PropertyHeader from "@sections/property-detail/PropertyHeader";
 import PropertyInfo from "@sections/property-detail/PropertyInfo";
+import PropertyMosaic from "@sections/property-detail/PropertyMosaic";
 import PropertyDescription from "@sections/property-detail/PropertyDescription";
 import PropertyFeatures from "@sections/property-detail/PropertyFeatures";
 import PropertyMap from "@sections/property-detail/PropertyMap";
@@ -53,6 +54,13 @@ export default function PropertyDetail() {
   const [isVisitModalOpen, setIsVisitModalOpen] = useState(false);
   const [property, setProperty] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+  const [initialGalleryIndex, setInitialGalleryIndex] = useState(0);
+
+  const handleOpenGallery = (index) => {
+    setInitialGalleryIndex(index);
+    setIsGalleryOpen(true);
+  };
 
   // Efeito 1: responsável APENAS por carregar o imóvel do Firebase
   useEffect(() => {
@@ -128,7 +136,14 @@ export default function PropertyDetail() {
     <div className={styles.page}>
       <Breadcrumb property={property} />
 
-      <PropertyGallery images={galleryImages} title={property.title} />
+      <PropertyGallery 
+        images={galleryImages} 
+        title={property.title} 
+        isOpen={isGalleryOpen}
+        onClose={() => setIsGalleryOpen(false)}
+        initialIndex={initialGalleryIndex}
+        onOpenGallery={handleOpenGallery}
+      />
 
       <MotionMain
         className={styles.container}
@@ -153,6 +168,9 @@ export default function PropertyDetail() {
           </MotionDiv>
           <MotionDiv variants={itemVariants}>
             <PropertyFeatures features={property.amenities} />
+          </MotionDiv>
+          <MotionDiv variants={itemVariants}>
+            <PropertyMosaic photos={galleryImages} onOpenGallery={handleOpenGallery} />
           </MotionDiv>
           <MotionDiv variants={itemVariants}>
             <PropertyDescription description={property.description} />
