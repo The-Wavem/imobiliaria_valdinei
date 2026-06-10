@@ -127,36 +127,49 @@
 }
 
 .tabs {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.5rem;
+  display: flex;
+  background: rgba(20, 20, 60, 0.85);
+  border-radius: 999px;
+  padding: 0.4rem;
   margin: 1.85rem 0 1.4rem;
 }
 
 .tab {
+  flex: 1;
+  position: relative;
   display: inline-flex;
   justify-content: center;
   align-items: center;
   min-height: 3.25rem;
-  border-radius: 18px;
-  border: 1px solid transparent;
-  background: rgba(20, 20, 60, 0.05);
-  color: var(--color-secondary);
-  font-weight: 600;
-  font-family: var(--font-sans);
+  border-radius: 999px;
+  border: none;
+  background: transparent;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.tab:hover,
-.tab:focus-visible {
-  border-color: rgba(199, 156, 49, 0.3);
-  box-shadow: 0 0 0 4px rgba(199, 156, 49, 0.12);
+.tabText {
+  position: relative;
+  z-index: 10;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+  transition: color 0.3s ease;
+  font-size: 0.95rem;
 }
 
-.tabActive {
-  background: var(--color-secondary);
-  color: #ffffff;
+.tabActiveText {
+  color: var(--color-secondary, #14143c);
+}
+
+.activePillBackground {
+  position: absolute;
+  inset: 0;
+  background-color: white;
+  border-radius: inherit;
+  z-index: 0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 .fields {

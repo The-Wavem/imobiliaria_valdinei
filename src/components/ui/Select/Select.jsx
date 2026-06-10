@@ -14,7 +14,7 @@ export default function Select({
   contentClassName = "",
   statusColor = "",
 }) {
-  const selectableOptions = options.filter((option) => option.value !== "");
+  const selectableOptions = options;
   const [open, setOpen] = useState(false);
 
   const handleOptionSelect = (nextValue) => {

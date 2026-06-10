@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Home as HomeIcon, MapPin } from "lucide-react";
 import Button from "@components/ui/Button/Button.jsx";
-import Input from "@components/ui/Input/Input.jsx";
 import Select from "@components/ui/Select/Select.jsx";
+import { getPublicProperties } from "@services/propertyService.js";
+import { extractNeighborhood } from "@utils/address.js";
 import styles from "./Hero.module.css";
 
 const typeOptions = [
@@ -46,7 +47,36 @@ const fadeUpItem = {
 export default function Hero() {
   const [searchTab, setSearchTab] = useState("Alugar");
   const [filters, setFilters] = useState(initialFilters);
+  const [properties, setProperties] = useState([]);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadProperties = async () => {
+      try {
+        const items = await getPublicProperties(searchTab);
+        if (isMounted) setProperties(items);
+      } catch (error) {
+        console.error("Error loading properties", error);
+      }
+    };
+    loadProperties();
+    
+    // Clear location filter when switching tabs so user doesn't search for a neighborhood that only has rentals on the buy tab
+    setFilters(prev => ({ ...prev, location: "" }));
+    
+    return () => { isMounted = false; };
+  }, [searchTab]);
+
+  const locationOptions = useMemo(() => {
+    const rawBairros = properties.map((p) => extractNeighborhood(p.location));
+    const unique = [...new Set(rawBairros.filter(Boolean))].sort((a, b) => a.localeCompare(b, "pt-BR"));
+    
+    return [
+      { value: "", label: "Todos os Bairros" },
+      ...unique.map((bairro) => ({ value: bairro, label: bairro })),
+    ];
+  }, [properties]);
 
   const handleFieldChange = (field) => (event) => {
     const value = typeof event === "string" ? event : event?.target?.value;
@@ -94,24 +124,36 @@ export default function Hero() {
           </div>
 
           <div className={styles.tabs} aria-label="Tipo de transação">
-            {['Alugar', 'Comprar'].map((tab) => (
-              <button
-                key={tab}
-                type="button"
-                className={`${styles.tab} ${searchTab === tab ? styles.tabActive : ""}`}
-                onClick={() => setSearchTab(tab)}
-              >
-                {tab}
-              </button>
-            ))}
+            {['Alugar', 'Comprar'].map((tab) => {
+              const isActive = searchTab === tab;
+              return (
+                <button
+                  key={tab}
+                  type="button"
+                  className={styles.tab}
+                  onClick={() => setSearchTab(tab)}
+                >
+                  {isActive && (
+                    <motion.div
+                      layoutId="heroTabPill"
+                      className={styles.activePillBackground}
+                      transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                    />
+                  )}
+                  <span className={`${styles.tabText} ${isActive ? styles.tabActiveText : ""}`}>
+                    {tab}
+                  </span>
+                </button>
+              );
+            })}
           </div>
 
           <div className={styles.fields}>
             <div className={styles.fieldsGrid} style={{ gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
-              <Input
+              <Select
                 icon={MapPin}
                 label="Localização"
-                placeholder="Busque por bairro ou cidade"
+                options={locationOptions}
                 value={filters.location}
                 onChange={handleFieldChange("location")}
               />
