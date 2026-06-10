@@ -1,7 +1,5 @@
 /* ── Sidebar ── */
 .sidebarInner {
-  position: sticky;
-  top: 100px;
   background: var(--color-brand-secondary);
   padding: 1.75rem;
   border-radius: 1.25rem;

@@ -26,6 +26,9 @@
 
 .sidebar {
   align-self: start;
+  position: sticky;
+  top: 100px;
+  z-index: 10;
 }
 
 /* Mobile: sidebar becomes fixed bottom bar */
