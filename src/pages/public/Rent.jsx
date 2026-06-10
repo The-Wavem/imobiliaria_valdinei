@@ -7,6 +7,7 @@ import CategoryHero from "@sections/listing/CategoryHero.jsx";
 import PropertyGrid from "@sections/listing/PropertyGrid.jsx";
 import { getPublicProperties } from "@services/propertyService.js";
 import { extractNeighborhood } from "@utils/address.js";
+import { parsePrice } from "@utils/validation.js";
 
 export default function Rent() {
   const routerLocation = useLocation();
@@ -44,18 +45,12 @@ export default function Rent() {
 
   const filteredProperties = useMemo(() => {
     return properties.filter((property) => {
-      const pricing = property.pricing || {};
       const feat = property.features || [];
       const searchLocation = (filters.location || "").trim().toLowerCase();
       const propertyType = filters.propertyType || "";
-      const priceMin =
-        Number((filters.priceMin || "").toString().replace(/[^0-9]/g, "")) || 0;
-      const priceMaxRaw = (filters.priceMax || "")
-        .toString()
-        .replace(/[^0-9]/g, "");
-      const priceMax = priceMaxRaw
-        ? Number(priceMaxRaw)
-        : Number.POSITIVE_INFINITY;
+      const priceMin = filters.priceMin !== "" && filters.priceMin !== undefined ? parsePrice(filters.priceMin) : 0;
+      const priceMaxRaw = filters.priceMax;
+      const priceMax = priceMaxRaw !== "" && priceMaxRaw !== undefined ? parsePrice(priceMaxRaw) : Number.POSITIVE_INFINITY;
       const bedrooms = filters.bedrooms || "Qualquer";
       const bathrooms = filters.bathrooms || "Qualquer";
       const parking = filters.parking || "Qualquer";
@@ -84,7 +79,7 @@ export default function Rent() {
         !propertyType ||
         (property.type &&
           property.type.toLowerCase() === propertyType.toLowerCase());
-      const rentPrice = Number(pricing.price) || 0;
+      const rentPrice = property.price || 0;
       const matchesPrice = rentPrice >= priceMin && rentPrice <= priceMax;
       const propBeds = Number(loc.bedrooms) || 0;
       const matchesBedrooms =

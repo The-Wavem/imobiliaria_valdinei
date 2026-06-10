@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Home as HomeIcon, MapPin } from "lucide-react";
 import Button from "@components/ui/Button/Button.jsx";
 import Select from "@components/ui/Select/Select.jsx";
@@ -116,11 +116,26 @@ export default function Hero() {
         <motion.div className={styles.searchCard} variants={fadeUpItem}>
           <div className={styles.cardHeader}>
             <span className={styles.kicker}>Imobiliária Valdinei</span>
-            <h1>{searchTab === "Alugar" ? "Alugue o lar ideal" : "Compre o lar ideal"}</h1>
-            <p>
-              Explore imóveis em Curitiba e região com uma busca simples,
-              objetiva e preparada para guiar sua próxima decisão.
-            </p>
+            <div className={styles.animatedTextWrapper}>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={searchTab}
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -15 }}
+                  transition={{ duration: 0.35, ease: [0.25, 1, 0.5, 1] }}
+                  className={styles.textContent}
+                >
+                  <h1>{searchTab === "Alugar" ? "Alugue o lar ideal" : "Compre o lar ideal"}</h1>
+                  <p>
+                    {searchTab === "Alugar"
+                      ? "Explore opções de locação com facilidade e segurança. Encontre o espaço perfeito para o seu próximo capítulo."
+                      : "Explore imóveis à venda com uma busca simples e objetiva, preparada para guiar sua próxima decisão."
+                    }
+                  </p>
+                </motion.div>
+              </AnimatePresence>
+            </div>
           </div>
 
           <div className={styles.tabs} aria-label="Tipo de transação">

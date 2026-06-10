@@ -75,6 +75,20 @@
   text-transform: uppercase;
   font-weight: 600;
 }
+.cardHeader {
+  margin-bottom: 1.5rem;
+}
+
+.animatedTextWrapper {
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+}
+
+.textContent {
+  display: flex;
+  flex-direction: column;
+}
 
 .cardHeader h1 {
   margin: 0;
