@@ -51,6 +51,7 @@ export function mapPropertyDocument(snapshot) {
     image: data.imageUrl || media.coverImage || photosArray[0] || "",
     images: photosArray,
     photos: photosArray, // Mantendo a chave photos tbm para garantir
+    videos: data.videos || [],
     summary: content.summary || data.summary || "",
     description: content.description || data.description || "",
     featured: Boolean(statusObj.featured),

@@ -13,6 +13,7 @@ import {
   Trash2,
   X,
   CarFront,
+  PlaySquare,
 } from "lucide-react";
 import Button from "@components/ui/Button/Button.jsx";
 import Modal from "@components/ui/Modal/Modal.jsx";
@@ -55,7 +56,7 @@ const defaultForm = {
   title: "", code: "", price: "", condo: "", iptu: "",
   category: "", type: "", cep: "", logradouro: "", numero: "", complemento: "", bairro: "", cidade: "", estado: "",
   area: "", bedrooms: "", bathrooms: "", parkingSpaces: "",
-  features: [], photos: [], summary: "", description: "",
+  features: [], photos: [], videos: [], summary: "", description: "",
   status: "Inativo"
 };
 
@@ -69,6 +70,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
   const [newType, setNewType] = useState("");
   const [newFeature, setNewFeature] = useState("");
   const [newPhotoUrl, setNewPhotoUrl] = useState("");
+  const [newVideoUrl, setNewVideoUrl] = useState("");
   const [coverPhotoIndex, setCoverPhotoIndex] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
@@ -83,6 +85,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
     setNewType("");
     setNewFeature("");
     setNewPhotoUrl("");
+    setNewVideoUrl("");
     setCoverPhotoIndex(0);
     setIsSaving(false);
 
@@ -108,6 +111,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
         parkingSpaces: property.parkingSpaces || property.location?.parkingSpaces || "",
         features: property.features || [],
         photos: property.photos || [],
+        videos: property.videos || [],
         summary: property.content?.summary || property.summary || "",
         description: property.content?.description || property.description || "",
         status: property.status || "Ativo"
@@ -231,6 +235,23 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
     }
   };
 
+  const addVideo = (urlValue) => {
+    const value = urlValue.trim();
+    if (!value) return;
+
+    setFormData((currentValue) => ({
+      ...currentValue,
+      videos: [...currentValue.videos, value],
+    }));
+  };
+
+  const removeVideo = (videoIndex) => {
+    setFormData((currentValue) => ({
+      ...currentValue,
+      videos: currentValue.videos.filter((_, index) => index !== videoIndex),
+    }));
+  };
+
   const toggleFeature = (feature) => {
     setFormData((currentValue) => {
       const selectedFeatures = currentValue.features.includes(feature)
@@ -285,6 +306,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
       formData.price !== "" ||
       formData.logradouro.trim() !== "" ||
       formData.photos.length > 0 ||
+      formData.videos.length > 0 ||
       formData.features.length > 0
     );
   }, [formData]);
@@ -765,6 +787,55 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                   );
                 })}
               </div>
+            </div>
+
+            <div className={styles.videoSection} style={{ marginTop: '2rem' }}>
+              <div className={styles.mediaDropzoneText} style={{ marginBottom: '1rem', textAlign: 'left' }}>
+                <strong>Adicione Vídeos do YouTube</strong>
+                <span style={{ display: 'block', fontSize: '0.85rem' }}>Cole os links do YouTube (ex: youtube.com/watch?v=...) para exibir no carrossel de mídia.</span>
+              </div>
+              
+              <div className={styles.mediaDropzoneActions}>
+                <Input
+                  label="URL do YouTube"
+                  icon={PlaySquare}
+                  placeholder="Cole a URL do vídeo"
+                  value={newVideoUrl}
+                  onChange={(event) => setNewVideoUrl(event.target.value)}
+                  className={styles.mediaDropzoneInput}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  className={styles.mediaDropzoneButton}
+                  onClick={() => {
+                    addVideo(newVideoUrl);
+                    setNewVideoUrl("");
+                  }}
+                >
+                  Adicionar Vídeo
+                </Button>
+              </div>
+
+              {formData.videos.length > 0 && (
+                <div className={styles.galleryShell} style={{ marginTop: '1.5rem', background: 'rgba(20, 20, 60, 0.03)', padding: '1rem', borderRadius: '1rem' }}>
+                  <div className={styles.galleryGrid}>
+                    {formData.videos.filter(Boolean).map((videoUrl, index) => (
+                      <div key={`video-${index}`} className={styles.thumbnailCard} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', background: '#fff', border: '1px solid rgba(20,20,60,0.1)' }}>
+                        <span style={{ fontSize: '0.8rem', wordBreak: 'break-all', textAlign: 'center' }}>{videoUrl}</span>
+                        <button
+                          type="button"
+                          className={styles.removePhotoButton}
+                          onClick={() => removeVideo(index)}
+                          aria-label={`Remover vídeo ${index + 1}`}
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </section>
         ) : null}

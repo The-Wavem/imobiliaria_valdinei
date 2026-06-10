@@ -138,6 +138,7 @@ export default function PropertyDetail() {
 
       <PropertyGallery 
         images={galleryImages} 
+        videos={property.videos || []}
         title={property.title} 
         isOpen={isGalleryOpen}
         onClose={() => setIsGalleryOpen(false)}
