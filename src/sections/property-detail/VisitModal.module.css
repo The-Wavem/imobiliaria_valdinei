@@ -69,6 +69,25 @@
   gap: 1.25rem;
 }
 
+.fieldWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.fieldError {
+  color: #ef4444;
+  font-size: 0.825rem;
+  margin-top: 0.25rem;
+  padding-left: 0.2rem;
+  font-weight: 500;
+}
+
+.inputError > div,
+.inputError {
+  border-color: #ef4444 !important;
+}
+
 .field,
 .fullWidth {
   width: 100%;
@@ -78,32 +97,110 @@
   grid-column: 1 / -1;
 }
 
+.messageField {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.messageField > div {
+  align-items: flex-start;
+  min-height: 100px;
+  border: 1px solid transparent;
+  background-color: #F8F9FA;
+  padding: 0;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+}
+
+.messageField:hover > div {
+  border-color: rgba(199, 156, 49, 0.2);
+}
+
+.messageField:focus-within > div {
+  border-color: var(--color-primary);
+  background-color: #FFFFFF;
+  box-shadow: 0 0 0 3px rgba(199, 156, 49, 0.15);
+}
+
+.textarea {
+  width: 100%;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--color-text-main);
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 0.96rem;
+  line-height: 1.5;
+  resize: vertical;
+  min-height: 100px;
+  max-height: 200px;
+  padding: 0.82rem 1rem;
+}
+
+.textarea::placeholder {
+  color: rgba(102, 102, 102, 0.8);
+}
+
 .submitButton {
   width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+}
+
+.submitButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.feedbackError {
+  padding: 0.95rem 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.4;
+  background: rgba(239, 68, 68, 0.08);
+  color: #991b1b;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  text-align: center;
 }
 
 .successState {
-  display: grid;
-  justify-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
   gap: 1rem;
-  padding: 2rem 1.25rem;
+  padding: 3rem 1.25rem;
+  background: rgba(34, 197, 94, 0.03);
+  border: 1px dashed rgba(34, 197, 94, 0.3);
+  border-radius: 1.25rem;
 }
 
 .successIcon {
-  width: 4rem;
-  height: 4rem;
+  width: 4.5rem;
+  height: 4.5rem;
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-primary);
-  background: rgba(199, 156, 49, 0.12);
-}
-
-.successPanel {
-  display: grid;
-  justify-items: center;
+  color: #22c55e;
+  background: rgba(34, 197, 94, 0.1);
 }
 
 .successTitle {
@@ -117,8 +214,8 @@
 .successText {
   margin: 0;
   color: var(--color-text-muted);
-  line-height: 1.7;
-  max-width: 32rem;
+  line-height: 1.6;
+  max-width: 24rem;
 }
 
 @media (max-width: 768px) {
@@ -130,12 +227,8 @@
     gap: 1.5rem;
   }
 
-  .context {
-    padding-inline: 0.25rem;
-  }
-
   .formPanel,
-  .successPanel {
+  .successState {
     padding: 1.15rem;
   }
 }

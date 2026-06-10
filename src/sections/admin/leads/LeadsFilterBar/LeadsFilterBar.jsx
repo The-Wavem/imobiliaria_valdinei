@@ -12,9 +12,10 @@ const filterStatusOptions = [
 ];
 
 const typeOptions = [
-  { label: "Todos", value: "Todos" },
-  { label: "Visita", value: "Visita" },
-  { label: "Contato", value: "Contato" },
+  { label: "Todos os Tipos", value: "Todos" },
+  { label: "Agendamento de Visita", value: "Agendamento" },
+  { label: "Interesse em Imóvel", value: "Imóvel" },
+  { label: "Contato Geral", value: "Contato" },
 ];
 
 export default function LeadsFilterBar({
@@ -32,7 +33,7 @@ export default function LeadsFilterBar({
           <Input
             icon={Search}
             label="Buscar cliente"
-            placeholder="Digite o nome do cliente"
+            placeholder="Digite nome, e-mail ou imóvel..."
             value={searchTerm}
             onChange={onSearchChange}
           />

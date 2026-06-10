@@ -18,15 +18,15 @@ const typeOptions = [
   { value: "terreno", label: "Terreno" },
 ];
 
-export default function FilterBar({ onSearch, onAdvancedFiltersApply, properties = [] }) {
+export default function FilterBar({ initialFilters = {}, onSearch, onAdvancedFiltersApply, properties = [] }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isStuck, setIsStuck] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [filters, setFilters] = useState({
-    location: "",
-    propertyType: "",
-    priceMin: "",
-    priceMax: "",
+    location: initialFilters.location || "",
+    propertyType: initialFilters.propertyType || "",
+    priceMin: initialFilters.priceMin || "",
+    priceMax: initialFilters.priceMax || "",
   });
   const [advancedFilters, setAdvancedFilters] = useState({
     bedrooms: "Qualquer",
@@ -105,6 +105,21 @@ export default function FilterBar({ onSearch, onAdvancedFiltersApply, properties
     trackFilterUsage(analyticsPayload);
     logSearchAnalytics(currentFilters);
   };
+
+  useEffect(() => {
+    if (initialFilters.location || initialFilters.propertyType || initialFilters.priceMin || initialFilters.priceMax) {
+      const currentFilters = { 
+        location: initialFilters.location || "",
+        propertyType: initialFilters.propertyType || "",
+        priceMin: initialFilters.priceMin || "",
+        priceMax: initialFilters.priceMax || "",
+        ...advancedFilters 
+      };
+      trackAndLogSearch(currentFilters);
+      onSearch?.(currentFilters);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSearch = async () => {
     setIsSearching(true);

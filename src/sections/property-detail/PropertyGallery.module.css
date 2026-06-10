@@ -1,5 +1,6 @@
 /* ── Galeria principal ── */
 .gallery {
+  position: relative;
   height: min(550px, 70vh);
   border-radius: var(--radius-lg);
   overflow: hidden;
@@ -12,12 +13,62 @@
   height: 100%;
 }
 
+.imageContainer {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  cursor: zoom-in;
+  overflow: hidden;
+}
+
 .image {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  cursor: zoom-in;
   display: block;
+}
+
+.videoIframe {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 16/9;
+  object-fit: cover;
+  border-radius: inherit;
+  pointer-events: auto;
+  border: none;
+}
+
+.hoverOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.imageContainer:hover .hoverOverlay {
+  opacity: 1;
+}
+
+.counterBadge {
+  position: absolute;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 10;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  color: #fff;
+  padding: 0.4rem 0.85rem;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  pointer-events: none;
 }
 
 .gallery :global(.swiper-button-prev),
@@ -34,6 +85,28 @@
 .gallery :global(.swiper-button-next::after) {
   font-size: 1rem;
   font-weight: 700;
+}
+
+/* ── Pagination Customization ── */
+.gallery :global(.swiper-pagination-bullets) {
+  bottom: 1.5rem !important;
+}
+
+.gallery :global(.swiper-pagination-bullet) {
+  width: 8px;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  opacity: 1;
+  transition: all 0.3s ease;
+  margin: 0 6px !important;
+}
+
+.gallery :global(.swiper-pagination-bullet-active) {
+  width: 24px;
+  border-radius: 4px;
+  background: var(--color-primary);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
 }
 
 /* ── Modal fullscreen ── */
@@ -122,6 +195,16 @@
   object-fit: contain;
   border-radius: var(--radius-md);
   display: block;
+}
+
+.modalVideoIframe {
+  width: 100%;
+  height: 100%;
+  max-width: 1000px;
+  max-height: 80vh;
+  aspect-ratio: 16/9;
+  border-radius: var(--radius-md);
+  border: none;
 }
 
 /* Contador de fotos */

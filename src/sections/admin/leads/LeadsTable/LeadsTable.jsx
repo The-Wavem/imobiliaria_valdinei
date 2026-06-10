@@ -1,4 +1,5 @@
-import { Eye, MessageCircle } from "lucide-react";
+import { useMemo } from "react";
+import { Eye, MessageCircle, Flame } from "lucide-react";
 import Button from "@components/ui/Button/Button.jsx";
 import Select from "@components/ui/Select/Select.jsx";
 import styles from "./LeadsTable.module.css";
@@ -101,6 +102,7 @@ function formatLeadDate(createdAt, fallbackDate) {
 
 export default function LeadsTable({
   leads = [],
+  allLeads = [],
   totalItems = 0,
   currentPage = 1,
   totalPages = 1,
@@ -111,6 +113,17 @@ export default function LeadsTable({
 }) {
   const showStart = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
   const showEnd = totalItems === 0 ? 0 : Math.min(currentPage * itemsPerPage, totalItems);
+
+  const emailFrequency = useMemo(() => {
+    const counts = {};
+    allLeads.forEach(lead => {
+      const email = lead.email || lead.client?.email;
+      if (email) {
+        counts[email] = (counts[email] || 0) + 1;
+      }
+    });
+    return counts;
+  }, [allLeads]);
 
   return (
     <section className={styles.section} aria-label="Tabela de solicitações">
@@ -143,15 +156,25 @@ export default function LeadsTable({
                 const reqType     = lead.source || lead.requestType || "Contato";
                 const formattedDate = formatLeadDate(lead.createdAt, lead.date);
                 const origin = resolveLeadOrigin(lead);
+                const isUnread = lead.status === "Novo";
 
                 return (
-                  <tr key={lead.id} className={`${styles.tableRow} ${getRequestRowClass(lead.status)}`.trim()}>
+                  <tr key={lead.id} className={`${styles.tableRow} ${getRequestRowClass(lead.status)} ${isUnread ? styles.unreadRow : ""}`.trim()}>
                     <td>
                       <div className={styles.dateCell}>{formattedDate}</div>
                     </td>
                     <td>
                       <div className={styles.clientCell}>
-                        <strong>{clientName}</strong>
+                        <div className={styles.clientHeader}>
+                          {isUnread && <span className={styles.unreadDot} />}
+                          <strong>{clientName}</strong>
+                          {clientEmail && emailFrequency[clientEmail] > 1 && (
+                            <span className={styles.recurrenceBadge}>
+                              <Flame size={12} />
+                              {emailFrequency[clientEmail]} Interações
+                            </span>
+                          )}
+                        </div>
                         <span>{clientPhone}</span>
                       </div>
                     </td>

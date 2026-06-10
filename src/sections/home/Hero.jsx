@@ -1,32 +1,23 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { BedDouble, Home as HomeIcon, MapPin, DollarSign } from "lucide-react";
+import { Home as HomeIcon, MapPin } from "lucide-react";
 import Button from "@components/ui/Button/Button.jsx";
 import Input from "@components/ui/Input/Input.jsx";
 import Select from "@components/ui/Select/Select.jsx";
 import styles from "./Hero.module.css";
 
-const bairroOptions = [
-  { value: "", label: "Nº de quartos" },
-  { value: "1", label: "1+ quartos" },
-  { value: "2", label: "2+ quartos" },
-  { value: "3", label: "3+ quartos" },
-  { value: "4", label: "4+ quartos" },
-];
-
-const valorOptions = [
-  { value: "", label: "Escolha o valor" },
-  { value: "ate-1500", label: "Até R$ 1.500" },
-  { value: "ate-3000", label: "Até R$ 3.000" },
-  { value: "ate-5000", label: "Até R$ 5.000" },
-  { value: "qualquer", label: "Qualquer valor" },
+const typeOptions = [
+  { value: "", label: "Qualquer tipo" },
+  { value: "casa", label: "Casa" },
+  { value: "apartamento", label: "Apartamento" },
+  { value: "sobrado", label: "Sobrado" },
+  { value: "terreno", label: "Terreno" },
 ];
 
 const initialFilters = {
-  cidade: "",
-  bairro: "",
-  valor: "",
-  quartos: "",
+  location: "",
+  propertyType: "",
 };
 
 const staggerContainer = {
@@ -55,9 +46,10 @@ const fadeUpItem = {
 export default function Hero() {
   const [searchTab, setSearchTab] = useState("Alugar");
   const [filters, setFilters] = useState(initialFilters);
+  const navigate = useNavigate();
 
   const handleFieldChange = (field) => (event) => {
-    const { value } = event.target;
+    const value = typeof event === "string" ? event : event?.target?.value;
 
     setFilters((currentFilters) => ({
       ...currentFilters,
@@ -66,10 +58,18 @@ export default function Hero() {
   };
 
   const handleSearch = () => {
-    console.log({
-      transaction: searchTab,
-      filters,
-    });
+    const params = new URLSearchParams();
+    
+    if (filters.location) {
+      params.append('location', filters.location);
+    }
+    
+    if (filters.propertyType) {
+      params.append('propertyType', filters.propertyType);
+    }
+    
+    const basePath = searchTab === "Alugar" ? "/alugar" : "/comprar";
+    navigate(`${basePath}?${params.toString()}`);
   };
 
   return (
@@ -107,37 +107,21 @@ export default function Hero() {
           </div>
 
           <div className={styles.fields}>
-            <Input
-              icon={MapPin}
-              label="Cidade"
-              placeholder="Busque por cidade"
-              value={filters.cidade}
-              onChange={handleFieldChange("cidade")}
-            />
-
-            <Input
-              icon={HomeIcon}
-              label="Bairro"
-              placeholder="Busque por bairro"
-              value={filters.bairro}
-              onChange={handleFieldChange("bairro")}
-            />
-
-            <div className={styles.fieldsGrid}>
-              <Select
-                icon={DollarSign}
-                label="Valor total até"
-                options={valorOptions}
-                value={filters.valor}
-                onChange={handleFieldChange("valor")}
+            <div className={styles.fieldsGrid} style={{ gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
+              <Input
+                icon={MapPin}
+                label="Localização"
+                placeholder="Busque por bairro ou cidade"
+                value={filters.location}
+                onChange={handleFieldChange("location")}
               />
 
               <Select
-                icon={BedDouble}
-                label="Quartos"
-                options={bairroOptions}
-                value={filters.quartos}
-                onChange={handleFieldChange("quartos")}
+                icon={HomeIcon}
+                label="Tipo de Imóvel"
+                options={typeOptions}
+                value={filters.propertyType}
+                onChange={handleFieldChange("propertyType")}
               />
             </div>
           </div>
@@ -158,8 +142,9 @@ export default function Hero() {
           </motion.p>
 
           <motion.div className={styles.actions} variants={fadeUpItem}>
-            <Button variant="primary">Falar com corretor</Button>
-            <Button variant="outline">Ver imóveis</Button>
+            <Button variant="primary" onClick={() => navigate("/contato")}>
+              Falar com corretor
+            </Button>
           </motion.div>
         </div>
       </motion.div>

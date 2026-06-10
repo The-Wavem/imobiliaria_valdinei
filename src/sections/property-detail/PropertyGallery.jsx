@@ -1,55 +1,90 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation } from "swiper/modules";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { Navigation, Pagination } from "swiper/modules";
+import { ChevronLeft, ChevronRight, X, Camera, Maximize, PlaySquare } from "lucide-react";
 import "swiper/css";
 import styles from "./PropertyGallery.module.css";
+import { getYouTubeEmbedUrl, getYouTubeThumbnailUrl } from "@utils/videoUtils";
 
-export default function PropertyGallery({ images = [], title }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [activeIndex, setActiveIndex] = useState(0);
+export default function PropertyGallery({ 
+  images = [], 
+  videos = [],
+  title, 
+  isOpen, 
+  onClose, 
+  initialIndex = 0, 
+  onOpenGallery 
+}) {
+  const [modalIndex, setModalIndex] = useState(initialIndex);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const swiperRef = useRef(null);
-  const safeImages = images.filter(Boolean);
+  const safeImages = images ? images.filter(Boolean) : [];
 
-  const openGallery = (index) => {
-    setActiveIndex(index || 0);
-    setIsOpen(true);
-  };
+  const rawVideos = videos || [];
+  const videoItems = rawVideos.map((url, index) => {
+    const defaultThumb = getYouTubeThumbnailUrl(url);
+    // Para o 1º vídeo, tenta usar a capa do imóvel (alta qualidade). Se não houver fotos, cai pro YouTube default.
+    const thumb = (index === 0 && safeImages.length > 0) ? safeImages[0] : defaultThumb;
+    
+    return {
+      type: 'video', 
+      url: getYouTubeEmbedUrl(url),
+      thumbnail: thumb
+    };
+  }).filter(v => v.url);
+  const photoItems = safeImages.map(url => ({ type: 'image', url }));
+  const mediaList = [...videoItems, ...photoItems];
 
-  if (safeImages.length === 0) return null;
+  useEffect(() => {
+    if (isOpen) {
+      setModalIndex(initialIndex);
+    }
+  }, [isOpen, initialIndex]);
+
+  if (mediaList.length === 0) return null;
 
   return (
     <div className={styles.gallery}>
       <Swiper
-        modules={[Navigation]}
+        modules={[Navigation, Pagination]}
         navigation
+        pagination={{ clickable: true }}
         spaceBetween={10}
         slidesPerView={1}
-        onSlideChange={(sw) => setActiveIndex(sw.activeIndex)}
+        onSlideChange={(swiper) => setCurrentIndex(swiper.realIndex)}
       >
-        {safeImages.map((src, idx) => (
+        {mediaList.map((item, idx) => (
           <SwiperSlide key={idx}>
-            <img
-              src={src}
-              alt={`${title} - ${idx + 1}`}
-              className={styles.image}
-              onClick={() => openGallery(idx)}
-            />
+            <div className={styles.imageContainer} onClick={() => onOpenGallery && onOpenGallery(idx)}>
+              <img
+                src={item.thumbnail || item.url}
+                alt={`${title} - ${item.type === 'video' ? 'Vídeo ' : ''}${idx + 1}`}
+                className={styles.image}
+              />
+              <div className={styles.hoverOverlay}>
+                <Maximize size={40} color="white" />
+              </div>
+            </div>
           </SwiperSlide>
         ))}
       </Swiper>
+
+      <div className={styles.counterBadge}>
+        <Camera size={16} />
+        <span>{currentIndex + 1} / {mediaList.length}</span>
+      </div>
 
       {isOpen && createPortal(
         <div
           className={styles.modalOverlay}
           role="dialog"
           aria-modal="true"
-          onClick={(e) => { if (e.target === e.currentTarget) setIsOpen(false); }}
+          onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
         >
           <button
             className={styles.closeBtn}
-            onClick={() => setIsOpen(false)}
+            onClick={onClose}
             aria-label="Fechar galeria"
           >
             <X size={18} />
@@ -66,20 +101,29 @@ export default function PropertyGallery({ images = [], title }) {
           <div className={styles.modalSwiperWrap}>
             <Swiper
               modules={[]}
-              initialSlide={activeIndex}
+              initialSlide={initialIndex}
               spaceBetween={20}
               slidesPerView={1}
               onSwiper={(swiper) => { swiperRef.current = swiper; }}
-              onSlideChange={(sw) => setActiveIndex(sw.activeIndex)}
+              onSlideChange={(sw) => setModalIndex(sw.activeIndex)}
             >
-              {safeImages.map((src, idx) => (
+              {mediaList.map((item, idx) => (
                 <SwiperSlide key={idx}>
                   <div className={styles.modalSlide}>
-                    <img
-                      src={src}
-                      alt={`${title} - ${idx + 1}`}
-                      className={styles.modalImage}
-                    />
+                    {item.type === 'video' ? (
+                      <iframe 
+                        src={item.url} 
+                        allow="autoplay; fullscreen" 
+                        className={styles.modalVideoIframe} 
+                        frameBorder="0" 
+                      />
+                    ) : (
+                      <img
+                        src={item.url}
+                        alt={`${title} - ${idx + 1}`}
+                        className={styles.modalImage}
+                      />
+                    )}
                   </div>
                 </SwiperSlide>
               ))}
@@ -95,7 +139,7 @@ export default function PropertyGallery({ images = [], title }) {
           </button>
 
           <div className={styles.modalCounter}>
-            {activeIndex + 1} / {safeImages.length}
+            {modalIndex + 1} / {mediaList.length}
           </div>
         </div>,
         document.body
