@@ -2,7 +2,7 @@ import { useRef, useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, Camera, Maximize } from "lucide-react";
 import "swiper/css";
 import styles from "./PropertyGallery.module.css";
 
@@ -15,6 +15,7 @@ export default function PropertyGallery({
   onOpenGallery 
 }) {
   const [modalIndex, setModalIndex] = useState(initialIndex);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const swiperRef = useRef(null);
   const safeImages = images.filter(Boolean);
 
@@ -34,18 +35,28 @@ export default function PropertyGallery({
         pagination={{ clickable: true }}
         spaceBetween={10}
         slidesPerView={1}
+        onSlideChange={(swiper) => setCurrentIndex(swiper.realIndex)}
       >
         {safeImages.map((src, idx) => (
           <SwiperSlide key={idx}>
-            <img
-              src={src}
-              alt={`${title} - ${idx + 1}`}
-              className={styles.image}
-              onClick={() => onOpenGallery && onOpenGallery(idx)}
-            />
+            <div className={styles.imageContainer} onClick={() => onOpenGallery && onOpenGallery(idx)}>
+              <img
+                src={src}
+                alt={`${title} - ${idx + 1}`}
+                className={styles.image}
+              />
+              <div className={styles.hoverOverlay}>
+                <Maximize size={40} color="white" />
+              </div>
+            </div>
           </SwiperSlide>
         ))}
       </Swiper>
+
+      <div className={styles.counterBadge}>
+        <Camera size={16} />
+        <span>{currentIndex + 1} / {safeImages.length}</span>
+      </div>
 
       {isOpen && createPortal(
         <div
