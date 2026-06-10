@@ -6,6 +6,7 @@ import { trackBairroView } from "@utils/analytics";
 import { incrementPropertyViews } from "@/services/propertyService";
 import { logPropertyViewAnalytics, logNeighborhoodView } from "@/services/analyticsService";
 import { extractNeighborhood } from "@utils/address.js";
+import { getYouTubeThumbnailUrl } from "@utils/videoUtils.js";
   
 import Breadcrumb from "@components/ui/Breadcrumb/Breadcrumb.jsx";
 import PropertyGallery from "@sections/property-detail/PropertyGallery";
@@ -132,6 +133,15 @@ export default function PropertyDetail() {
       ? [property.image]
       : [];
 
+  const rawVideos = property.videos || [];
+  const safeImages = galleryImages.filter(Boolean);
+  
+  const videoThumbnails = rawVideos.map((url) => {
+    return getYouTubeThumbnailUrl(url);
+  }).filter(Boolean);
+
+  const mosaicUrls = [...videoThumbnails, ...safeImages];
+
   return (
     <div className={styles.page}>
       <Breadcrumb property={property} />
@@ -171,7 +181,7 @@ export default function PropertyDetail() {
             <PropertyFeatures features={property.amenities} />
           </MotionDiv>
           <MotionDiv variants={itemVariants}>
-            <PropertyMosaic photos={galleryImages} onOpenGallery={handleOpenGallery} />
+            <PropertyMosaic photos={mosaicUrls} onOpenGallery={handleOpenGallery} />
           </MotionDiv>
           <MotionDiv variants={itemVariants}>
             <PropertyDescription description={property.description} />
