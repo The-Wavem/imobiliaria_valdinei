@@ -19,6 +19,8 @@ import Button from "@components/ui/Button/Button.jsx";
 import Modal from "@components/ui/Modal/Modal.jsx";
 import Input from "@components/ui/Input/Input.jsx";
 import Select from "@components/ui/Select/Select.jsx";
+import ReactQuill from "react-quill-new";
+import "react-quill-new/dist/quill.snow.css";
 import Loader from "@components/ui/Loader/Loader.jsx";
 import styles from "./PropertyFormModal.module.css";
 
@@ -56,8 +58,16 @@ const defaultForm = {
   title: "", code: "", price: "", condo: "", iptu: "",
   category: "", type: "", cep: "", logradouro: "", numero: "", complemento: "", bairro: "", cidade: "", estado: "",
   area: "", bedrooms: "", bathrooms: "", parkingSpaces: "",
-  features: [], photos: [], videos: [], summary: "", description: "",
+  features: [], photos: [], videos: [], description: "",
   status: "Inativo"
+};
+
+const quillModules = {
+  toolbar: [
+    ['bold', 'italic', 'underline'],
+    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+    ['clean']
+  ]
 };
 
 export default function PropertyFormModal({ isOpen, onClose, property, onSave }) {
@@ -112,7 +122,6 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
         features: property.features || [],
         photos: property.photos || [],
         videos: property.videos || [],
-        summary: property.content?.summary || property.summary || "",
         description: property.content?.description || property.description || "",
         status: property.status || "Ativo"
       });
@@ -842,25 +851,17 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
 
         {activeTab === "description" ? (
           <section className={styles.tabPanel}>
-            <div className={styles.descriptionGroup}>
-              <Input
-                label="Resumo Rápido"
-                placeholder="Ex: Lindo sobrado triplex com sol da manhã"
-                value={formData.summary}
-                onChange={(event) => updateField("summary", event.target.value)}
-              />
-
-              <label className={styles.textareaField}>
+            <div className={styles.descriptionGroup} style={{ paddingBottom: '2rem' }}>
+              <div className={styles.textareaField}>
                 <span className={styles.textareaLabel}>Descrição Completa</span>
-                <textarea
-                  className={styles.textareaControl}
-                  placeholder="Descreva o imóvel com detalhes, diferenciais, posicionamento solar, acabamentos e contexto de uso."
+                <ReactQuill
+                  theme="snow"
                   value={formData.description}
-                  onChange={(event) =>
-                    updateField("description", event.target.value)
-                  }
+                  onChange={(content) => setFormData((prev) => ({ ...prev, description: content }))}
+                  modules={quillModules}
+                  placeholder="Descreva o imóvel com detalhes, diferenciais, posicionamento solar, acabamentos e contexto de uso."
                 />
-              </label>
+              </div>
             </div>
           </section>
         ) : null}

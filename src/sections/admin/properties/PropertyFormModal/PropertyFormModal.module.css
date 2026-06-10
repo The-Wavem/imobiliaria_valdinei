@@ -451,6 +451,42 @@
   gap: 0.45rem;
 }
 
+.textareaField :global(.ql-editor) p {
+  margin-bottom: 0.5rem;
+}
+
+.textareaField :global(.ql-editor) p:last-child {
+  margin-bottom: 0;
+}
+
+.textareaField :global(.ql-editor) strong,
+.textareaField :global(.ql-editor) b {
+  font-weight: bold !important;
+}
+
+.textareaField :global(.ql-editor) em,
+.textareaField :global(.ql-editor) i {
+  font-style: italic !important;
+}
+
+.textareaField :global(.ql-editor) u {
+  text-decoration: underline !important;
+}
+
+.textareaField :global(.ql-editor) ol {
+  padding-left: 1.5rem;
+  list-style-type: decimal !important;
+}
+
+.textareaField :global(.ql-editor) ul {
+  padding-left: 1.5rem;
+  list-style-type: disc !important;
+}
+
+.textareaField :global(.ql-editor) li {
+  margin-bottom: 0.25rem;
+}
+
 .textareaLabel {
   font-size: 0.76rem;
   font-weight: 700;

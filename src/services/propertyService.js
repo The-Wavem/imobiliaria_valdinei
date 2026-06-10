@@ -47,7 +47,6 @@ const formatPropertyData = (data) => {
     photos: data.photos || [],
     videos: data.videos || [],
     content: {
-      summary: data.summary || data.content?.summary || "",
       description: data.description || data.content?.description || "",
     },
     updatedAt: new Date().toISOString(),
