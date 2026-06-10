@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import Footer from "@components/layout/Footer.jsx";
 import FilterBar from "@components/ui/FilterBar/FilterBar.jsx";
 import CategoryHero from "@sections/listing/CategoryHero.jsx";
@@ -9,7 +9,15 @@ import { getPublicProperties } from "@services/propertyService.js";
 import { extractNeighborhood } from "@utils/address.js";
 
 export default function Buy() {
-  const [filters, setFilters] = useState({});
+  const routerLocation = useLocation();
+  const searchParams = new URLSearchParams(routerLocation.search);
+  
+  const initialFilters = useMemo(() => ({
+    location: searchParams.get('location') || "",
+    propertyType: searchParams.get('propertyType') || "",
+  }), []);
+
+  const [filters, setFilters] = useState(initialFilters);
   const [properties, setProperties] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
@@ -140,7 +148,12 @@ export default function Buy() {
         <CategoryHero category="Comprar" />
       </motion.div>
       <motion.div variants={fadeUpItem} style={{ position: "relative", zIndex: 10 }}>
-        <FilterBar onSearch={setFilters} onAdvancedFiltersApply={setFilters} properties={properties} />
+        <FilterBar 
+          initialFilters={initialFilters}
+          onSearch={setFilters} 
+          onAdvancedFiltersApply={setFilters} 
+          properties={properties} 
+        />
       </motion.div>
       <motion.div variants={fadeUpItem}>
         <PropertyGrid
