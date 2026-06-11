@@ -139,9 +139,7 @@ export default function Buy() {
       initial="hidden"
       animate="show"
     >
-      <motion.div variants={fadeUpItem}>
-        <CategoryHero category="Comprar" />
-      </motion.div>
+      <CategoryHero category="Comprar" />
       <motion.div variants={fadeUpItem} style={{ position: "relative", zIndex: 10 }}>
         <FilterBar 
           initialFilters={initialFilters}

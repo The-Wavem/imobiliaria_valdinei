@@ -12,11 +12,14 @@ import { parsePrice } from "@utils/validation.js";
 export default function Rent() {
   const routerLocation = useLocation();
   const searchParams = new URLSearchParams(routerLocation.search);
-  
-  const initialFilters = useMemo(() => ({
-    location: searchParams.get('location') || "",
-    propertyType: searchParams.get('propertyType') || "",
-  }), []);
+
+  const initialFilters = useMemo(
+    () => ({
+      location: searchParams.get("location") || "",
+      propertyType: searchParams.get("propertyType") || "",
+    }),
+    [],
+  );
 
   const [filters, setFilters] = useState(initialFilters);
   const [properties, setProperties] = useState([]);
@@ -48,23 +51,35 @@ export default function Rent() {
       const feat = property.features || [];
       const searchLocation = (filters.location || "").trim().toLowerCase();
       const propertyType = filters.propertyType || "";
-      const priceMin = filters.priceMin !== "" && filters.priceMin !== undefined ? parsePrice(filters.priceMin) : 0;
+      const priceMin =
+        filters.priceMin !== "" && filters.priceMin !== undefined
+          ? parsePrice(filters.priceMin)
+          : 0;
       const priceMaxRaw = filters.priceMax;
-      const priceMax = priceMaxRaw !== "" && priceMaxRaw !== undefined ? parsePrice(priceMaxRaw) : Number.POSITIVE_INFINITY;
+      const priceMax =
+        priceMaxRaw !== "" && priceMaxRaw !== undefined
+          ? parsePrice(priceMaxRaw)
+          : Number.POSITIVE_INFINITY;
       const bedrooms = filters.bedrooms || "Qualquer";
       const bathrooms = filters.bathrooms || "Qualquer";
       const parking = filters.parking || "Qualquer";
       const amenities = filters.amenities || [];
       const areaMin = Number(filters.areaMin || 0);
       const areaMax = Number(filters.areaMax || Number.POSITIVE_INFINITY);
-      const loc = typeof property.location === "object" ? property.location : {};
+      const loc =
+        typeof property.location === "object" ? property.location : {};
       const propAddress = (loc.address || "").toLowerCase();
       const propNeighborhood = (loc.neighborhood || "").toLowerCase();
       const propBairro = (loc.bairro || "").toLowerCase();
-      
+
       // Nova extração direta baseada na string (se for string)
-      const propExtractedBairro = extractNeighborhood(property.location).toLowerCase();
-      const rawLocationString = typeof property.location === "string" ? property.location.toLowerCase() : "";
+      const propExtractedBairro = extractNeighborhood(
+        property.location,
+      ).toLowerCase();
+      const rawLocationString =
+        typeof property.location === "string"
+          ? property.location.toLowerCase()
+          : "";
 
       const searchLoc = searchLocation.toLowerCase();
 
@@ -114,40 +129,50 @@ export default function Rent() {
 
   const staggerContainer = {
     hidden: { opacity: 0 },
-    show: { opacity: 1, transition: { staggerChildren: 0.15, delayChildren: 0.1 } },
+    show: {
+      opacity: 1,
+      transition: { staggerChildren: 0.15, delayChildren: 0.1 },
+    },
   };
 
   const fadeUpItem = {
     hidden: { opacity: 0, y: 30 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] } },
+    show: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] },
+    },
   };
 
   return (
-    <motion.main 
-      className="pageTransition"
-      variants={staggerContainer}
-      initial="hidden"
-      animate="show"
-    >
-      <motion.div variants={fadeUpItem}>
-        <CategoryHero category="Alugar" />
-      </motion.div>
-      <motion.div variants={fadeUpItem} style={{ position: "relative", zIndex: 10 }}>
-        <FilterBar 
-          initialFilters={initialFilters}
-          onSearch={setFilters} 
-          onAdvancedFiltersApply={setFilters} 
-          properties={properties} 
-        />
-      </motion.div>
-      <motion.div variants={fadeUpItem}>
-        <PropertyGrid
-          properties={filteredProperties}
-          title="Imóveis para Alugar"
-          onPropertyClick={handlePropertyClick}
-          isLoading={isLoading}
-        />
-      </motion.div>
-    </motion.main>
+    <>
+      <CategoryHero category="Alugar" />
+      <motion.main
+        className="pageTransition"
+        variants={staggerContainer}
+        initial="hidden"
+        animate="show"
+      >
+        <motion.div
+          variants={fadeUpItem}
+          style={{ position: "relative", zIndex: 10 }}
+        >
+          <FilterBar
+            initialFilters={initialFilters}
+            onSearch={setFilters}
+            onAdvancedFiltersApply={setFilters}
+            properties={properties}
+          />
+        </motion.div>
+        <motion.div variants={fadeUpItem}>
+          <PropertyGrid
+            properties={filteredProperties}
+            title="Imóveis para Alugar"
+            onPropertyClick={handlePropertyClick}
+            isLoading={isLoading}
+          />
+        </motion.div>
+      </motion.main>
+    </>
   );
 }

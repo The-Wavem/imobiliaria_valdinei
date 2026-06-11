@@ -15,7 +15,6 @@
   background-position: center;
   background-repeat: no-repeat;
   z-index: 0;
-  animation: kenBurns 20s ease-in-out infinite alternate;
 }
 
 @keyframes kenBurns {
