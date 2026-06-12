@@ -6,6 +6,7 @@ const ANALYTICS_DAILY_COLLECTION = "analytics_daily";
 const ANALYTICS_FILTERS_COLLECTION = "analytics_filters";
 const ANALYTICS_BAIRROS_COLLECTION = "analytics_bairros";
 const PROPERTY_COLLECTION = "properties";
+const CAMPAIGN_CLICKS_COLLECTION = "campaign_clicks";
 
 export async function getDailyAnalytics() {
   const snapshot = await getDocs(
@@ -431,5 +432,35 @@ export function logWhatsAppClickAnalytics(propertyName, origin) {
     });
   } catch (error) {
     console.error("Falha ao registrar WhatsApp click no Firebase Analytics:", error);
+  }
+}
+
+export async function trackCampaignClick(utmSource, utmMedium, utmCampaign) {
+  if (typeof window === "undefined" || !utmCampaign) {
+    return;
+  }
+
+  try {
+    const source = String(utmSource || "outro").trim().toLowerCase();
+    const medium = String(utmMedium || "social").trim().toLowerCase();
+    const campaign = String(utmCampaign).trim().toLowerCase();
+
+    // Create a deterministic document ID for the campaign click
+    const docId = slugify(`${source}_${medium}_${campaign}`);
+
+    const docRef = doc(db, CAMPAIGN_CLICKS_COLLECTION, docId);
+
+    await setDoc(
+      docRef,
+      {
+        source,
+        medium,
+        campaign,
+        clicks: increment(1),
+      },
+      { merge: true },
+    );
+  } catch (error) {
+    console.error("Falha ao registrar clique de campanha no Firestore:", error);
   }
 }

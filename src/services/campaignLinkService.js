@@ -2,6 +2,7 @@ import { addDoc, collection, deleteDoc, doc, getDocs } from "firebase/firestore"
 import { db } from "./firebaseConfig.js";
 
 const CAMPAIGN_LINKS_COLLECTION = "campaign_links";
+const CAMPAIGN_CLICKS_COLLECTION = "campaign_clicks";
 
 const mapCampaignLinkDocument = (documentSnapshot) => ({
   id: documentSnapshot.id,
@@ -20,8 +21,31 @@ export async function addCampaignLink(linkData) {
 
 export async function getCampaignLinks() {
   try {
-    const snapshot = await getDocs(collection(db, CAMPAIGN_LINKS_COLLECTION));
-    const links = snapshot.docs.map(mapCampaignLinkDocument);
+    const [linksSnapshot, clicksSnapshot] = await Promise.all([
+      getDocs(collection(db, CAMPAIGN_LINKS_COLLECTION)),
+      getDocs(collection(db, CAMPAIGN_CLICKS_COLLECTION)),
+    ]);
+
+    const clicksMap = {};
+    clicksSnapshot.docs.forEach((doc) => {
+      const data = doc.data();
+      const key = `${data.source}_${data.medium}_${data.campaign}`.toLowerCase();
+      clicksMap[key] = data.clicks || 0;
+    });
+
+    const links = linksSnapshot.docs.map((doc) => {
+      const linkData = mapCampaignLinkDocument(doc);
+      const source = String(linkData.source || "outro").trim().toLowerCase();
+      const medium = String(linkData.medium || "social").trim().toLowerCase();
+      const campaign = String(linkData.campaign || "").trim().toLowerCase();
+      
+      const key = `${source}_${medium}_${campaign}`;
+      
+      return {
+        ...linkData,
+        clicks: clicksMap[key] || 0,
+      };
+    });
 
     return links.sort((firstLink, secondLink) => {
       const firstDate = new Date(firstLink.createdAt || 0).getTime();

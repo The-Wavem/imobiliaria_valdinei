@@ -1,5 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { ChevronDown, ChevronUp, Copy, Link2, Loader2, Plus, RotateCcw, Trash2 } from "lucide-react";
+import { 
+  ChevronDown, ChevronUp, Copy, Link2, Loader2, Plus, RotateCcw, Trash2,
+  Link as LinkIcon, MousePointerClick
+} from "lucide-react";
+import { FaInstagram, FaFacebook, FaWhatsapp, FaLinkedin, FaYoutube } from "react-icons/fa";
 import Button from "@components/ui/Button/Button.jsx";
 import Input from "@components/ui/Input/Input.jsx";
 import {
@@ -11,16 +15,19 @@ import {
   DEFAULT_CAMPAIGN_DOMAIN,
 } from "@hooks/capturaUrl.js";
 import { addCampaignLink, deleteCampaignLink, getCampaignLinks } from "@services/campaignLinkService.js";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend } from "recharts";
 import "./Captura_Url.css";
 
 // Emoji/icon for each platform
 const PLATFORM_META = {
-  Instagram: { emoji: "", color: "#E1306C" },
-  Facebook:  { emoji: "", color: "#1877F2" },
-  WhatsApp:  { emoji: "", color: "#25D366" },
-  LinkedIn:  { emoji: "", color: "#0A66C2" },
-  YouTube:   { emoji: "▶",  color: "#FF0000" },
+  Instagram: { icon: <FaInstagram size={20} />, color: "#E1306C" },
+  Facebook:  { icon: <FaFacebook size={20} />, color: "#1877F2" },
+  WhatsApp:  { icon: <FaWhatsapp size={20} />, color: "#25D366" },
+  LinkedIn:  { icon: <FaLinkedin size={20} />, color: "#0A66C2" },
+  YouTube:   { icon: <FaYoutube size={20} />,  color: "#FF0000" },
 };
+
+const CHART_COLORS = ['#0C9186', '#C79C31', '#1e40af', '#ea580c', '#64748b'];
 
 const PAGE_OPTIONS = [
   { label: "Contato", value: "/contato" },
@@ -31,6 +38,16 @@ const PAGE_OPTIONS = [
 ];
 
 const toSafeText = (value) => String(value || "").trim();
+
+const getPlatformIcon = (source) => {
+  const src = String(source).toLowerCase();
+  if (src === 'instagram') return <FaInstagram size={14} />;
+  if (src === 'facebook') return <FaFacebook size={14} />;
+  if (src === 'whatsapp') return <FaWhatsapp size={14} />;
+  if (src === 'linkedin') return <FaLinkedin size={14} />;
+  if (src === 'youtube') return <FaYoutube size={14} />;
+  return <LinkIcon size={14} />;
+};
 
 export default function CapturaUrlSection() {
   const [form, setForm] = useState(getInitialCampaignForm());
@@ -64,15 +81,48 @@ export default function CapturaUrlSection() {
     [effectiveCampaign, form.content, form.destinationPath, form.medium, form.source, form.term],
   );
 
-  const sourceBreakdown = useMemo(() => {
-    return campaignLinks.reduce(
-      (accumulator, link) => {
+  const stats = useMemo(() => {
+    let total = 0;
+    let instagram = 0;
+    let facebook = 0;
+    let whatsapp = 0;
+
+    campaignLinks.forEach(link => {
+      const clicks = link.clicks || 0;
+      total += clicks;
+      const src = String(link.source).toLowerCase();
+      if (src === 'instagram') instagram += clicks;
+      if (src === 'facebook') facebook += clicks;
+      if (src === 'whatsapp') whatsapp += clicks;
+    });
+
+    return { total, instagram, facebook, whatsapp };
+  }, [campaignLinks]);
+
+  const chartData = useMemo(() => {
+    const grouped = {};
+    campaignLinks.forEach(link => {
+      const clicks = link.clicks || 0;
+      if (clicks > 0) {
         const source = String(link.source || "outro").toLowerCase();
-        accumulator[source] = (accumulator[source] || 0) + 1;
-        return accumulator;
-      },
-      { instagram: 0, facebook: 0, whatsapp: 0, linkedin: 0, youtube: 0, outro: 0 },
-    );
+        grouped[source] = (grouped[source] || 0) + clicks;
+      }
+    });
+
+    return Object.entries(grouped)
+      .map(([source, value]) => {
+        let color = '#64748b';
+        let name = source.charAt(0).toUpperCase() + source.slice(1);
+        
+        const platformKey = Object.keys(PLATFORM_META).find(k => k.toLowerCase() === source);
+        if (platformKey) {
+          color = PLATFORM_META[platformKey].color;
+          name = platformKey;
+        }
+
+        return { name, value, color };
+      })
+      .sort((a, b) => b.value - a.value);
   }, [campaignLinks]);
 
   const loadCampaignLinks = async () => {
@@ -188,10 +238,10 @@ export default function CapturaUrlSection() {
     <main className="admin-container">
       <section className="pageHeader">
         <div>
-          <p className="kicker">Captura de URL</p>
-          <h1 className="admin-title">Criar Links de Campanha</h1>
+          <p className="kicker">Captura de URL e UTMs</p>
+          <h1 className="admin-title">Cliques de Campanhas</h1>
           <p className="description">
-            Gere links rastreáveis para suas campanhas em poucos cliques, usando o domínio <strong>{DEFAULT_CAMPAIGN_DOMAIN}</strong>.
+            Gere links rastreáveis e veja o total de <strong>acessos reais</strong> gerados por cada campanha através de UTMs.
           </p>
         </div>
 
@@ -207,22 +257,22 @@ export default function CapturaUrlSection() {
         </div>
       </section>
 
-      <section className="statsGrid" aria-label="Resumo rápido dos links">
+      <section className="statsGrid" aria-label="Resumo rápido de cliques">
         <article className="statCard">
-          <span>Total</span>
-          <strong>{campaignLinks.length}</strong>
+          <span>Total de Cliques</span>
+          <strong>{stats.total}</strong>
         </article>
         <article className="statCard">
-          <span>Instagram</span>
-          <strong>{sourceBreakdown.instagram}</strong>
+          <span>Cliques via Instagram</span>
+          <strong>{stats.instagram}</strong>
         </article>
         <article className="statCard">
-          <span>Facebook</span>
-          <strong>{sourceBreakdown.facebook}</strong>
+          <span>Cliques via Facebook</span>
+          <strong>{stats.facebook}</strong>
         </article>
         <article className="statCard">
-          <span>WhatsApp</span>
-          <strong>{sourceBreakdown.whatsapp}</strong>
+          <span>Cliques via WhatsApp</span>
+          <strong>{stats.whatsapp}</strong>
         </article>
       </section>
 
@@ -245,7 +295,7 @@ export default function CapturaUrlSection() {
                     onClick={() => applyPreset(preset)}
                     aria-pressed={isActive}
                   >
-                    <span className="platformEmoji">{meta.emoji}</span>
+                    <span className="platformEmoji">{meta.icon}</span>
                     <span className="platformName">{preset.label}</span>
                     {isActive && <span className="platformCheck">✓</span>}
                   </button>
@@ -340,54 +390,104 @@ export default function CapturaUrlSection() {
           </div>
         </form>
 
-        <section className="listCard">
-          <div className="cardHeading">
-            <div>
-              <p className="cardLabel">Links salvos</p>
-              <h2>Histórico para copiar ou excluir</h2>
-            </div>
-            <Link2 size={20} />
-          </div>
-
-          {isLoading ? (
-            <div className="emptyState">Carregando links de campanha...</div>
-          ) : campaignLinks.length === 0 ? (
-            <div className="emptyState">
-              Nenhum link salvo ainda. Crie o primeiro usando o formulário ao lado.
-            </div>
-          ) : (
-            <div className="linkList">
-              {campaignLinks.map((link) => (
-                <article key={link.id} className="linkCard">
-                  <div className="linkMeta">
-                    <strong>{link.title || link.campaign}</strong>
-                    <div className="linkTags">
-                      <span>{link.source}</span>
-                      <span>{link.medium}</span>
-                      <span>{link.destinationPath}</span>
-                    </div>
-                  </div>
-
-                  <div className="linkUrlRow">
-                    <input readOnly value={link.url} />
-                  </div>
-
-                  <div className="linkActions">
-                    <button type="button" className="linkActionButton" onClick={() => handleCopyUrl(link.url, link.id)}>
-                      <Copy size={16} />
-                      {copyFeedbackId === link.id ? "Copiado!" : "Copiar"}
-                    </button>
-
-                    <button type="button" className="linkActionButton dangerAction" onClick={() => handleDelete(link.id)}>
-                      <Trash2 size={16} />
-                      Excluir
-                    </button>
-                  </div>
-                </article>
-              ))}
-            </div>
+        <div className="rightColumn">
+          {/* Gráfico de Pizza */}
+          {chartData.length > 0 && (
+            <section className="chartCard">
+              <div className="cardHeading">
+                <div>
+                  <p className="cardLabel">Distribuição</p>
+                  <h2>Tráfego por Plataforma</h2>
+                </div>
+              </div>
+              <div className="chartWrapper">
+                <ResponsiveContainer width="100%" height={250}>
+                  <PieChart>
+                    <Pie
+                      data={chartData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={80}
+                      paddingAngle={5}
+                      labelLine={false}
+                    >
+                      {chartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <RechartsTooltip 
+                      formatter={(value) => [`${value} cliques`, 'Acessos']}
+                      contentStyle={{ borderRadius: '0.8rem', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}
+                    />
+                    <Legend verticalAlign="bottom" height={36} iconType="circle" />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </section>
           )}
-        </section>
+
+          {/* Lista de Links */}
+          <section className="listCard">
+            <div className="cardHeading">
+              <div>
+                <p className="cardLabel">Links salvos</p>
+                <h2>Histórico de URLs geradas</h2>
+              </div>
+              <Link2 size={20} />
+            </div>
+
+            {isLoading ? (
+              <div className="emptyState">Carregando links de campanha...</div>
+            ) : campaignLinks.length === 0 ? (
+              <div className="emptyState">
+                Nenhum link salvo ainda. Crie o primeiro usando o formulário ao lado.
+              </div>
+            ) : (
+              <div className="linkList">
+                {campaignLinks.map((link) => (
+                  <article key={link.id} className="linkCard">
+                    <div className="linkHeader">
+                      <div className="linkMeta">
+                        <strong>{link.title || link.campaign}</strong>
+                        <div className="linkTags">
+                          <span className="sourceTag">
+                            {getPlatformIcon(link.source)}
+                            {link.source}
+                          </span>
+                          <span>{link.medium}</span>
+                          <span className="pathTag">{link.destinationPath}</span>
+                        </div>
+                      </div>
+                      <div className="linkClicks" title={`${link.clicks || 0} acessos via UTM`}>
+                        <MousePointerClick size={16} />
+                        <strong>{link.clicks || 0}</strong>
+                      </div>
+                    </div>
+
+                    <div className="linkUrlRow">
+                      <input readOnly value={link.url} />
+                    </div>
+
+                    <div className="linkActions">
+                      <button type="button" className="linkActionButton" onClick={() => handleCopyUrl(link.url, link.id)}>
+                        <Copy size={16} />
+                        {copyFeedbackId === link.id ? "Copiado!" : "Copiar"}
+                      </button>
+
+                      <button type="button" className="linkActionButton dangerAction" onClick={() => handleDelete(link.id)}>
+                        <Trash2 size={16} />
+                        Excluir
+                      </button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
       </section>
     </main>
   );
