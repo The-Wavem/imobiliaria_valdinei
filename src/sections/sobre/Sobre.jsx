@@ -1,4 +1,5 @@
 import styles from "./Sobre.module.css";
+import { Link } from "react-router-dom";
 
 export default function Sobre() {
   return (
@@ -69,9 +70,9 @@ export default function Sobre() {
               complicações, pautada na confiança e na acessibilidade.
             </span>
           </p>
-          <a href="/alugar">
-            Ver Imóveis Disponiveis
-          </a>
+          <Link to="/alugar">
+            Ver Imóveis Disponíveis
+          </Link>
         </div>
       </div>
     </main>

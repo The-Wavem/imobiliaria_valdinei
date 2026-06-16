@@ -1,6 +1,9 @@
+import { useNavigate } from 'react-router-dom';
 import styles from './Services.module.css';
 
 export default function Services() {
+    const navigate = useNavigate();
+
     return ( 
       <main>
         <div className={styles.hero}>
@@ -15,7 +18,7 @@ export default function Services() {
               </div>
               <h1>Consultoria Imobiliária</h1>
               <p>Atendimento próximo e personalizado para encontrar o imóvel que melhor se adapta ao seu momento de vida.</p>
-              <button>Agendar Visita</button>
+              <button onClick={() => navigate('/contato', { state: { subject: 'Interesse no serviço: Consultoria Imobiliária' } })}>Agendar Visita</button>
               <div className={styles.invisibleDiv}>
                 <span>
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-circle-check" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="m9 12 2 2 4-4"></path></svg>
@@ -52,7 +55,7 @@ export default function Services() {
               </div>
               <h1>Avaliação de Mercado</h1>
               <p>Análise técnica e mercadológica precisa para determinar o valor justo de imóveis em Curitiba e região.</p>
-              <button>Solicitar Avaliação</button>
+              <button onClick={() => navigate('/contato', { state: { subject: 'Interesse no serviço: Avaliação de Mercado' } })}>Solicitar Avaliação</button>
               <div className={styles.invisibleDiv}>
                 <span>
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-circle-check" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="m9 12 2 2 4-4"></path></svg>
@@ -86,7 +89,7 @@ export default function Services() {
         <div className={styles.specialist}>
           <h1>Pronto para encontrar seu <span>novo lar?</span></h1>
           <h2>Nossa equipe está preparada para ajudar você em cada passo da sua jornada imobiliária.</h2>
-          <button><a href="/contato">Falar com um especialista</a></button>
+          <button onClick={() => navigate('/contato', { state: { subject: 'Falar com um especialista' } })}>Falar com um especialista</button>
         </div>
       </main>
     );
