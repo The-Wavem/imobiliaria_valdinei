@@ -5,9 +5,10 @@ export default function PropertyDescription({ description }) {
   return (
     <section className={styles.section}>
       <h2 className={styles.subtitle}>Descrição</h2>
-      <div className={styles.desc}>
-        <p>{description}</p>
-      </div>
+      <div 
+        className={styles.richTextContainer}
+        dangerouslySetInnerHTML={{ __html: description }} 
+      />
     </section>
   );
 }

@@ -1,15 +1,24 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import Footer from "@components/layout/Footer.jsx";
 import FilterBar from "@components/ui/FilterBar/FilterBar.jsx";
 import CategoryHero from "@sections/listing/CategoryHero.jsx";
 import PropertyGrid from "@sections/listing/PropertyGrid.jsx";
 import { getPublicProperties } from "@services/propertyService.js";
 import { extractNeighborhood } from "@utils/address.js";
+import { parsePrice } from "@utils/validation.js";
 
 export default function Buy() {
-  const [filters, setFilters] = useState({});
+  const routerLocation = useLocation();
+  const searchParams = new URLSearchParams(routerLocation.search);
+  
+  const initialFilters = useMemo(() => ({
+    location: searchParams.get('location') || "",
+    propertyType: searchParams.get('propertyType') || "",
+  }), []);
+
+  const [filters, setFilters] = useState(initialFilters);
   const [properties, setProperties] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
@@ -37,19 +46,13 @@ export default function Buy() {
 
   const filteredProperties = useMemo(() => {
     return properties.filter((property) => {
-      const pricing = property.pricing || {};
       const feat = property.features || [];
 
       const searchLocation = (filters.location || "").trim().toLowerCase();
       const propertyType = filters.propertyType || "";
-      const priceMin =
-        Number((filters.priceMin || "").toString().replace(/[^0-9]/g, "")) || 0;
-      const priceMaxRaw = (filters.priceMax || "")
-        .toString()
-        .replace(/[^0-9]/g, "");
-      const priceMax = priceMaxRaw
-        ? Number(priceMaxRaw)
-        : Number.POSITIVE_INFINITY;
+      const priceMin = filters.priceMin !== "" && filters.priceMin !== undefined ? parsePrice(filters.priceMin) : 0;
+      const priceMaxRaw = filters.priceMax;
+      const priceMax = priceMaxRaw !== "" && priceMaxRaw !== undefined ? parsePrice(priceMaxRaw) : Number.POSITIVE_INFINITY;
       const bedrooms = filters.bedrooms || "Qualquer";
       const bathrooms = filters.bathrooms || "Qualquer";
       const parking = filters.parking || "Qualquer";
@@ -81,7 +84,7 @@ export default function Buy() {
         (property.type &&
           property.type.toLowerCase() === propertyType.toLowerCase());
 
-      const buyPrice = Number(pricing.price) || 0;
+      const buyPrice = property.price || 0;
       const matchesPrice = buyPrice >= priceMin && buyPrice <= priceMax;
 
       const propBeds = Number(loc.bedrooms) || 0;
@@ -136,11 +139,14 @@ export default function Buy() {
       initial="hidden"
       animate="show"
     >
-      <motion.div variants={fadeUpItem}>
-        <CategoryHero category="Comprar" />
-      </motion.div>
+      <CategoryHero category="Comprar" />
       <motion.div variants={fadeUpItem} style={{ position: "relative", zIndex: 10 }}>
-        <FilterBar onSearch={setFilters} onAdvancedFiltersApply={setFilters} properties={properties} />
+        <FilterBar 
+          initialFilters={initialFilters}
+          onSearch={setFilters} 
+          onAdvancedFiltersApply={setFilters} 
+          properties={properties} 
+        />
       </motion.div>
       <motion.div variants={fadeUpItem}>
         <PropertyGrid

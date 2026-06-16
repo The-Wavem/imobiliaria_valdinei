@@ -1,5 +1,6 @@
 import { Heart, Menu } from "lucide-react";
 import { NavLink } from "react-router-dom";
+import { useFavorites } from "@hooks/useFavorites";
 import styles from "./Navbar.module.css";
 
 const navigationItems = [
@@ -12,6 +13,8 @@ const navigationItems = [
 ];
 
 export default function Navbar() {
+  const { favorites } = useFavorites();
+
   return (
     <header className={styles.header}>
       <div className={styles.container}>
@@ -48,6 +51,9 @@ export default function Navbar() {
             aria-label="Ver favoritos"
           >
             <Heart size={18} />
+            {favorites.length > 0 && (
+              <span className={styles.badge}>{favorites.length}</span>
+            )}
           </NavLink>
           <button
             type="button"

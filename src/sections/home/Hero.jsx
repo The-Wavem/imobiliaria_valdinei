@@ -1,32 +1,24 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
-import { BedDouble, Home as HomeIcon, MapPin, DollarSign } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import { Home as HomeIcon, MapPin } from "lucide-react";
 import Button from "@components/ui/Button/Button.jsx";
-import Input from "@components/ui/Input/Input.jsx";
 import Select from "@components/ui/Select/Select.jsx";
+import { getPublicProperties } from "@services/propertyService.js";
+import { extractNeighborhood } from "@utils/address.js";
 import styles from "./Hero.module.css";
 
-const bairroOptions = [
-  { value: "", label: "Nº de quartos" },
-  { value: "1", label: "1+ quartos" },
-  { value: "2", label: "2+ quartos" },
-  { value: "3", label: "3+ quartos" },
-  { value: "4", label: "4+ quartos" },
-];
-
-const valorOptions = [
-  { value: "", label: "Escolha o valor" },
-  { value: "ate-1500", label: "Até R$ 1.500" },
-  { value: "ate-3000", label: "Até R$ 3.000" },
-  { value: "ate-5000", label: "Até R$ 5.000" },
-  { value: "qualquer", label: "Qualquer valor" },
+const typeOptions = [
+  { value: "", label: "Qualquer tipo" },
+  { value: "casa", label: "Casa" },
+  { value: "apartamento", label: "Apartamento" },
+  { value: "sobrado", label: "Sobrado" },
+  { value: "terreno", label: "Terreno" },
 ];
 
 const initialFilters = {
-  cidade: "",
-  bairro: "",
-  valor: "",
-  quartos: "",
+  location: "",
+  propertyType: "",
 };
 
 const staggerContainer = {
@@ -55,9 +47,39 @@ const fadeUpItem = {
 export default function Hero() {
   const [searchTab, setSearchTab] = useState("Alugar");
   const [filters, setFilters] = useState(initialFilters);
+  const [properties, setProperties] = useState([]);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadProperties = async () => {
+      try {
+        const items = await getPublicProperties(searchTab);
+        if (isMounted) setProperties(items);
+      } catch (error) {
+        console.error("Error loading properties", error);
+      }
+    };
+    loadProperties();
+    
+    // Clear location filter when switching tabs so user doesn't search for a neighborhood that only has rentals on the buy tab
+    setFilters(prev => ({ ...prev, location: "" }));
+    
+    return () => { isMounted = false; };
+  }, [searchTab]);
+
+  const locationOptions = useMemo(() => {
+    const rawBairros = properties.map((p) => extractNeighborhood(p.location));
+    const unique = [...new Set(rawBairros.filter(Boolean))].sort((a, b) => a.localeCompare(b, "pt-BR"));
+    
+    return [
+      { value: "", label: "Todos os Bairros" },
+      ...unique.map((bairro) => ({ value: bairro, label: bairro })),
+    ];
+  }, [properties]);
 
   const handleFieldChange = (field) => (event) => {
-    const { value } = event.target;
+    const value = typeof event === "string" ? event : event?.target?.value;
 
     setFilters((currentFilters) => ({
       ...currentFilters,
@@ -66,10 +88,18 @@ export default function Hero() {
   };
 
   const handleSearch = () => {
-    console.log({
-      transaction: searchTab,
-      filters,
-    });
+    const params = new URLSearchParams();
+    
+    if (filters.location) {
+      params.append('location', filters.location);
+    }
+    
+    if (filters.propertyType) {
+      params.append('propertyType', filters.propertyType);
+    }
+    
+    const basePath = searchTab === "Alugar" ? "/alugar" : "/comprar";
+    navigate(`${basePath}?${params.toString()}`);
   };
 
   return (
@@ -86,58 +116,69 @@ export default function Hero() {
         <motion.div className={styles.searchCard} variants={fadeUpItem}>
           <div className={styles.cardHeader}>
             <span className={styles.kicker}>Imobiliária Valdinei</span>
-            <h1>{searchTab === "Alugar" ? "Alugue o lar ideal" : "Compre o lar ideal"}</h1>
-            <p>
-              Explore imóveis em Curitiba e região com uma busca simples,
-              objetiva e preparada para guiar sua próxima decisão.
-            </p>
+            <div className={styles.animatedTextWrapper}>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={searchTab}
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -15 }}
+                  transition={{ duration: 0.35, ease: [0.25, 1, 0.5, 1] }}
+                  className={styles.textContent}
+                >
+                  <h1>{searchTab === "Alugar" ? "Alugue o lar ideal" : "Compre o lar ideal"}</h1>
+                  <p>
+                    {searchTab === "Alugar"
+                      ? "Explore opções de locação com facilidade e segurança. Encontre o espaço perfeito para o seu próximo capítulo."
+                      : "Explore imóveis à venda com uma busca simples e objetiva, preparada para guiar sua próxima decisão."
+                    }
+                  </p>
+                </motion.div>
+              </AnimatePresence>
+            </div>
           </div>
 
           <div className={styles.tabs} aria-label="Tipo de transação">
-            {['Alugar', 'Comprar'].map((tab) => (
-              <button
-                key={tab}
-                type="button"
-                className={`${styles.tab} ${searchTab === tab ? styles.tabActive : ""}`}
-                onClick={() => setSearchTab(tab)}
-              >
-                {tab}
-              </button>
-            ))}
+            {['Alugar', 'Comprar'].map((tab) => {
+              const isActive = searchTab === tab;
+              return (
+                <button
+                  key={tab}
+                  type="button"
+                  className={styles.tab}
+                  onClick={() => setSearchTab(tab)}
+                >
+                  {isActive && (
+                    <motion.div
+                      layoutId="heroTabPill"
+                      className={styles.activePillBackground}
+                      transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                    />
+                  )}
+                  <span className={`${styles.tabText} ${isActive ? styles.tabActiveText : ""}`}>
+                    {tab}
+                  </span>
+                </button>
+              );
+            })}
           </div>
 
           <div className={styles.fields}>
-            <Input
-              icon={MapPin}
-              label="Cidade"
-              placeholder="Busque por cidade"
-              value={filters.cidade}
-              onChange={handleFieldChange("cidade")}
-            />
-
-            <Input
-              icon={HomeIcon}
-              label="Bairro"
-              placeholder="Busque por bairro"
-              value={filters.bairro}
-              onChange={handleFieldChange("bairro")}
-            />
-
-            <div className={styles.fieldsGrid}>
+            <div className={styles.fieldsGrid} style={{ gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
               <Select
-                icon={DollarSign}
-                label="Valor total até"
-                options={valorOptions}
-                value={filters.valor}
-                onChange={handleFieldChange("valor")}
+                icon={MapPin}
+                label="Localização"
+                options={locationOptions}
+                value={filters.location}
+                onChange={handleFieldChange("location")}
               />
 
               <Select
-                icon={BedDouble}
-                label="Quartos"
-                options={bairroOptions}
-                value={filters.quartos}
-                onChange={handleFieldChange("quartos")}
+                icon={HomeIcon}
+                label="Tipo de Imóvel"
+                options={typeOptions}
+                value={filters.propertyType}
+                onChange={handleFieldChange("propertyType")}
               />
             </div>
           </div>
@@ -158,8 +199,9 @@ export default function Hero() {
           </motion.p>
 
           <motion.div className={styles.actions} variants={fadeUpItem}>
-            <Button variant="primary">Falar com corretor</Button>
-            <Button variant="outline">Ver imóveis</Button>
+            <Button variant="primary" onClick={() => navigate("/contato")}>
+              Falar com corretor
+            </Button>
           </motion.div>
         </div>
       </motion.div>

@@ -1,6 +1,7 @@
 import { collection, doc, getDoc, getDocs, query, where } from "firebase/firestore";
 import { db } from "./firebaseConfig";
 import { PROPERTY_COLLECTION } from "./AdminCadastro";
+import { parsePrice } from "../utils/validation.js";
 
 const toNumber = (value) => {
   const parsedValue = Number(value);
@@ -40,9 +41,9 @@ export function mapPropertyDocument(snapshot) {
     category: data.category || "Imóvel",
     type: data.type || "Imóvel",
     location: [location.neighborhood, location.address].filter(Boolean).join(" - ") || location.address || location.neighborhood || data.address || data.neighborhood || "",
-    price: toNumber(pricing.price || data.price),
-    condo: toNumber(pricing.condo || data.condo),
-    iptu: toNumber(pricing.iptu || data.iptu),
+    price: parsePrice(pricing.price || data.price),
+    condo: parsePrice(pricing.condo || data.condo),
+    iptu: parsePrice(pricing.iptu || data.iptu),
     beds: toNumber(location.bedrooms || data.bedrooms),
     baths: toNumber(location.bathrooms || data.bathrooms),
     parking: toNumber(location.parkingSpaces || data.parkingSpaces),
@@ -51,7 +52,7 @@ export function mapPropertyDocument(snapshot) {
     image: data.imageUrl || media.coverImage || photosArray[0] || "",
     images: photosArray,
     photos: photosArray, // Mantendo a chave photos tbm para garantir
-    summary: content.summary || data.summary || "",
+    videos: data.videos || [],
     description: content.description || data.description || "",
     featured: Boolean(statusObj.featured),
     active: isActive,

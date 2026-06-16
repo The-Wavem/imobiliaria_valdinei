@@ -2,12 +2,14 @@ import { useRef, useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
-import { ChevronLeft, ChevronRight, X, Camera, Maximize } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, Camera, Maximize, PlaySquare } from "lucide-react";
 import "swiper/css";
 import styles from "./PropertyGallery.module.css";
+import { getYouTubeEmbedUrl, getYouTubeThumbnailUrl } from "@utils/videoUtils";
 
 export default function PropertyGallery({ 
   images = [], 
+  videos = [],
   title, 
   isOpen, 
   onClose, 
@@ -17,7 +19,22 @@ export default function PropertyGallery({
   const [modalIndex, setModalIndex] = useState(initialIndex);
   const [currentIndex, setCurrentIndex] = useState(0);
   const swiperRef = useRef(null);
-  const safeImages = images.filter(Boolean);
+  const safeImages = images ? images.filter(Boolean) : [];
+
+  const rawVideos = videos || [];
+  const videoItems = rawVideos.map((url, index) => {
+    const defaultThumb = getYouTubeThumbnailUrl(url);
+    // Para o 1º vídeo, tenta usar a capa do imóvel (alta qualidade). Se não houver fotos, cai pro YouTube default.
+    const thumb = (index === 0 && safeImages.length > 0) ? safeImages[0] : defaultThumb;
+    
+    return {
+      type: 'video', 
+      url: getYouTubeEmbedUrl(url),
+      thumbnail: thumb
+    };
+  }).filter(v => v.url);
+  const photoItems = safeImages.map(url => ({ type: 'image', url }));
+  const mediaList = [...videoItems, ...photoItems];
 
   useEffect(() => {
     if (isOpen) {
@@ -25,7 +42,7 @@ export default function PropertyGallery({
     }
   }, [isOpen, initialIndex]);
 
-  if (safeImages.length === 0) return null;
+  if (mediaList.length === 0) return null;
 
   return (
     <div className={styles.gallery}>
@@ -37,12 +54,12 @@ export default function PropertyGallery({
         slidesPerView={1}
         onSlideChange={(swiper) => setCurrentIndex(swiper.realIndex)}
       >
-        {safeImages.map((src, idx) => (
+        {mediaList.map((item, idx) => (
           <SwiperSlide key={idx}>
             <div className={styles.imageContainer} onClick={() => onOpenGallery && onOpenGallery(idx)}>
               <img
-                src={src}
-                alt={`${title} - ${idx + 1}`}
+                src={item.thumbnail || item.url}
+                alt={`${title} - ${item.type === 'video' ? 'Vídeo ' : ''}${idx + 1}`}
                 className={styles.image}
               />
               <div className={styles.hoverOverlay}>
@@ -55,7 +72,7 @@ export default function PropertyGallery({
 
       <div className={styles.counterBadge}>
         <Camera size={16} />
-        <span>{currentIndex + 1} / {safeImages.length}</span>
+        <span>{currentIndex + 1} / {mediaList.length}</span>
       </div>
 
       {isOpen && createPortal(
@@ -90,14 +107,23 @@ export default function PropertyGallery({
               onSwiper={(swiper) => { swiperRef.current = swiper; }}
               onSlideChange={(sw) => setModalIndex(sw.activeIndex)}
             >
-              {safeImages.map((src, idx) => (
+              {mediaList.map((item, idx) => (
                 <SwiperSlide key={idx}>
                   <div className={styles.modalSlide}>
-                    <img
-                      src={src}
-                      alt={`${title} - ${idx + 1}`}
-                      className={styles.modalImage}
-                    />
+                    {item.type === 'video' ? (
+                      <iframe 
+                        src={item.url} 
+                        allow="autoplay; fullscreen" 
+                        className={styles.modalVideoIframe} 
+                        frameBorder="0" 
+                      />
+                    ) : (
+                      <img
+                        src={item.url}
+                        alt={`${title} - ${idx + 1}`}
+                        className={styles.modalImage}
+                      />
+                    )}
                   </div>
                 </SwiperSlide>
               ))}
@@ -113,7 +139,7 @@ export default function PropertyGallery({
           </button>
 
           <div className={styles.modalCounter}>
-            {modalIndex + 1} / {safeImages.length}
+            {modalIndex + 1} / {mediaList.length}
           </div>
         </div>,
         document.body

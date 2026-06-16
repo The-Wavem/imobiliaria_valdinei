@@ -1,0 +1,65 @@
+import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
+import styles from "./HomeAbout.module.css";
+
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.15,
+    },
+  },
+};
+
+const slideRightItem = {
+  hidden: { opacity: 0, x: -30 },
+  show: { opacity: 1, x: 0, transition: { duration: 0.8, ease: [0.25, 1, 0.5, 1] } },
+};
+
+const fadeUpItem = {
+  hidden: { opacity: 0, y: 30 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.25, 1, 0.5, 1] } },
+};
+
+export default function HomeAbout() {
+  return (
+    <section className={styles.section}>
+      <motion.div 
+        className={styles.container}
+        variants={staggerContainer}
+        initial="hidden"
+        whileInView="show"
+        viewport={{ once: true, margin: "-100px" }}
+      >
+        <motion.div className={styles.imageWrapper} variants={slideRightItem}>
+          <img 
+            src="/VALDINEI_SOBRE.png" 
+            alt="Corretor Valdinei" 
+            className={styles.image} 
+            onError={(e) => {
+               e.target.src = 'https://media.istockphoto.com/id/1327592420/es/vector/icono-de-marcador-de-posici%C3%B3n-de-foto-de-avatar-predeterminado-foto-de-perfil-gris-hombre-de.jpg?s=612x612&w=0&k=20&c=nm6SQ9wO3_plDHiLT9kqG4g8ixisNLGSwvatKAgM55w=';
+            }}
+          />
+        </motion.div>
+
+        <div className={styles.content}>
+          <motion.span className={styles.kicker} variants={fadeUpItem}>
+            CONHEÇA QUEM REALIZA SEUS SONHOS
+          </motion.span>
+          <motion.h2 className={styles.title} variants={fadeUpItem}>
+            Valdinei, seu parceiro na busca pelo imóvel ideal
+          </motion.h2>
+          <motion.p className={styles.description} variants={fadeUpItem}>
+            Com forte atuação na região, oferecemos um atendimento exclusivo e personalizado para garantir que a sua próxima conquista seja perfeita e segura.
+          </motion.p>
+          <motion.div variants={fadeUpItem}>
+            <Link to="/sobre" className={styles.button}>
+              Saber mais sobre nossa história
+            </Link>
+          </motion.div>
+        </div>
+      </motion.div>
+    </section>
+  );
+}

@@ -113,3 +113,37 @@ export function validateContactForm(data) {
 
   return errors;
 }
+
+// ─── Sanitização de Preços (Números) ──────────────────────────────────────────
+
+/**
+ * Converte qualquer formato de preço (ex: 'R$ 500.000,00', '500.000', 500000)
+ * para um Number nativo e válido.
+ */
+export function parsePrice(value) {
+  if (value === null || value === undefined || value === "") return 0;
+  if (typeof value === "number") return value;
+
+  let str = String(value).trim();
+  // Remove R$ e espaços
+  str = str.replace(/[R$\s]/g, "");
+
+  if (str.includes(",") && str.includes(".")) {
+    // Ex: 1.500.000,00 -> remove pontos, troca vírgula por ponto
+    str = str.replace(/\./g, "").replace(",", ".");
+  } else if (str.includes(",")) {
+    // Ex: 1500,00 -> troca vírgula por ponto
+    str = str.replace(",", ".");
+  } else if (str.includes(".")) {
+    // Ex: 500.000 (sem centavos) ou 500000.00 (formato JS)
+    const parts = str.split(".");
+    // Se a última parte tem exatamente 3 dígitos e não há outras indicações,
+    // assumimos que é um separador de milhar (padrão Brasil).
+    if (parts[parts.length - 1].length === 3) {
+      str = str.replace(/\./g, "");
+    }
+  }
+
+  const parsed = parseFloat(str);
+  return isNaN(parsed) ? 0 : parsed;
+}
