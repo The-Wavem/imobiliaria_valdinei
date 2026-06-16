@@ -55,19 +55,24 @@ export default function Select({
           align="start"
         >
           <div className={styles.viewport}>
-            {selectableOptions.map((option) => (
-              <button
-                type="button"
-                key={option.value}
-                className={styles.item}
-                onClick={() => handleOptionSelect(option.value)}
-              >
-                <span className={styles.itemIndicator} aria-hidden="true">
-                  <Check size={16} />
-                </span>
-                <span>{option.label}</span>
-              </button>
-            ))}
+            {selectableOptions.map((option) => {
+              const isSelected = option.value === value;
+              return (
+                <button
+                  type="button"
+                  key={option.value}
+                  className={`${styles.item} ${isSelected ? styles.itemSelected : ""}`.trim()}
+                  onClick={() => handleOptionSelect(option.value)}
+                >
+                  {isSelected && (
+                    <span className={styles.itemIndicator} aria-hidden="true">
+                      <Check size={16} />
+                    </span>
+                  )}
+                  <span>{option.label}</span>
+                </button>
+              );
+            })}
           </div>
         </Popover.Content>
       </Popover.Portal>

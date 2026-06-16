@@ -135,6 +135,17 @@
   color: var(--select-option-hover-text, #ffffff);
 }
 
+.itemSelected {
+  color: var(--color-primary);
+  font-weight: 700;
+  background: rgba(217, 172, 69, 0.08); /* Cor primária do site suave */
+}
+
+.itemSelected:hover {
+  background: var(--select-option-hover-bg, var(--color-primary));
+  color: var(--select-option-hover-text, #ffffff);
+}
+
 .container[data-status-color="novo"],
 .content[data-status-color="novo"] {
   --select-border: var(--color-brand-secondary);
@@ -197,6 +208,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  color: var(--color-primary);
+}
+
+.item:hover .itemIndicator {
   color: inherit;
 }
 

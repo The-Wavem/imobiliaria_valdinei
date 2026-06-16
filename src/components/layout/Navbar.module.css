@@ -85,6 +85,7 @@
 
 .iconButton,
 .menuButton {
+  position: relative;
   width: 44px;
   height: 44px;
   border-radius: 999px;
@@ -96,13 +97,31 @@
   color: var(--color-surface);
   transition: transform var(--transition-fast), background var(--transition-fast), color var(--transition-fast);
 }
-
 .iconButton:hover,
 .menuButton:hover {
-  transform: translateY(-1px);
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--color-primary);
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+  transform: translateY(-2px);
 }
+
+.badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background-color: var(--color-primary);
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 800;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 2px solid #14143C;
+}
+
 
 .iconButton {
   text-decoration: none;

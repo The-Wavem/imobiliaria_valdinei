@@ -13,7 +13,8 @@ import {
 import styles from "./PropertyCard.module.css";
 import buttonStyles from "../Button/Button.module.css";
 import Button from "../Button/Button";
-import ButtonFavorito from "../Button_Favorito/Button_Favorito";
+import { useFavorites } from "@hooks/useFavorites";
+import { Heart } from "lucide-react";
 
 export default function PropertyCard({ property, onViewDetails }) {
   const coverImage =
@@ -27,6 +28,9 @@ export default function PropertyCard({ property, onViewDetails }) {
   const beds = property.beds ?? property.bedrooms ?? 0;
   const baths = property.baths ?? property.bathrooms ?? 0;
   const area = property.area ?? 0;
+
+  const { toggleFavorite, isFavorite } = useFavorites();
+  const isFav = isFavorite(property.id);
 
   return (
     <article className={styles.card}>
@@ -65,7 +69,21 @@ export default function PropertyCard({ property, onViewDetails }) {
           </span>
         </div>
 
-        <ButtonFavorito property={property} />
+        <button 
+          className={styles.favoriteBtn}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleFavorite(property);
+          }}
+          aria-label={isFav ? "Remover dos favoritos" : "Adicionar aos favoritos"}
+        >
+          <Heart 
+            size={22} 
+            fill={isFav ? "var(--color-primary)" : "none"} 
+            color={isFav ? "var(--color-primary)" : "#ffffff"} 
+          />
+        </button>
       </div>
 
       <div className={styles.content}>

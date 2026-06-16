@@ -55,6 +55,29 @@
   text-decoration: none;
 }
 
+.favoriteBtn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 10;
+  background: rgba(20, 20, 60, 0.4);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.favoriteBtn:hover {
+  transform: scale(1.1);
+  background: rgba(20, 20, 60, 0.6);
+}
+
 .card:hover .image {
   transform: scale(1.05);
 }
