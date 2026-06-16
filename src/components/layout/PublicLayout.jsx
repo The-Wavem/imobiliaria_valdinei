@@ -5,6 +5,7 @@ import Footer from "./Footer";
 import CookieConsent from "@components/ui/CookieConsent/CookieConsent.jsx";
 import Loader from "@components/ui/Loader/Loader.jsx";
 import { trackPageView } from "@utils/analytics";
+import { trackCampaignClick } from "@services/analyticsService";
 import styles from "./PublicLayout.module.css";
 
 let lastTrackedPageViewSignature = null;
@@ -14,6 +15,20 @@ export default function PublicLayout() {
 
   useEffect(() => {
     const signature = `${location.pathname}::${location.key || "default"}`;
+
+    // Track UTMs
+    const searchParams = new URLSearchParams(location.search);
+    const utmSource = searchParams.get("utm_source");
+    const utmMedium = searchParams.get("utm_medium");
+    const utmCampaign = searchParams.get("utm_campaign");
+
+    if (utmCampaign) {
+      const sessionKey = `tracked_campaign_${utmCampaign}`;
+      if (!window.sessionStorage.getItem(sessionKey)) {
+        trackCampaignClick(utmSource, utmMedium, utmCampaign);
+        window.sessionStorage.setItem(sessionKey, "true");
+      }
+    }
 
     if (lastTrackedPageViewSignature === signature) {
       return;
@@ -25,7 +40,7 @@ export default function PublicLayout() {
     if (storedConsent === "accepted") {
       trackPageView();
     }
-  }, [location.pathname]);
+  }, [location.pathname, location.search, location.key]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
