@@ -73,9 +73,9 @@ export default function Rent() {
       const propBairro = (loc.bairro || "").toLowerCase();
 
       // Nova extração direta baseada na string (se for string)
-      const propExtractedBairro = extractNeighborhood(
+      const propExtractedBairro = (extractNeighborhood(
         property.location,
-      ).toLowerCase();
+      ) || "").toLowerCase();
       const rawLocationString =
         typeof property.location === "string"
           ? property.location.toLowerCase()

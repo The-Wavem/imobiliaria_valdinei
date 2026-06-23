@@ -32,6 +32,7 @@ export default function ContactSidebar({
   onScheduleVisit,
   propertyTitle,
   propertyId,
+  status,
 }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -180,15 +181,17 @@ export default function ContactSidebar({
           </div>
         )}
 
-        <div className={styles.cta}>
-          <button type="button" className={styles.whatsappBtn} onClick={openModal}>
-            <MessageCircle size={20} />
-            <span>Quero esse imóvel</span>
-          </button>
-          <button type="button" className={styles.visitBtn} onClick={onScheduleVisit}>
-            Agendar Visita
-          </button>
-        </div>
+        {(!status || status === "Disponível" || status === "Ativo") && (
+          <div className={styles.cta}>
+            <button type="button" className={styles.whatsappBtn} onClick={openModal}>
+              <MessageCircle size={20} />
+              <span>Quero esse imóvel</span>
+            </button>
+            <button type="button" className={styles.visitBtn} onClick={onScheduleVisit}>
+              Agendar Visita
+            </button>
+          </div>
+        )}
       </aside>
 
       {isModalOpen && createPortal(

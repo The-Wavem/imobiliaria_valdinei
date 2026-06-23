@@ -62,6 +62,12 @@ export default function PropertyCard({ property, onViewDetails }) {
           )}
         </Link>
 
+        {property.status && property.status !== "Disponível" && property.status !== "Inativo" && property.status !== "Ativo" && (
+          <span className={`${styles.statusBadge} ${styles[property.status.toLowerCase()] || ""}`.trim()}>
+            {property.status}
+          </span>
+        )}
+
         <div className={styles.badges}>
           <span className={styles.badge}>{property.type}</span>
           <span className={`${styles.badge} ${styles.categoryBadge}`}>

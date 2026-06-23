@@ -200,6 +200,7 @@ export default function PropertyDetail() {
               iptu={property.iptu}
               propertyTitle={property.title}
               propertyId={property.id}
+              status={property.status}
               onScheduleVisit={() => setIsVisitModalOpen(true)}
             />
           </MotionDiv>

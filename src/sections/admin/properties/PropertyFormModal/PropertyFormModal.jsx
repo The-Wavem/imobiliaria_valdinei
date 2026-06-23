@@ -60,7 +60,7 @@ const defaultForm = {
   category: "", type: "", cep: "", logradouro: "", numero: "", complemento: "", bairro: "", cidade: "", estado: "",
   area: "", bedrooms: "", bathrooms: "", parkingSpaces: "",
   features: [], photos: [], videos: [], description: "",
-  status: "Inativo"
+  status: "Disponível"
 };
 
 const quillModules = {
@@ -132,7 +132,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
         photos: property.photos || [],
         videos: property.videos || [],
         description: property.content?.description || property.description || "",
-        status: property.status || "Ativo"
+        status: property.status || "Disponível"
       });
 
       if (property.type) {
@@ -572,16 +572,16 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                 onChange={(event) => updateField("iptu", event.target.value)}
               />
 
-              <div className={styles.dynamicSelectRow}>
-                <div className={styles.dynamicSelectGroup}>
-                  <Select
-                    label="Categoria"
-                    options={categoryOptions}
-                    value={formData.category}
-                    onChange={(value) => updateField("category", value)}
-                  />
-                </div>
+              <div className={styles.selectRow}>
+                <Select
+                  label="Categoria"
+                  value={formData.category}
+                  onChange={(value) => updateField("category", value)}
+                  options={categoryOptions}
+                />
+              </div>
 
+              <div className={styles.dynamicSelectRow}>
                 <div className={styles.dynamicSelectGroup}>
                   {isAddingType ? (
                     <div className={styles.typeEditorBox}>

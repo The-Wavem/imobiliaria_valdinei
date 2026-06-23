@@ -22,8 +22,8 @@ const formatPropertyData = (data) => {
     code: data.code || "",
     category: data.category || "",
     type: data.type || "",
-    status: data.status || "Inativo",
-    active: (data.status || "Inativo") === "Ativo",
+    status: data.status || "Disponível",
+    active: data.status ? data.status !== "Inativo" : true,
     pricing: {
       price: Number(data.price || data.pricing?.price || 0),
       condo: Number(data.condo || data.pricing?.condo || 0),
@@ -110,7 +110,7 @@ export async function getPublicProperties(categoryParam) {
   try {
     const propertiesQuery = query(
       collection(db, PROPERTY_COLLECTION),
-      where("status", "==", "Ativo")
+      where("active", "==", true)
     );
     const snapshot = await getDocs(propertiesQuery);
 
@@ -188,7 +188,7 @@ export const togglePropertyStatus = async (id, newStatus) => {
     // Atualiza apenas o campo status e a data, sem mexer no resto da casa!
     await updateDoc(propertyRef, { 
       status: newStatus,
-      active: newStatus === "Ativo", // mantendo coerência com o boolean active usado nos filtros
+      active: newStatus !== "Inativo", // mantendo coerência com o boolean active usado nos filtros
       updatedAt: new Date().toISOString()
     });
     return true;

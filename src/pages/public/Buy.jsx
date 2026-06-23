@@ -66,7 +66,7 @@ export default function Buy() {
       const propBairro = (loc.bairro || "").toLowerCase();
       
       // Nova extração direta baseada na string (se for string)
-      const propExtractedBairro = extractNeighborhood(property.location).toLowerCase();
+      const propExtractedBairro = (extractNeighborhood(property.location) || "").toLowerCase();
       const rawLocationString = typeof property.location === "string" ? property.location.toLowerCase() : "";
 
       const searchLoc = searchLocation.toLowerCase();

@@ -92,10 +92,8 @@ export default function PropertyManager() {
     setCurrentPage(1);
   };
 
-  const handleToggleStatus = async (id, currentStatus) => {
-    const newStatus = currentStatus === "Ativo" ? "Inativo" : "Ativo";
-    
-    // Agora usamos a função cirúrgica em vez da atualização completa!
+  const handleToggleStatus = async (id, newStatus) => {
+    // Agora usamos a função cirúrgica recebendo o novo status diretamente do Select
     await togglePropertyStatus(id, newStatus);
     
     loadProperties();
