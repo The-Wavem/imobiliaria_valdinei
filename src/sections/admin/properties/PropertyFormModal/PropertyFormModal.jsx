@@ -405,28 +405,38 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={mode === "edit" ? "Editar imóvel" : "Adicionar imóvel"}
+      className={styles.modalContent}
+      contentClassName={styles.modalInnerContent}
       variant="admin"
     >
-      <div className={styles.modalContent}>
-        <nav
-          className={styles.tabs}
-          aria-label="Navegação das abas do formulário"
-        >
-          {tabOptions.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              className={`${styles.tabButton} ${activeTab === tab.id ? styles.tabButtonActive : ""}`.trim()}
-              onClick={() => setActiveTab(tab.id)}
-            >
-              {tab.label}
+      <form className={styles.formContainer} onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
+        <header className={styles.modalHeader}>
+          <div className={styles.headerTop}>
+            <h2>{mode === "edit" ? "Editar imóvel" : "Adicionar imóvel"}</h2>
+            <button type="button" className={styles.closeButton} onClick={onClose} aria-label="Fechar modal">
+              <X size={20} />
             </button>
-          ))}
-        </nav>
+          </div>
+          <nav
+            className={styles.tabs}
+            aria-label="Navegação das abas do formulário"
+          >
+            {tabOptions.map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                className={`${styles.tabButton} ${activeTab === tab.id ? styles.tabButtonActive : ""}`.trim()}
+                onClick={() => setActiveTab(tab.id)}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </nav>
+        </header>
 
-        {activeTab === "basic" ? (
-          <section className={styles.tabPanel}>
+        <div className={styles.modalBody}>
+          {activeTab === "basic" ? (
+            <section className={styles.tabPanel}>
             <div className={styles.formGrid}>
               <Input
                 label="Título"
@@ -865,6 +875,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
             </div>
           </section>
         ) : null}
+        </div>
 
         <footer className={styles.modalFooter}>
           {showCancelConfirm ? (
@@ -892,6 +903,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
           ) : (
             <>
               <Button
+                type="button"
                 variant="outline"
                 className={styles.modalButton}
                 onClick={handleCancelClick}
@@ -899,10 +911,10 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                 Cancelar
               </Button>
               <Button
+                type="submit"
                 variant="primary"
                 className={styles.modalButton}
                 disabled={isSaving}
-                onClick={handleSave}
               >
                 {isSaving ? <Loader size={20} /> : <Save size={16} />}
                 <span>{isSaving ? "Salvando..." : "Salvar Imóvel"}</span>
@@ -910,7 +922,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
             </>
           )}
         </footer>
-      </div>
+      </form>
     </Modal>
   );
 }
