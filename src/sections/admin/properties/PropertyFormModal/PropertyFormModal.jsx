@@ -84,6 +84,8 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
   const [coverPhotoIndex, setCoverPhotoIndex] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [cepError, setCepError] = useState("");
+  const [cepSuccess, setCepSuccess] = useState(false);
 
   useEffect(() => {
     if (!isOpen) {
@@ -98,6 +100,8 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
     setNewVideoUrl("");
     setCoverPhotoIndex(0);
     setIsSaving(false);
+    setCepError("");
+    setCepSuccess(false);
 
     if (property) {
       setFormData({
@@ -168,13 +172,18 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
   const handleCepChange = async (event) => {
     let value = event.target.value.replace(/\D/g, "");
     updateField("cep", value);
+    setCepError("");
+    setCepSuccess(false);
 
     if (value.length === 8) {
       try {
         const response = await fetch(`https://viacep.com.br/ws/${value}/json/`);
         const data = await response.json();
         
-        if (!data.erro) {
+        if (data.erro) {
+          setCepError("CEP não encontrado. Por favor, verifique.");
+        } else {
+          setCepSuccess(true);
           setFormData((prev) => ({
             ...prev,
             logradouro: data.logradouro || prev.logradouro,
@@ -185,6 +194,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
         }
       } catch (error) {
         console.error("Erro ao buscar CEP:", error);
+        setCepError("Erro ao buscar CEP. Tente novamente.");
       }
     }
   };
@@ -319,6 +329,24 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
       formData.features.length > 0
     );
   }, [formData]);
+
+  const fullAddressString = useMemo(() => {
+    const parts = [];
+    if (formData.logradouro) parts.push(formData.logradouro);
+    if (formData.numero) parts.push(formData.numero);
+    let str = parts.join(", ");
+    
+    const comp = [];
+    if (formData.bairro) comp.push(formData.bairro);
+    if (formData.cidade) comp.push(formData.cidade);
+    if (formData.estado) comp.push(formData.estado);
+    
+    if (comp.length > 0) {
+      str += (str ? " - " : "") + comp.join(", ");
+    }
+    
+    return str;
+  }, [formData.logradouro, formData.numero, formData.bairro, formData.cidade, formData.estado]);
 
   const handleCancelClick = () => {
     if (isFormDirty) {
@@ -613,6 +641,8 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                 value={formData.cep}
                 onChange={handleCepChange}
                 maxLength={8}
+                error={cepError}
+                success={cepSuccess}
               />
               <Input
                 label="Logradouro"
@@ -655,6 +685,23 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                 maxLength={2}
               />
             </div>
+
+            {fullAddressString && (
+              <div className={styles.mapContainer}>
+                <h4 className={styles.mapTitle}>Confirme a Localização no Mapa</h4>
+                <iframe
+                  title="Mapa da Propriedade"
+                  width="100%"
+                  height="250"
+                  frameBorder="0"
+                  scrolling="no"
+                  marginHeight="0"
+                  marginWidth="0"
+                  src={`https://maps.google.com/maps?q=${encodeURIComponent(fullAddressString)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
+                  className={styles.mapIframe}
+                ></iframe>
+              </div>
+            )}
           </section>
         ) : null}
 
