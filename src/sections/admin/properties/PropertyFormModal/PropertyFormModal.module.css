@@ -663,6 +663,22 @@
   background: #e2e8f0;
 }
 
+.codeGroupContainer {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.codeInput {
+  flex: 1;
+}
+
+.generateCodeBtn {
+  margin-top: 1.63rem;
+  height: 3.45rem;
+  flex-shrink: 0;
+}
+
 @media (max-width: 820px) {
   .formGrid {
     grid-template-columns: 1fr;
