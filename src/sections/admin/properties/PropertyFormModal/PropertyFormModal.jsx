@@ -23,6 +23,7 @@ import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
 import Loader from "@components/ui/Loader/Loader.jsx";
 import styles from "./PropertyFormModal.module.css";
+import { checkCodeExists } from "../../../../services/propertyService.js";
 
 const tabOptions = [
   { id: "basic", label: "Básico" },
@@ -86,6 +87,8 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [cepError, setCepError] = useState("");
   const [cepSuccess, setCepSuccess] = useState(false);
+  const [codeError, setCodeError] = useState("");
+  const [isGeneratingCode, setIsGeneratingCode] = useState(false);
 
   useEffect(() => {
     if (!isOpen) {
@@ -102,6 +105,8 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
     setIsSaving(false);
     setCepError("");
     setCepSuccess(false);
+    setCodeError("");
+    setIsGeneratingCode(false);
 
     if (property) {
       setFormData({
@@ -167,6 +172,49 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
       ...currentValue,
       [field]: value,
     }));
+  };
+
+  const handleGenerateCode = async () => {
+    setIsGeneratingCode(true);
+    setCodeError('');
+    let isUnique = false;
+    let newCode = '';
+    
+    try {
+      while (!isUnique) {
+        const randomNum = Math.floor(1000 + Math.random() * 9000);
+        newCode = `VLD-${randomNum}`;
+        const exists = await checkCodeExists(newCode, property?.firestoreId || property?.id);
+        if (!exists) {
+          isUnique = true;
+        }
+      }
+      updateField('code', newCode);
+    } catch (error) {
+      console.error("Erro ao gerar código único:", error);
+      setCodeError("Erro ao gerar código. Tente novamente.");
+    } finally {
+      setIsGeneratingCode(false);
+    }
+  };
+
+  const handleCodeBlur = async (event) => {
+    const code = event.target.value.trim();
+    if (!code) {
+      setCodeError('');
+      return;
+    }
+    
+    try {
+      const exists = await checkCodeExists(code, property?.firestoreId || property?.id);
+      if (exists) {
+        setCodeError('Este código já está em uso ou já existiu e não pode ser repetido.');
+      } else {
+        setCodeError('');
+      }
+    } catch (error) {
+      console.error("Erro ao validar código:", error);
+    }
   };
 
   const handleCepChange = async (event) => {
@@ -365,6 +413,16 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
     setIsSaving(true);
 
     try {
+      if (formData.code) {
+        const codeExists = await checkCodeExists(formData.code, property?.firestoreId || property?.id);
+        if (codeExists) {
+          setCodeError('Este código já está em uso ou já existiu e não pode ser repetido.');
+          setActiveTab("basic");
+          setIsSaving(false);
+          return;
+        }
+      }
+
       const payload = { ...formData };
       
       // Reordenar fotos para garantir que a capa (coverPhotoIndex) seja a primeira
@@ -472,12 +530,26 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                 value={formData.title}
                 onChange={(event) => updateField("title", event.target.value)}
               />
-              <Input
-                label="Código"
-                placeholder="Ex: IV-1204"
-                value={formData.code}
-                onChange={(event) => updateField("code", event.target.value)}
-              />
+              <div className={styles.codeGroupContainer}>
+                <Input
+                  label="Código"
+                  placeholder="Ex: VLD-1204"
+                  value={formData.code}
+                  onChange={(event) => updateField("code", event.target.value)}
+                  onBlur={handleCodeBlur}
+                  error={codeError}
+                  className={styles.codeInput}
+                />
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={handleGenerateCode}
+                  disabled={isGeneratingCode}
+                  className={styles.generateCodeBtn}
+                >
+                  {isGeneratingCode ? "Gerando..." : "Gerar Código"}
+                </Button>
+              </div>
               <Input
                 label="Preço"
                 type="number"
@@ -961,7 +1033,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                 type="submit"
                 variant="primary"
                 className={styles.modalButton}
-                disabled={isSaving}
+                disabled={isSaving || !!codeError}
               >
                 {isSaving ? <Loader size={20} /> : <Save size={16} />}
                 <span>{isSaving ? "Salvando..." : "Salvar Imóvel"}</span>

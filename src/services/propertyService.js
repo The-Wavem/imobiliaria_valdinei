@@ -197,3 +197,26 @@ export const togglePropertyStatus = async (id, newStatus) => {
     throw error;
   }
 };
+
+export const checkCodeExists = async (code, excludeId = null) => {
+  if (!code) return false;
+  try {
+    const q = query(
+      collection(db, PROPERTY_COLLECTION),
+      where("code", "==", code.trim().toUpperCase())
+    );
+    const querySnapshot = await getDocs(q);
+    
+    if (querySnapshot.empty) return false;
+    
+    if (excludeId) {
+      // Retorna true se houver ALGUM documento com este código que não seja o excludeId
+      return querySnapshot.docs.some(doc => doc.id !== excludeId);
+    }
+    
+    return !querySnapshot.empty;
+  } catch (error) {
+    console.error("Erro ao verificar código:", error);
+    return true; 
+  }
+};
