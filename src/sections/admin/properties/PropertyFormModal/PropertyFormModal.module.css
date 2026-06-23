@@ -113,6 +113,100 @@
   gap: 1.25rem;
 }
 
+/* Score UI */
+.scoreContainer {
+  margin: 1rem 1.5rem 0;
+  padding: 1rem 1.25rem;
+  background: #f8fafc;
+  border: 1px solid rgba(20, 20, 60, 0.08);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.scoreHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.scoreTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-secondary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.scoreValue {
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.scoreProgressBg {
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.scoreProgressBar {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.5s ease-in-out, background-color 0.3s ease;
+}
+
+.scoreTipsWrapper {
+  margin-top: 0.5rem;
+}
+
+.scoreTipsToggle {
+  background: none;
+  border: none;
+  color: var(--color-brand-primary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0;
+}
+
+.scoreTipsToggle:hover {
+  text-decoration: underline;
+}
+
+.scoreTips {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(20, 20, 60, 0.05);
+}
+
+.scoreTipItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.scoreTipItem.completed {
+  color: #10b981;
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+.scoreTipIcon {
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
 .formGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

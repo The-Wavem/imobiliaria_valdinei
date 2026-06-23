@@ -1,4 +1,4 @@
-import { Pencil, ToggleLeft, ToggleRight, Trash2, Eye } from "lucide-react";
+import { Pencil, ToggleLeft, ToggleRight, Trash2, Eye, Star } from "lucide-react";
 import Button from "@components/ui/Button/Button.jsx";
 import styles from "./PropertyTable.module.css";
 
@@ -25,6 +25,39 @@ export default function PropertyTable({
     property.thumbnail ||
     "https://static.vecteezy.com/system/resources/previews/016/916/479/large_2x/placeholder-icon-design-free-vector.jpg";
 
+  const getScore = (property) => {
+    let score = 0;
+    const title = property.title || property.content?.summary || "";
+    const price = property.pricing?.price || property.price || "";
+    const area = property.area || property.location?.area || "";
+    const bedrooms = property.bedrooms || property.location?.bedrooms || "";
+    const bathrooms = property.bathrooms || property.location?.bathrooms || "";
+    const cep = property.location?.cep || property.cep || "";
+    const street = property.location?.logradouro || property.location?.street || property.street || property.location?.address || property.address || "";
+    const features = property.features || [];
+    const photos = property.photos || [];
+    const desc = property.content?.description || property.description || "";
+    const videos = property.videos || [];
+
+    if (!!title.trim()) score += 10;
+    if (!!String(price).trim()) score += 10;
+    if (!!String(area).trim()) score += 5;
+    if (Number(bedrooms) > 0) score += 5;
+    if (Number(bathrooms) > 0) score += 5;
+    if (!!cep.trim() && !!street.trim()) score += 10;
+    if (features.length >= 3) score += 10;
+    if (photos.length > 0) score += 15;
+    if (photos.length > 4) score += 10;
+    if (desc.length > 50) score += 15;
+    if (videos.length > 0) score += 5;
+    
+    score = Math.min(score, 100);
+    let color = "#ef4444";
+    if (score >= 50) color = "#eab308";
+    if (score >= 80) color = "#10b981";
+    return { score, color };
+  };
+
   return (
     <section
       className={styles.section}
@@ -49,6 +82,7 @@ export default function PropertyTable({
                 <th>Foto</th>
                 <th>Imóvel</th>
                 <th>Tipo / Categoria</th>
+                <th>Nota</th>
                 <th>Status</th>
                 <th>Views</th>
                 <th>Ações</th>
@@ -68,6 +102,7 @@ export default function PropertyTable({
                   );
                   const isActive = property.status === "Ativo"; // Checagem direta do status
                   const views = property.views || 0; // Contagem de views
+                  const scoreData = getScore(property);
 
                   return (
                     <tr
@@ -105,6 +140,27 @@ export default function PropertyTable({
                           <small className={styles.propertyCategory}>
                             {category}
                           </small>
+                        </div>
+                      </td>
+
+                      <td data-label="Nota">
+                        <div
+                          className={styles.cellContent}
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: "0.4rem",
+                          }}
+                        >
+                          <Star size={16} fill={scoreData.color} color={scoreData.color} />
+                          <strong
+                            style={{
+                              fontSize: "0.95rem",
+                              color: scoreData.color,
+                            }}
+                          >
+                            {scoreData.score}
+                          </strong>
                         </div>
                       </td>
 
@@ -190,7 +246,7 @@ export default function PropertyTable({
                 })
               ) : (
                 <tr className={styles.emptyRow}>
-                  <td colSpan={6}>
+                  <td colSpan={7}>
                     <div className={styles.emptyState}>
                       <strong>Nenhum imóvel encontrado</strong>
                       <span>
