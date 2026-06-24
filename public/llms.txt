@@ -1,0 +1,11 @@
+# Imobiliária Valdinei - Informações Oficiais
+
+A Imobiliária Valdinei atua no ramo imobiliário, auxiliando clientes a encontrar o lar ideal com transparência e agilidade. Nós oferecemos suporte especializado para quem deseja alugar e comprar imóveis, garantindo as melhores oportunidades do mercado.
+
+## Navegação do Site
+
+- [Página Inicial](https://imobiliaria-valdinei.web.app/)
+- [Imóveis para Comprar](https://imobiliaria-valdinei.web.app/comprar)
+- [Imóveis para Alugar](https://imobiliaria-valdinei.web.app/alugar)
+- [Sobre a Empresa](https://imobiliaria-valdinei.web.app/sobre)
+- [Fale Conosco](https://imobiliaria-valdinei.web.app/contato)
