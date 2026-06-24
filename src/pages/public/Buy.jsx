@@ -9,6 +9,10 @@ import { getPublicProperties } from "@services/propertyService.js";
 import { extractNeighborhood } from "@utils/address.js";
 import { parsePrice } from "@utils/validation.js";
 
+// Assets Premium para o Hero
+import buyVideo from "../../assets/videos/buy-bg.mp4";
+import buyThumb from "../../assets/images/buy-thumb.jpg";
+
 export default function Buy() {
   const routerLocation = useLocation();
   const searchParams = new URLSearchParams(routerLocation.search);
@@ -139,7 +143,11 @@ export default function Buy() {
       initial="hidden"
       animate="show"
     >
-      <CategoryHero category="Comprar" />
+      <CategoryHero 
+        title="Imóveis para Comprar" 
+        bgImage={buyThumb} 
+        videoSrc={buyVideo} 
+      />
       <motion.div variants={fadeUpItem} style={{ position: "relative", zIndex: 10 }}>
         <FilterBar 
           initialFilters={initialFilters}

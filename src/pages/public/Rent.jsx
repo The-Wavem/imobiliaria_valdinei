@@ -9,6 +9,10 @@ import { getPublicProperties } from "@services/propertyService.js";
 import { extractNeighborhood } from "@utils/address.js";
 import { parsePrice } from "@utils/validation.js";
 
+// Assets Premium para o Hero
+import rentVideo from "../../assets/videos/rent-bg.mp4";
+import rentThumb from "../../assets/images/rent-thumb.jpg";
+
 export default function Rent() {
   const routerLocation = useLocation();
   const searchParams = new URLSearchParams(routerLocation.search);
@@ -146,7 +150,11 @@ export default function Rent() {
 
   return (
     <>
-      <CategoryHero category="Alugar" />
+      <CategoryHero 
+        title="Imóveis para Alugar" 
+        bgImage={rentThumb} 
+        videoSrc={rentVideo} 
+      />
       <motion.main
         className="pageTransition"
         variants={staggerContainer}

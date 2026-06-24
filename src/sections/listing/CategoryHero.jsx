@@ -1,7 +1,7 @@
 import styles from "./CategoryHero.module.css";
 import { motion } from "framer-motion";
 
-export default function CategoryHero({ category }) {
+export default function CategoryHero({ title, bgImage, videoSrc }) {
   const fadeUpItem = {
     hidden: { opacity: 0, y: 30 },
     show: {
@@ -12,24 +12,37 @@ export default function CategoryHero({ category }) {
   };
 
   return (
-    <section className={styles.hero}>
+    <section 
+      className={styles.hero} 
+      style={!videoSrc && bgImage ? { backgroundImage: `url(${bgImage})` } : {}}
+    >
+      {videoSrc && (
+        <video 
+          src={videoSrc} 
+          autoPlay 
+          loop 
+          muted 
+          playsInline 
+          className={styles.bgVideo} 
+          poster={bgImage} 
+        />
+      )}
       <div className={styles.overlay} />
 
       <motion.div className={styles.content} variants={fadeUpItem}>
         <div className={styles.badge}>
           <span className={styles.dot} />
-          <span>{category} um imóvel</span>
+          <span>Explorar catálogo</span>
         </div>
 
         <h1>
-          Imóveis para <br />
-          <span>{category}</span>
+          {title.substring(0, title.lastIndexOf(" "))} <br />
+          <span>{title.substring(title.lastIndexOf(" ") + 1)}</span>
         </h1>
 
         <p>
-          Explore nossa seleção exclusiva de imóveis para{" "}
-          {category.toLowerCase()} em Curitiba e região. Qualidade e confiança
-          em cada metro quadrado.
+          Explore nossa seleção exclusiva em Curitiba e região. 
+          Qualidade e confiança em cada metro quadrado.
         </p>
       </motion.div>
     </section>
