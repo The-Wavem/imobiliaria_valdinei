@@ -1,4 +1,5 @@
 import { NavLink } from "react-router-dom";
+import logoImg from "../../assets/images/logo.webp";
 import styles from "./Footer.module.css";
 
 const quickLinks = [
@@ -14,10 +15,12 @@ export default function Footer() {
       <div className={styles.container}>
         <div className={styles.brandColumn}>
           <img
-            src="https://iili.io/qwYujzx.png"
+            src={logoImg}
             alt="Logo Valdinei Souza"
             className={styles.brandMark}
-            referrerPolicy="no-referrer"
+            width="151"
+            height="151"
+            loading="lazy"
           />
           <p>
             Sua imobiliária de confiança em Curitiba. Encontrando o lar ideal

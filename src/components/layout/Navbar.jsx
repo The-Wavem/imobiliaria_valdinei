@@ -1,6 +1,7 @@
 import { Heart, Menu } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { useFavorites } from "@hooks/useFavorites";
+import logoImg from "../../assets/images/logo.webp";
 import styles from "./Navbar.module.css";
 
 const navigationItems = [
@@ -23,10 +24,11 @@ export default function Navbar() {
           className={styles.brand}
         >
           <img
-            src="https://iili.io/qwYujzx.png"
+            src={logoImg}
             alt="Logo Valdinei Souza"
             className={styles.logo_navbar}
-            referrerPolicy="no-referrer"
+            width="151"
+            height="151"
           />
         </NavLink>
 
