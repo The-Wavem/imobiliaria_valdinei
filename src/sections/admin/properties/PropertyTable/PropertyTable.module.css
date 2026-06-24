@@ -150,24 +150,8 @@
   font-weight: 700;
 }
 
-.statusButton {
-  min-height: 2.65rem !important;
-  padding: 0.55rem 0.85rem !important;
-  border-radius: var(--radius-md) !important;
-  gap: 0.45rem;
-}
-
-.statusActive {
-  background-color: rgba(199, 156, 49, 0.1) !important;
-  color: var(--color-brand-primary) !important;
-  border-color: rgba(199, 156, 49, 0.3) !important;
-}
-
-.statusInactive {
-  /* O "Roxinho" elegante (Secondary Brand Color) */
-  background-color: rgba(20, 20, 60, 0.08) !important;
-  color: var(--color-brand-secondary) !important;
-  border-color: rgba(20, 20, 60, 0.2) !important;
+.statusSelectWrapper {
+  min-width: 130px;
 }
 
 .actionsCell {
@@ -305,7 +289,7 @@
   }
 
   .actionsCell .actionButton,
-  .actionsCell .statusButton {
+  .statusSelectWrapper {
     width: 100%;
   }
 

@@ -233,7 +233,7 @@ export async function getTopBairros() {
 
   const propertiesQuery = query(
     collection(db, PROPERTY_COLLECTION),
-    where("status", "==", "Ativo")
+    where("active", "==", true)
   );
   const propertiesSnapshot = await getDocs(propertiesQuery);
 

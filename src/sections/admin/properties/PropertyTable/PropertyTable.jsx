@@ -1,5 +1,6 @@
 import { Pencil, ToggleLeft, ToggleRight, Trash2, Eye } from "lucide-react";
 import Button from "@components/ui/Button/Button.jsx";
+import Select from "@components/ui/Select/Select.jsx";
 import styles from "./PropertyTable.module.css";
 
 function formatCurrency(value) {
@@ -110,25 +111,26 @@ export default function PropertyTable({
 
                       <td data-label="Status">
                         <div className={styles.cellContent}>
-                          <Button
-                            type="button"
-                            variant="outline" /* <-- MUDAMOS AQUI PARA NÃO BRIGAR COM O CSS */
-                            className={`${styles.statusButton} ${isActive ? styles.statusActive : styles.statusInactive}`.trim()}
-                            onClick={() =>
-                              onToggleStatus &&
-                              onToggleStatus(
-                                property.firestoreId || property.id,
-                                property.status,
-                              )
-                            }
-                          >
-                            {isActive ? (
-                              <ToggleRight size={16} />
-                            ) : (
-                              <ToggleLeft size={16} />
-                            )}
-                            <span>{isActive ? "Ativo" : "Inativo"}</span>
-                          </Button>
+                          <div className={styles.statusSelectWrapper}>
+                            <Select
+                              value={property.status || "Disponível"}
+                              onChange={(value) =>
+                                onToggleStatus &&
+                                onToggleStatus(
+                                  property.firestoreId || property.id,
+                                  value
+                                )
+                              }
+                              options={[
+                                { label: "Disponível", value: "Disponível" },
+                                { label: "Reservado", value: "Reservado" },
+                                { label: "Vendido", value: "Vendido" },
+                                { label: "Alugado", value: "Alugado" },
+                                { label: "Inativo", value: "Inativo" },
+                              ]}
+                              compact={true}
+                            />
+                          </div>
                           <span className={styles.propertyPrice}>
                             {formatCurrency(price)}
                           </span>

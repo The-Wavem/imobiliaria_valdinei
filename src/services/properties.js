@@ -29,9 +29,12 @@ export function mapPropertyDocument(snapshot) {
     ? data.photos.filter(Boolean) 
     : (Array.isArray(media.photos) ? media.photos.filter(Boolean) : []);
     
-  const isActive = typeof data.status === "string" 
-    ? data.status === "Ativo" 
-    : (data.active !== undefined ? data.active : statusObj.active !== false);
+  // Now 'active' is a top-level boolean in the document.
+  const isActive = data.active !== undefined ? data.active : (
+    typeof data.status === "string" ? data.status !== "Inativo" : statusObj.active !== false
+  );
+  
+  const currentStatus = typeof data.status === "string" ? data.status : "Disponível";
 
   return {
     id: snapshot.id,
@@ -56,6 +59,7 @@ export function mapPropertyDocument(snapshot) {
     description: content.description || data.description || "",
     featured: Boolean(statusObj.featured),
     active: isActive,
+    status: currentStatus,
     visibility: statusObj.visibility || "published",
     createdAt: data.createdAt || data.audit?.createdAt || null,
   };
@@ -64,7 +68,7 @@ export function mapPropertyDocument(snapshot) {
 export async function fetchPublishedProperties() {
   const propertiesQuery = query(
     collection(db, PROPERTY_COLLECTION),
-    where("status", "==", "Ativo")
+    where("active", "==", true)
   );
   const snapshot = await getDocs(propertiesQuery);
 
