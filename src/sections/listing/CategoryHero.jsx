@@ -1,5 +1,6 @@
 import styles from "./CategoryHero.module.css";
 import { motion } from "framer-motion";
+import { ChevronDown } from "lucide-react";
 
 export default function CategoryHero({ title, bgImage, videoSrc }) {
   const fadeUpItem = {
@@ -9,6 +10,10 @@ export default function CategoryHero({ title, bgImage, videoSrc }) {
       y: 0,
       transition: { duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] },
     },
+  };
+
+  const handleScrollDown = () => {
+    window.scrollBy({ top: window.innerHeight * 0.7, behavior: 'smooth' });
   };
 
   return (
@@ -45,6 +50,10 @@ export default function CategoryHero({ title, bgImage, videoSrc }) {
           Qualidade e confiança em cada metro quadrado.
         </p>
       </motion.div>
+
+      <button type="button" className={styles.scrollIndicator} onClick={handleScrollDown} aria-label="Rolar para o catálogo">
+        <ChevronDown size={40} className={styles.scrollIcon} />
+      </button>
     </section>
   );
 }

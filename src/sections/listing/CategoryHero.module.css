@@ -80,6 +80,46 @@
   color: rgba(226, 232, 240, 1);
 }
 
+.scrollIndicator {
+  position: absolute;
+  bottom: 65px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  z-index: 10;
+  padding: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: color 0.3s ease;
+  outline: none;
+}
+
+.scrollIndicator:hover {
+  color: #ffffff;
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-6px);
+  }
+  60% {
+    transform: translateY(-3px);
+  }
+}
+
+.scrollIcon {
+  animation: bounce 3.5s infinite;
+  opacity: 0.9;
+  filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.5));
+}
+
 @media (max-width: 768px) {
   .hero {
     padding-inline: 1rem;
