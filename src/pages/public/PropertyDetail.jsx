@@ -21,6 +21,7 @@ import PropertyContactForm from "@sections/property-detail/PropertyContactForm";
 import VisitModal from "@sections/property-detail/VisitModal";
 
 import { fetchPropertyById } from "@services/properties";
+import { useDocumentTitle } from "@hooks/useDocumentTitle.js";
 
 const pageVariants = {
   hidden: { opacity: 0 },
@@ -57,6 +58,8 @@ export default function PropertyDetail() {
   const [isLoading, setIsLoading] = useState(true);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [initialGalleryIndex, setInitialGalleryIndex] = useState(0);
+
+  useDocumentTitle(property ? property.title : 'Carregando Imóvel...');
 
   const handleOpenGallery = (index) => {
     setInitialGalleryIndex(index);

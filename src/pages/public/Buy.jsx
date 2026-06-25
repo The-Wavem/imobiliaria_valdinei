@@ -13,8 +13,10 @@ import { sortPropertiesByRelevance } from "@utils/rankingEngine.js";
 // Assets Premium para o Hero
 import buyVideo from "../../assets/videos/buy-bg.mp4";
 import buyThumb from "../../assets/images/buy-thumb.jpg";
+import { useDocumentTitle } from "@hooks/useDocumentTitle.js";
 
 export default function Buy() {
+  useDocumentTitle('Imóveis à Venda');
   const routerLocation = useLocation();
   const searchParams = new URLSearchParams(routerLocation.search);
   

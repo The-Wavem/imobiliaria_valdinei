@@ -13,8 +13,10 @@ import { sortPropertiesByRelevance } from "@utils/rankingEngine.js";
 // Assets Premium para o Hero
 import rentVideo from "../../assets/videos/rent-bg.mp4";
 import rentThumb from "../../assets/images/rent-thumb.jpg";
+import { useDocumentTitle } from "@hooks/useDocumentTitle.js";
 
 export default function Rent() {
+  useDocumentTitle('Imóveis para Alugar');
   const routerLocation = useLocation();
   const searchParams = new URLSearchParams(routerLocation.search);
 

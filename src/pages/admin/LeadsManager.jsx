@@ -4,8 +4,10 @@ import LeadsFilterBar from "@sections/admin/leads/LeadsFilterBar/LeadsFilterBar.
 import LeadsTable from "@sections/admin/leads/LeadsTable/LeadsTable.jsx";
 import LeadDetailsModal from "@sections/admin/leads/LeadDetailsModal/LeadDetailsModal.jsx";
 import { getAllLeads } from "@services/leadService.js";
+import { useDocumentTitle } from "@hooks/useDocumentTitle.js";
 
 export default function LeadsManager() {
+  useDocumentTitle('Gerenciar Leads');
   const [leads, setLeads] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedRequest, setSelectedRequest] = useState(null);

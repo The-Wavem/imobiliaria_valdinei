@@ -5,8 +5,10 @@ import PropertyTable from "@sections/admin/properties/PropertyTable/PropertyTabl
 import PropertyFormModal from "@sections/admin/properties/PropertyFormModal/PropertyFormModal.jsx";
 import ConfirmDialog from "@components/ui/ConfirmDialog/ConfirmDialog.jsx";
 import { addProperty, updateProperty, getAllProperties, deleteProperty, togglePropertyStatus, togglePropertyFeatured } from "@services/propertyService.js";
+import { useDocumentTitle } from "@hooks/useDocumentTitle.js";
 
 export default function PropertyManager() {
+  useDocumentTitle('Gerenciar Imóveis');
   const [properties, setProperties] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");

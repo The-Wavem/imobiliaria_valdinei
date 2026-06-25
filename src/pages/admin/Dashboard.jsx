@@ -9,8 +9,10 @@ import { db } from "@services/firebaseConfig.js";
 import { getDailyAnalytics, getTopBairros, getTopFilters } from "@services/analyticsService.js";
 import { getPropertiesStats } from "@services/propertyService.js";
 import { getLeadsStats } from "@services/leadService.js";
+import { useDocumentTitle } from "@hooks/useDocumentTitle.js";
 
 export default function Dashboard() {
+  useDocumentTitle('Painel Admin - Dashboard');
   const [period, setPeriod] = useState("7d");
   const [accessData, setAccessData] = useState([]);
   const [bairrosData, setBairrosData] = useState([]);

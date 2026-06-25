@@ -137,7 +137,7 @@ export const incrementPropertyViews = async (propertyId) => {
 
   try {
     const propertyRef = doc(db, "properties", propertyId);
-    await setDoc(propertyRef, { views: increment(1), score: increment(1) }, { merge: true });
+    await updateDoc(propertyRef, { views: increment(1), score: increment(1) });
   } catch (error) {
     console.error(`Erro ao registrar view para o imóvel ${propertyId}:`, error);
   }
@@ -149,11 +149,10 @@ export const incrementPropertyFavorite = async (propertyId, value = 1) => {
   try {
     const propertyRef = doc(db, "properties", propertyId);
     const scoreIncrement = value > 0 ? 50 : -50;
-    await setDoc(
-      propertyRef,
-      { favoriteCount: increment(value), score: increment(scoreIncrement) },
-      { merge: true }
-    );
+    await updateDoc(propertyRef, { 
+      favoriteCount: increment(value), 
+      score: increment(scoreIncrement) 
+    });
   } catch (error) {
     console.error(`Erro ao atualizar favoritos para o imóvel ${propertyId}:`, error);
   }
@@ -164,11 +163,10 @@ export const incrementPropertyLead = async (propertyId) => {
 
   try {
     const propertyRef = doc(db, "properties", propertyId);
-    await setDoc(
-      propertyRef,
-      { leadCount: increment(1), score: increment(500) },
-      { merge: true }
-    );
+    await updateDoc(propertyRef, { 
+      leadCount: increment(1), 
+      score: increment(500) 
+    });
   } catch (error) {
     console.error(`Erro ao registrar lead para o imóvel ${propertyId}:`, error);
   }
