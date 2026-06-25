@@ -12,6 +12,7 @@ import {
   Star,
   Sparkles,
   Flame,
+  Trophy,
 } from "lucide-react";
 import styles from "./PropertyCard.module.css";
 import buttonStyles from "../Button/Button.module.css";
@@ -46,7 +47,9 @@ export default function PropertyCard({ property, onViewDetails }) {
   }, [property.createdAt, property.audit]);
 
   const isPopular = (property.views || 0) >= 50;
-  const isLoved = (property.favoriteCount || 0) >= 5;
+  
+  const isHighlyDesired = (property.favoriteCount || 0) >= 15;
+  const isLoved = (property.favoriteCount || 0) >= 5 && !isHighlyDesired;
 
   return (
     <article className={styles.card}>
@@ -98,6 +101,11 @@ export default function PropertyCard({ property, onViewDetails }) {
           {isPopular && (
             <span className={`${styles.badge} ${styles.badgePopular}`}>
               <Flame size={12} /> Em Alta
+            </span>
+          )}
+          {isHighlyDesired && (
+            <span className={`${styles.badge} ${styles.badgeSupreme}`}>
+              <Trophy size={12} fill="currentColor" /> Mais Desejado
             </span>
           )}
           {isLoved && (
