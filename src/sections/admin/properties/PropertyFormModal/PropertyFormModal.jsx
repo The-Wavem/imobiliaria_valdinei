@@ -4,6 +4,10 @@ import {
   BedDouble,
   Camera,
   Check,
+  CheckCircle2,
+  ChevronDown,
+  ChevronUp,
+  Circle,
   ImagePlus,
   MapPin,
   Plus,
@@ -89,11 +93,13 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
   const [cepSuccess, setCepSuccess] = useState(false);
   const [codeError, setCodeError] = useState("");
   const [isGeneratingCode, setIsGeneratingCode] = useState(false);
+  const [showTips, setShowTips] = useState(false);
 
   useEffect(() => {
     if (!isOpen) {
       return;
     }
+    setShowTips(false);
     setShowCancelConfirm(false);
     setActiveTab("basic");
     setIsAddingType(false);
@@ -378,6 +384,42 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
     );
   }, [formData]);
 
+  const scoringRules = useMemo(() => [
+    { id: 'title', check: (d) => !!d.title?.trim(), points: 10, tip: "Adicione um título atraente" },
+    { id: 'price', check: (d) => !!String(d.price)?.trim(), points: 10, tip: "Informe o preço do imóvel" },
+    { id: 'area', check: (d) => !!String(d.area)?.trim(), points: 5, tip: "Adicione a área do imóvel" },
+    { id: 'bedrooms', check: (d) => Number(d.bedrooms) > 0, points: 5, tip: "Informe o número de quartos" },
+    { id: 'bathrooms', check: (d) => Number(d.bathrooms) > 0, points: 5, tip: "Informe o número de banheiros" },
+    { id: 'cep', check: (d) => !!d.cep?.trim() && !!d.logradouro?.trim(), points: 10, tip: "Informe a localização (CEP e Logradouro)" },
+    { id: 'features', check: (d) => d.features?.length >= 3, points: 10, tip: "Adicione pelo menos 3 características" },
+    { id: 'photos', check: (d) => d.photos?.length > 0, points: 15, tip: "Adicione fotos ao anúncio" },
+    { id: 'photos_more', check: (d) => d.photos?.length > 4, points: 10, tip: "Adicione mais de 4 fotos" },
+    { id: 'desc', check: (d) => d.description?.length > 50, points: 15, tip: "Escreva uma descrição detalhada (mais de 50 caracteres)" },
+    { id: 'video', check: (d) => d.videos?.length > 0, points: 5, tip: "Adicione um vídeo do imóvel" }
+  ], []);
+
+  const scoreData = useMemo(() => {
+    let score = 0;
+    const tips = [];
+    
+    scoringRules.forEach(rule => {
+      const isCompleted = rule.check(formData);
+      if (isCompleted) {
+        score += rule.points;
+      }
+      tips.push({
+        id: rule.id,
+        tip: rule.tip,
+        completed: isCompleted,
+      });
+    });
+    let color = "#ef4444"; // vermelho
+    if (score >= 50) color = "#eab308"; // amarelo
+    if (score >= 80) color = "#10b981"; // verde
+    score = Math.min(score, 100);
+    return { score, color, tips };
+  }, [formData, scoringRules]);
+
   const fullAddressString = useMemo(() => {
     const parts = [];
     if (formData.logradouro) parts.push(formData.logradouro);
@@ -520,8 +562,9 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
           </nav>
         </header>
 
-        <div className={styles.modalBody}>
-          {activeTab === "basic" ? (
+        <div className={styles.modalBodyLayout}>
+          <div className={styles.modalMainContent}>
+            {activeTab === "basic" ? (
             <section className={styles.tabPanel}>
             <div className={styles.formGrid}>
               <Input
@@ -994,6 +1037,49 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
             </div>
           </section>
         ) : null}
+          </div>
+
+          <aside className={styles.scoreSidebar}>
+            <div className={styles.scoreContainer}>
+              <div className={styles.scoreHeader}>
+                <div className={styles.scoreTitle}>
+                  <Star size={16} fill={scoreData.color} color={scoreData.color} />
+                  Nota do Anúncio
+                </div>
+                <div className={styles.scoreValue} style={{ color: scoreData.color }}>
+                  {scoreData.score} / 100
+                </div>
+              </div>
+              <div className={styles.scoreProgressBg}>
+                <div 
+                  className={styles.scoreProgressBar} 
+                  style={{ width: `${scoreData.score}%`, backgroundColor: scoreData.color }}
+                />
+              </div>
+              <div className={styles.scoreTipsWrapper}>
+                <button 
+                  type="button" 
+                  className={styles.scoreTipsToggle}
+                  onClick={() => setShowTips(!showTips)}
+                >
+                  {showTips ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                  {showTips ? "Ocultar dicas" : "Ver dicas para melhorar a nota"}
+                </button>
+                {showTips && (
+                  <div className={styles.scoreTips}>
+                    {scoreData.tips.map(tip => (
+                      <div key={tip.id} className={`${styles.scoreTipItem} ${tip.completed ? styles.completed : ""}`}>
+                        <div className={styles.scoreTipIcon}>
+                          {tip.completed ? <CheckCircle2 size={14} /> : <Circle size={14} />}
+                        </div>
+                        <span>{tip.tip}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </aside>
         </div>
 
         <footer className={styles.modalFooter}>
