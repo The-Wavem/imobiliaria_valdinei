@@ -8,6 +8,7 @@ import PropertyGrid from "@sections/listing/PropertyGrid.jsx";
 import { getPublicProperties } from "@services/propertyService.js";
 import { extractNeighborhood } from "@utils/address.js";
 import { parsePrice } from "@utils/validation.js";
+import { sortPropertiesByRelevance } from "@utils/rankingEngine.js";
 
 // Assets Premium para o Hero
 import rentVideo from "../../assets/videos/rent-bg.mp4";
@@ -132,9 +133,7 @@ export default function Rent() {
   }, [properties, filters]);
 
   const prioritizedProperties = useMemo(() => {
-    return [...filteredProperties].sort((a, b) => {
-      return (b.featured ? 1 : 0) - (a.featured ? 1 : 0);
-    });
+    return sortPropertiesByRelevance(filteredProperties);
   }, [filteredProperties]);
 
   const staggerContainer = {

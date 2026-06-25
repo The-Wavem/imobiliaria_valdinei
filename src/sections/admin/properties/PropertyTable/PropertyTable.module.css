@@ -187,7 +187,20 @@
 }
 
 .statusSelectWrapper {
-  min-width: 130px;
+  max-width: 140px;
+}
+
+.scoreBadge {
+  background: rgba(222, 255, 154, 0.1);
+  color: var(--color-brand-primary);
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 0.8rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid rgba(222, 255, 154, 0.3);
 }
 
 .actionsCell {

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Link } from "react-router-dom";
 import {
   MapPin,
@@ -31,6 +31,16 @@ export default function PropertyCard({ property, onViewDetails }) {
 
   const { toggleFavorite, isFavorite } = useFavorites();
   const isFav = isFavorite(property.firestoreId || property.id);
+
+  const isNew = useMemo(() => {
+    const createdAtStr = property.createdAt || (property.audit && property.audit.createdAt);
+    if (!createdAtStr) return false;
+    const createdAtTime = new Date(createdAtStr).getTime();
+    if (isNaN(createdAtTime)) return false;
+    const now = Date.now();
+    const threeDaysInMs = 3 * 24 * 60 * 60 * 1000;
+    return (now - createdAtTime) <= threeDaysInMs;
+  }, [property.createdAt, property.audit]);
 
   return (
     <article className={styles.card}>
@@ -72,6 +82,11 @@ export default function PropertyCard({ property, onViewDetails }) {
           {property.featured && (
             <span className={`${styles.badge} ${styles.featuredBadge}`}>
               ⭐ Destaque
+            </span>
+          )}
+          {isNew && (
+            <span className={`${styles.badge} ${styles.newBadge}`}>
+              ✨ Novo
             </span>
           )}
           <span className={styles.badge}>{property.type}</span>

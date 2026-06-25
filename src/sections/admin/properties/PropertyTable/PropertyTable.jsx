@@ -1,6 +1,7 @@
 import { Pencil, ToggleLeft, ToggleRight, Trash2, Eye, Star } from "lucide-react";
 import Button from "@components/ui/Button/Button.jsx";
 import Select from "@components/ui/Select/Select.jsx";
+import { calculateTotalScore } from "@utils/rankingEngine.js";
 import styles from "./PropertyTable.module.css";
 
 function formatCurrency(value) {
@@ -86,6 +87,7 @@ export default function PropertyTable({
                 <th>Tipo / Categoria</th>
                 <th>Nota</th>
                 <th>Status</th>
+                <th>Populariedade</th>
                 <th>Views</th>
                 <th>Ações</th>
               </tr>
@@ -105,6 +107,7 @@ export default function PropertyTable({
                   const isActive = property.status === "Ativo"; // Checagem direta do status
                   const views = property.views || 0; // Contagem de views
                   const scoreData = getScore(property);
+                  const wavemRank = calculateTotalScore(property);
 
                   return (
                     <tr
@@ -204,6 +207,14 @@ export default function PropertyTable({
                           </div>
                           <span className={styles.propertyPrice}>
                             {formatCurrency(price)}
+                          </span>
+                        </div>
+                      </td>
+
+                      <td data-label="Wavem Rank">
+                        <div className={styles.cellContent}>
+                          <span className={styles.scoreBadge}>
+                            {wavemRank} pts
                           </span>
                         </div>
                       </td>

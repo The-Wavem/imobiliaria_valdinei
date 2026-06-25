@@ -12,12 +12,13 @@ import {
 } from "firebase/firestore";
 import { db } from "./firebaseConfig.js";
 import { mapPropertyDocument } from "./properties.js";
+import { calculateBaseScore } from "../utils/rankingEngine.js";
 
 const PROPERTY_COLLECTION = "properties";
 
 const formatPropertyData = (data) => {
   const loc = data.location || {};
-  return {
+  const formatted = {
     title: data.title || "",
     code: data.code || "",
     category: data.category || "",
@@ -49,8 +50,13 @@ const formatPropertyData = (data) => {
     content: {
       description: data.description || data.content?.description || "",
     },
+    featured: Boolean(data.featured),
+    views: Number(data.views) || 0,
     updatedAt: new Date().toISOString(),
   };
+
+  formatted.score = calculateBaseScore(formatted);
+  return formatted;
 };
 
 export const addProperty = async (propertyData) => {
@@ -131,7 +137,7 @@ export const incrementPropertyViews = async (propertyId) => {
 
   try {
     const propertyRef = doc(db, "properties", propertyId);
-    await setDoc(propertyRef, { views: increment(1) }, { merge: true });
+    await setDoc(propertyRef, { views: increment(1), score: increment(1) }, { merge: true });
   } catch (error) {
     console.error(`Erro ao registrar view para o imóvel ${propertyId}:`, error);
   }
@@ -205,6 +211,7 @@ export const togglePropertyFeatured = async (id, isFeatured) => {
     const propertyRef = doc(db, PROPERTY_COLLECTION, id);
     await updateDoc(propertyRef, { 
       featured: isFeatured,
+      score: increment(isFeatured ? 10000 : -10000),
       updatedAt: new Date().toISOString()
     });
     return true;
