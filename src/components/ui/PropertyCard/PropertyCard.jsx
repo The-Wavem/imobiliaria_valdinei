@@ -11,6 +11,7 @@ import {
   Calendar,
   Star,
   Sparkles,
+  Flame,
 } from "lucide-react";
 import styles from "./PropertyCard.module.css";
 import buttonStyles from "../Button/Button.module.css";
@@ -43,6 +44,9 @@ export default function PropertyCard({ property, onViewDetails }) {
     const threeDaysInMs = 3 * 24 * 60 * 60 * 1000;
     return (now - createdAtTime) <= threeDaysInMs;
   }, [property.createdAt, property.audit]);
+
+  const isPopular = (property.views || 0) >= 50;
+  const isLoved = (property.favoriteCount || 0) >= 5;
 
   return (
     <article className={styles.card}>
@@ -80,17 +84,30 @@ export default function PropertyCard({ property, onViewDetails }) {
           </span>
         )}
 
-        <div className={styles.badges}>
+        <div className={styles.badgeStack}>
           {property.featured && (
-            <span className={`${styles.badge} ${styles.featuredBadge}`}>
+            <span className={`${styles.badge} ${styles.badgeFeatured}`}>
               <Star size={12} /> Destaque
             </span>
           )}
           {isNew && (
-            <span className={`${styles.badge} ${styles.newBadge}`}>
+            <span className={`${styles.badge} ${styles.badgeNew}`}>
               <Sparkles size={12} /> Novo
             </span>
           )}
+          {isPopular && (
+            <span className={`${styles.badge} ${styles.badgePopular}`}>
+              <Flame size={12} /> Em Alta
+            </span>
+          )}
+          {isLoved && (
+            <span className={`${styles.badge} ${styles.badgeLoved}`}>
+              <Heart size={12} fill="currentColor" /> Queridinho
+            </span>
+          )}
+        </div>
+
+        <div className={styles.badges}>
           <span className={styles.badge}>{property.type}</span>
           <span className={`${styles.badge} ${styles.categoryBadge}`}>
             {property.category}

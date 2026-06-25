@@ -125,49 +125,76 @@
 
 .badges {
   position: absolute;
-  top: 0.75rem;
-  left: 0.75rem;
+  top: 12px;
+  left: 12px;
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
   z-index: 1;
 }
 
+.badgeStack {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 10;
+  align-items: flex-start;
+  pointer-events: none;
+}
+
+/* Esconde as badges originais se usarmos badgeStack por cima, ou desloca: */
+.badgeStack + .badges {
+  top: auto;
+  bottom: 12px;
+  left: auto;
+  right: 12px;
+}
+
 .badge {
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  background-color: #ffffff;
+  color: var(--color-secondary);
   display: inline-flex;
   align-items: center;
-  justify-content: center;
   gap: 0.25rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(4px);
-  color: var(--color-dark);
-  font-size: 0.65rem;
   line-height: 1;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  border: 1px solid rgba(20, 20, 60, 0.08);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .badge svg {
   transform: translateY(-0.5px);
 }
 
-.featuredBadge {
-  background: var(--color-primary);
-  color: white;
-  border: 1px solid rgba(199, 156, 49, 0.3);
-  box-shadow: 0 2px 4px rgba(199, 156, 49, 0.2);
+.badgeFeatured {
+  background-color: #d97706;
+  color: #ffffff;
+  border: 1px solid #b45309;
 }
 
-.newBadge {
+.badgeNew {
   background-color: #10b981;
-  color: white;
-  border: 1px solid rgba(16, 185, 129, 0.3);
-  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+  color: #ffffff;
+  border: 1px solid #059669;
+}
+
+.badgePopular {
+  background-color: #ef4444;
+  color: #ffffff;
+  border: 1px solid #dc2626;
+}
+
+.badgeLoved {
+  background-color: #ec4899;
+  color: #ffffff;
+  border: 1px solid #db2777;
 }
 
 .categoryBadge {
