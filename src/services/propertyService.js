@@ -57,6 +57,7 @@ export const addProperty = async (propertyData) => {
   try {
     const formattedData = formatPropertyData(propertyData);
     formattedData.createdAt = new Date().toISOString();
+    formattedData.statusUpdatedAt = new Date().toISOString(); // Marcação inicial
     formattedData.views = 0;
     
     const docRef = await addDoc(collection(db, PROPERTY_COLLECTION), formattedData);
@@ -189,7 +190,8 @@ export const togglePropertyStatus = async (id, newStatus) => {
     await updateDoc(propertyRef, { 
       status: newStatus,
       active: newStatus !== "Inativo", // mantendo coerência com o boolean active usado nos filtros
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
+      statusUpdatedAt: new Date().toISOString() // Marcação de quando o status mudou
     });
     return true;
   } catch (error) {
