@@ -131,6 +131,12 @@ export default function Rent() {
     });
   }, [properties, filters]);
 
+  const prioritizedProperties = useMemo(() => {
+    return [...filteredProperties].sort((a, b) => {
+      return (b.featured ? 1 : 0) - (a.featured ? 1 : 0);
+    });
+  }, [filteredProperties]);
+
   const staggerContainer = {
     hidden: { opacity: 0 },
     show: {
@@ -174,7 +180,7 @@ export default function Rent() {
         </motion.div>
         <motion.div variants={fadeUpItem}>
           <PropertyGrid
-            properties={filteredProperties}
+            properties={prioritizedProperties}
             title="Imóveis para Alugar"
             onPropertyClick={handlePropertyClick}
             isLoading={isLoading}

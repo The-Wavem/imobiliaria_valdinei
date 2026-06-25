@@ -64,7 +64,8 @@ const defaultForm = {
   category: "", type: "", cep: "", logradouro: "", numero: "", complemento: "", bairro: "", cidade: "", estado: "",
   area: "", bedrooms: "", bathrooms: "", parkingSpaces: "",
   features: [], photos: [], videos: [], description: "",
-  status: "Disponível"
+  status: "Disponível",
+  featured: false
 };
 
 const quillModules = {
@@ -138,7 +139,8 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
         photos: property.photos || [],
         videos: property.videos || [],
         description: property.content?.description || property.description || "",
-        status: property.status || "Disponível"
+        status: property.status || "Disponível",
+        featured: property.featured || false
       });
 
       if (property.type) {
@@ -622,6 +624,21 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                   onChange={(value) => updateField("category", value)}
                   options={categoryOptions}
                 />
+              </div>
+
+              <div className={styles.featuredToggleContainer}>
+                <label className={styles.featuredToggleLabel}>
+                  <input
+                    type="checkbox"
+                    checked={formData.featured}
+                    onChange={(e) => updateField("featured", e.target.checked)}
+                    className={styles.featuredToggleInput}
+                  />
+                  <div className={styles.featuredToggleText}>
+                    <Star size={16} className={formData.featured ? styles.starActive : ""} />
+                    <span>Destacar este imóvel na Home e no topo das buscas</span>
+                  </div>
+                </label>
               </div>
 
               <div className={styles.dynamicSelectRow}>

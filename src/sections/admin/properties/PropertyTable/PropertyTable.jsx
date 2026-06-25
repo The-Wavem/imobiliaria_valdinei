@@ -19,6 +19,7 @@ export default function PropertyTable({
   onEdit,
   onDelete,
   onToggleStatus,
+  onToggleFeatured,
 }) {
   const getThumbnail = (property) =>
     (property.photos && property.photos[0]) ||
@@ -111,7 +112,7 @@ export default function PropertyTable({
                       className={`${styles.row} ${isActive ? styles.rowActive : styles.rowInactive}`.trim()}
                     >
                       <td data-label="Foto">
-                        <div className={styles.cellContent}>
+                        <div className={styles.cellContent} style={{ position: "relative", width: "max-content" }}>
                           <div className={styles.thumbnail}>
                             <img
                               src={getThumbnail(property)}
@@ -123,6 +124,20 @@ export default function PropertyTable({
                               }}
                             />
                           </div>
+                          
+                          {onToggleFeatured && (
+                            <button
+                              type="button"
+                              className={`${styles.featuredStarBtn} ${property.featured ? styles.featuredStarActive : ""}`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onToggleFeatured(property.firestoreId || property.id, property.featured);
+                              }}
+                              title={property.featured ? "Remover destaque" : "Destacar imóvel"}
+                            >
+                              <Star size={14} fill={property.featured ? "currentColor" : "none"} />
+                            </button>
+                          )}
                         </div>
                       </td>
 

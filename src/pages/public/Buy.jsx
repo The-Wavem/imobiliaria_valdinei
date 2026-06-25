@@ -126,6 +126,12 @@ export default function Buy() {
     });
   }, [properties, filters]);
 
+  const prioritizedProperties = useMemo(() => {
+    return [...filteredProperties].sort((a, b) => {
+      return (b.featured ? 1 : 0) - (a.featured ? 1 : 0);
+    });
+  }, [filteredProperties]);
+
   const staggerContainer = {
     hidden: { opacity: 0 },
     show: { opacity: 1, transition: { staggerChildren: 0.15, delayChildren: 0.1 } },
@@ -158,7 +164,7 @@ export default function Buy() {
       </motion.div>
       <motion.div variants={fadeUpItem}>
         <PropertyGrid
-          properties={filteredProperties}
+          properties={prioritizedProperties}
           title="Imóveis para Comprar"
           onPropertyClick={handlePropertyClick}
           isLoading={isLoading}

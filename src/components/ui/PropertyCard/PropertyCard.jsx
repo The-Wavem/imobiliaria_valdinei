@@ -30,18 +30,18 @@ export default function PropertyCard({ property, onViewDetails }) {
   const area = property.area ?? 0;
 
   const { toggleFavorite, isFavorite } = useFavorites();
-  const isFav = isFavorite(property.id);
+  const isFav = isFavorite(property.firestoreId || property.id);
 
   return (
     <article className={styles.card}>
       <div className={styles.imageWrap}>
         <Link
-          to={`/imovel/${property.id}`}
+          to={`/imovel/${property.firestoreId || property.id}`}
           className={styles.cardLink}
           onClick={(e) => {
             if (onViewDetails) {
               e.preventDefault();
-              onViewDetails(property.id);
+              onViewDetails(property.firestoreId || property.id);
             }
           }}
         >
@@ -69,6 +69,11 @@ export default function PropertyCard({ property, onViewDetails }) {
         )}
 
         <div className={styles.badges}>
+          {property.featured && (
+            <span className={`${styles.badge} ${styles.featuredBadge}`}>
+              ⭐ Destaque
+            </span>
+          )}
           <span className={styles.badge}>{property.type}</span>
           <span className={`${styles.badge} ${styles.categoryBadge}`}>
             {property.category}
@@ -95,17 +100,25 @@ export default function PropertyCard({ property, onViewDetails }) {
       <div className={styles.content}>
         <div className={styles.location}>
           <MapPin size={14} />
-          <span>{property.location}</span>
+          <span>
+            {typeof property.location === "string"
+              ? property.location
+              : property.location
+                ? [property.location.bairro, property.location.cidade, property.location.estado].filter(Boolean).join(", ") || property.location.address || "Local não informado"
+                : property.bairro
+                  ? [property.bairro, property.cidade, property.estado].filter(Boolean).join(", ")
+                  : "Local não informado"}
+          </span>
         </div>
 
         <h3 className={styles.title}>
           <Link
-            to={`/imovel/${property.id}`}
+            to={`/imovel/${property.firestoreId || property.id}`}
             className={styles.titleLink}
             onClick={(e) => {
               if (onViewDetails) {
                 e.preventDefault();
-                onViewDetails(property.id);
+                onViewDetails(property.firestoreId || property.id);
               }
             }}
           >
@@ -114,7 +127,7 @@ export default function PropertyCard({ property, onViewDetails }) {
         </h3>
 
         <p className={styles.price}>
-          {property.price.toLocaleString("pt-BR", {
+          {Number(property.price || property.pricing?.price || 0).toLocaleString("pt-BR", {
             style: "currency",
             currency: "BRL",
           })}
@@ -147,12 +160,12 @@ export default function PropertyCard({ property, onViewDetails }) {
 
         <div className={styles.actions}>
           <Link
-            to={`/imovel/${property.id}`}
+            to={`/imovel/${property.firestoreId || property.id}`}
             className={`${buttonStyles.btn} ${buttonStyles.outline} ${styles.detailsButton}`}
             onClick={(e) => {
               if (onViewDetails) {
                 e.preventDefault();
-                onViewDetails(property.id);
+                onViewDetails(property.firestoreId || property.id);
               }
             }}
           >

@@ -200,6 +200,20 @@ export const togglePropertyStatus = async (id, newStatus) => {
   }
 };
 
+export const togglePropertyFeatured = async (id, isFeatured) => {
+  try {
+    const propertyRef = doc(db, PROPERTY_COLLECTION, id);
+    await updateDoc(propertyRef, { 
+      featured: isFeatured,
+      updatedAt: new Date().toISOString()
+    });
+    return true;
+  } catch (error) {
+    console.error("Erro ao alterar destaque do imóvel:", error);
+    throw error;
+  }
+};
+
 export const checkCodeExists = async (code, excludeId = null) => {
   if (!code) return false;
   try {
