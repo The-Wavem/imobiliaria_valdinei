@@ -143,6 +143,37 @@ export const incrementPropertyViews = async (propertyId) => {
   }
 };
 
+export const incrementPropertyFavorite = async (propertyId, value = 1) => {
+  if (!propertyId) return;
+
+  try {
+    const propertyRef = doc(db, "properties", propertyId);
+    const scoreIncrement = value > 0 ? 50 : -50;
+    await setDoc(
+      propertyRef,
+      { favoriteCount: increment(value), score: increment(scoreIncrement) },
+      { merge: true }
+    );
+  } catch (error) {
+    console.error(`Erro ao atualizar favoritos para o imóvel ${propertyId}:`, error);
+  }
+};
+
+export const incrementPropertyLead = async (propertyId) => {
+  if (!propertyId) return;
+
+  try {
+    const propertyRef = doc(db, "properties", propertyId);
+    await setDoc(
+      propertyRef,
+      { leadCount: increment(1), score: increment(500) },
+      { merge: true }
+    );
+  } catch (error) {
+    console.error(`Erro ao registrar lead para o imóvel ${propertyId}:`, error);
+  }
+};
+
 export const getAllProperties = async () => {
   try {
     const snapshot = await getDocs(collection(db, "properties"));

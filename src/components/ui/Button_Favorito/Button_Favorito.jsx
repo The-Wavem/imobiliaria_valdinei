@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Heart } from "lucide-react";
 import { logAddToWishlistAnalytics } from "@services/analyticsService.js";
+import { incrementPropertyFavorite } from "@services/propertyService.js";
 import styles from "./Button_Favorito.module.css";
 
 const STORAGE_KEY = "imobiliaria-valdinei:favorites";
@@ -52,6 +53,16 @@ export default function ButtonFavorito({ property }) {
 
     if (!alreadyFavorite) {
       logAddToWishlistAnalytics(property);
+    }
+
+    // Atualiza o ranking global silenciosamente
+    try {
+      const propertyId = property.firestoreId || property.id;
+      if (propertyId) {
+        incrementPropertyFavorite(propertyId, alreadyFavorite ? -1 : 1);
+      }
+    } catch (e) {
+      // Falha silenciosa para não quebrar UI
     }
   }
 

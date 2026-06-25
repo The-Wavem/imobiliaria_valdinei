@@ -1,5 +1,7 @@
 export const calculateBaseScore = (property) => {
   let score = Number(property.views) || 0;
+  score += (Number(property.favoriteCount) || 0) * 50;
+  score += (Number(property.leadCount) || 0) * 500;
 
   if (property.featured) {
     score += 10000;
@@ -10,7 +12,7 @@ export const calculateBaseScore = (property) => {
 
 export const calculateTotalScore = (property) => {
   // Pega o score fixado do banco ou calcula o base na hora
-  let score = property.score !== undefined ? Number(property.score) : calculateBaseScore(property);
+  let total = property.score !== undefined ? Number(property.score) : calculateBaseScore(property);
 
   // Fator Novidade (Temporário, não vai pro banco, apenas exibe no frontend)
   const createdAtStr = property.createdAt || (property.audit && property.audit.createdAt);
@@ -20,11 +22,21 @@ export const calculateTotalScore = (property) => {
     const threeDaysInMs = 3 * 24 * 60 * 60 * 1000;
 
     if (!isNaN(createdAtTime) && (now - createdAtTime) <= threeDaysInMs) {
-      score += 5000;
+      total += 5000;
     }
   }
 
-  return score;
+  // Fatores de Qualidade do Anúncio
+  if (property.videos?.length > 0) total += 200;
+  if (property.photos?.length > 0) total += (property.photos.length * 10);
+  if (property.description?.length > 150) total += 100;
+
+  // Penalização de Status
+  if (property.status && property.status !== 'Disponível') {
+    total -= 50000;
+  }
+
+  return total;
 };
 
 export const sortPropertiesByRelevance = (properties) => {

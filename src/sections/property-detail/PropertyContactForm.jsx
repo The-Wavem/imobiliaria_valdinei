@@ -4,6 +4,7 @@ import Input from "@components/ui/Input/Input";
 import Button from "@components/ui/Button/Button.jsx";
 import inputStyles from "@components/ui/Input/Input.module.css";
 import { addLead } from "@services/leadService.js";
+import { incrementPropertyLead } from "@services/propertyService.js";
 import { logLeadSubmissionAnalytics } from "@/services/analyticsService.js";
 import { validateContactForm, sanitizeFormData } from "@utils/validation.js";
 import styles from "./PropertyContactForm.module.css";
@@ -79,6 +80,13 @@ export default function PropertyContactForm({ property }) {
       });
 
       logLeadSubmissionAnalytics(property?.id, property?.title);
+
+      // Incrementa o leadCount do imóvel para o Wavem Rank 2.0 (Silenciosamente)
+      try {
+        if (property?.id) incrementPropertyLead(property.id);
+      } catch (e) {
+        // Ignora erros para não quebrar a UI
+      }
 
       setIsSuccess(true);
       setName("");

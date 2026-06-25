@@ -9,6 +9,8 @@ import {
   Bed,
   Maximize,
   Calendar,
+  Star,
+  Sparkles,
 } from "lucide-react";
 import styles from "./PropertyCard.module.css";
 import buttonStyles from "../Button/Button.module.css";
@@ -81,12 +83,12 @@ export default function PropertyCard({ property, onViewDetails }) {
         <div className={styles.badges}>
           {property.featured && (
             <span className={`${styles.badge} ${styles.featuredBadge}`}>
-              ⭐ Destaque
+              <Star size={12} /> Destaque
             </span>
           )}
           {isNew && (
             <span className={`${styles.badge} ${styles.newBadge}`}>
-              ✨ Novo
+              <Sparkles size={12} /> Novo
             </span>
           )}
           <span className={styles.badge}>{property.type}</span>
