@@ -57,7 +57,7 @@ export function mapPropertyDocument(snapshot) {
     photos: photosArray, // Mantendo a chave photos tbm para garantir
     videos: data.videos || [],
     description: content.description || data.description || "",
-    featured: Boolean(statusObj.featured),
+    featured: data.featured !== undefined ? Boolean(data.featured) : Boolean(statusObj.featured),
     active: isActive,
     status: currentStatus,
     visibility: statusObj.visibility || "published",

@@ -8,12 +8,15 @@ import PropertyGrid from "@sections/listing/PropertyGrid.jsx";
 import { getPublicProperties } from "@services/propertyService.js";
 import { extractNeighborhood } from "@utils/address.js";
 import { parsePrice } from "@utils/validation.js";
+import { sortPropertiesByRelevance } from "@utils/rankingEngine.js";
 
 // Assets Premium para o Hero
 import rentVideo from "../../assets/videos/rent-bg.mp4";
 import rentThumb from "../../assets/images/rent-thumb.jpg";
+import { useDocumentTitle } from "@hooks/useDocumentTitle.js";
 
 export default function Rent() {
+  useDocumentTitle('Imóveis para Alugar');
   const routerLocation = useLocation();
   const searchParams = new URLSearchParams(routerLocation.search);
 
@@ -131,6 +134,10 @@ export default function Rent() {
     });
   }, [properties, filters]);
 
+  const prioritizedProperties = useMemo(() => {
+    return sortPropertiesByRelevance(filteredProperties);
+  }, [filteredProperties]);
+
   const staggerContainer = {
     hidden: { opacity: 0 },
     show: {
@@ -174,7 +181,7 @@ export default function Rent() {
         </motion.div>
         <motion.div variants={fadeUpItem}>
           <PropertyGrid
-            properties={filteredProperties}
+            properties={prioritizedProperties}
             title="Imóveis para Alugar"
             onPropertyClick={handlePropertyClick}
             isLoading={isLoading}

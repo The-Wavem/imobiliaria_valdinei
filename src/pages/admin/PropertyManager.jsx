@@ -4,9 +4,11 @@ import PropertyFilterBar from "@sections/admin/properties/PropertyFilterBar/Prop
 import PropertyTable from "@sections/admin/properties/PropertyTable/PropertyTable.jsx";
 import PropertyFormModal from "@sections/admin/properties/PropertyFormModal/PropertyFormModal.jsx";
 import ConfirmDialog from "@components/ui/ConfirmDialog/ConfirmDialog.jsx";
-import { addProperty, updateProperty, getAllProperties, deleteProperty, togglePropertyStatus } from "@services/propertyService.js";
+import { addProperty, updateProperty, getAllProperties, deleteProperty, togglePropertyStatus, togglePropertyFeatured } from "@services/propertyService.js";
+import { useDocumentTitle } from "@hooks/useDocumentTitle.js";
 
 export default function PropertyManager() {
+  useDocumentTitle('Gerenciar Imóveis');
   const [properties, setProperties] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -99,6 +101,11 @@ export default function PropertyManager() {
     loadProperties();
   };
 
+  const handleToggleFeatured = async (id, currentFeatured) => {
+    await togglePropertyFeatured(id, !currentFeatured);
+    loadProperties();
+  };
+
   // Quando clica no botão "Excluir" na tabela
   const handleDeleteRequest = (id) => {
     setConfirmDelete({ isOpen: true, propertyId: id });
@@ -164,6 +171,7 @@ export default function PropertyManager() {
         onEdit={handleOpenModal}
         onDelete={handleDeleteRequest} // <-- LIGANDO O GATILHO AQUI
         onToggleStatus={handleToggleStatus}
+        onToggleFeatured={handleToggleFeatured}
         onRefresh={loadProperties}
       />
 

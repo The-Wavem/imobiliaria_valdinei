@@ -10,16 +10,17 @@ service cloud.firestore {
     // Regras para a coleção de imóveis
     match /properties/{propertyId} {
       // O Admin lê tudo. O público lê apenas imóveis ativos.
-      allow read: if isAdmin() || resource.data.status == 'Ativo';
+      allow read: if isAdmin() || resource.data.active == true;
 
       // Criação e exclusão totais restritas ao Admin
       allow create, delete: if isAdmin();
 
       // Atualização: Admin pode tudo.
-      // Visitante comum PODE APENAS incrementar o contador de visualizações.
+      // Visitante comum PODE APENAS incrementar o contador de visualizações e score.
       allow update: if isAdmin() || (
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['views']) 
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['views', 'score']) 
         && request.resource.data.views == resource.data.views + 1
+        && request.resource.data.score == resource.data.score + 1
       );
     }
 

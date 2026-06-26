@@ -12,12 +12,13 @@ import {
 } from "firebase/firestore";
 import { db } from "./firebaseConfig.js";
 import { mapPropertyDocument } from "./properties.js";
+import { calculateBaseScore } from "../utils/rankingEngine.js";
 
 const PROPERTY_COLLECTION = "properties";
 
 const formatPropertyData = (data) => {
   const loc = data.location || {};
-  return {
+  const formatted = {
     title: data.title || "",
     code: data.code || "",
     category: data.category || "",
@@ -49,14 +50,20 @@ const formatPropertyData = (data) => {
     content: {
       description: data.description || data.content?.description || "",
     },
+    featured: Boolean(data.featured),
+    views: Number(data.views) || 0,
     updatedAt: new Date().toISOString(),
   };
+
+  formatted.score = calculateBaseScore(formatted);
+  return formatted;
 };
 
 export const addProperty = async (propertyData) => {
   try {
     const formattedData = formatPropertyData(propertyData);
     formattedData.createdAt = new Date().toISOString();
+    formattedData.statusUpdatedAt = new Date().toISOString(); // Marcação inicial
     formattedData.views = 0;
     
     const docRef = await addDoc(collection(db, PROPERTY_COLLECTION), formattedData);
@@ -130,9 +137,38 @@ export const incrementPropertyViews = async (propertyId) => {
 
   try {
     const propertyRef = doc(db, "properties", propertyId);
-    await setDoc(propertyRef, { views: increment(1) }, { merge: true });
+    await updateDoc(propertyRef, { views: increment(1), score: increment(1) });
   } catch (error) {
     console.error(`Erro ao registrar view para o imóvel ${propertyId}:`, error);
+  }
+};
+
+export const incrementPropertyFavorite = async (propertyId, value = 1) => {
+  if (!propertyId) return;
+
+  try {
+    const propertyRef = doc(db, "properties", propertyId);
+    const scoreIncrement = value > 0 ? 50 : -50;
+    await updateDoc(propertyRef, { 
+      favoriteCount: increment(value), 
+      score: increment(scoreIncrement) 
+    });
+  } catch (error) {
+    console.error(`Erro ao atualizar favoritos para o imóvel ${propertyId}:`, error);
+  }
+};
+
+export const incrementPropertyLead = async (propertyId) => {
+  if (!propertyId) return;
+
+  try {
+    const propertyRef = doc(db, "properties", propertyId);
+    await updateDoc(propertyRef, { 
+      leadCount: increment(1), 
+      score: increment(500) 
+    });
+  } catch (error) {
+    console.error(`Erro ao registrar lead para o imóvel ${propertyId}:`, error);
   }
 };
 
@@ -189,11 +225,27 @@ export const togglePropertyStatus = async (id, newStatus) => {
     await updateDoc(propertyRef, { 
       status: newStatus,
       active: newStatus !== "Inativo", // mantendo coerência com o boolean active usado nos filtros
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
+      statusUpdatedAt: new Date().toISOString() // Marcação de quando o status mudou
     });
     return true;
   } catch (error) {
     console.error("Erro ao alterar status do imóvel:", error);
+    throw error;
+  }
+};
+
+export const togglePropertyFeatured = async (id, isFeatured) => {
+  try {
+    const propertyRef = doc(db, PROPERTY_COLLECTION, id);
+    await updateDoc(propertyRef, { 
+      featured: isFeatured,
+      score: increment(isFeatured ? 10000 : -10000),
+      updatedAt: new Date().toISOString()
+    });
+    return true;
+  } catch (error) {
+    console.error("Erro ao alterar destaque do imóvel:", error);
     throw error;
   }
 };

@@ -3,11 +3,16 @@ import DashboardStats from "@sections/admin/dashboard/DashboardStats/DashboardSt
 import OverviewChart from "@sections/admin/dashboard/OverviewChart/OverviewChart.jsx";
 import InsightsGrid from "@sections/admin/dashboard/InsightsGrid/InsightsGrid.jsx";
 import Loader from "@components/ui/Loader/Loader.jsx";
+import PerformanceChart from "@sections/admin/dashboard/PerformanceChart/PerformanceChart.jsx";
+import { getDocs, collection } from "firebase/firestore";
+import { db } from "@services/firebaseConfig.js";
 import { getDailyAnalytics, getTopBairros, getTopFilters } from "@services/analyticsService.js";
 import { getPropertiesStats } from "@services/propertyService.js";
 import { getLeadsStats } from "@services/leadService.js";
+import { useDocumentTitle } from "@hooks/useDocumentTitle.js";
 
 export default function Dashboard() {
+  useDocumentTitle('Painel Admin - Dashboard');
   const [period, setPeriod] = useState("7d");
   const [accessData, setAccessData] = useState([]);
   const [bairrosData, setBairrosData] = useState([]);
@@ -22,6 +27,7 @@ export default function Dashboard() {
     novos: 0,
     emAtendimento: 0,
   });
+  const [propertiesData, setPropertiesData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -31,13 +37,20 @@ export default function Dashboard() {
       setIsLoading(true);
 
       try {
-        const [accessHistoryResult, bairrosResult, filtersResult, propertiesStatsResult, leadsStatsResult] =
-          await Promise.all([
+        const [
+          accessHistoryResult, 
+          bairrosResult, 
+          filtersResult, 
+          propertiesStatsResult, 
+          leadsStatsResult,
+          propertiesSnapshot
+        ] = await Promise.all([
             getDailyAnalytics(),
             getTopBairros(),
             getTopFilters(),
             getPropertiesStats(),
             getLeadsStats(),
+            getDocs(collection(db, "properties")),
           ]);
 
         if (!isMounted) {
@@ -49,6 +62,7 @@ export default function Dashboard() {
         setFiltersData(filtersResult);
         setPropertyStats(propertiesStatsResult);
         setLeadStats(leadsStatsResult);
+        setPropertiesData(propertiesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
       } catch (error) {
         console.error("Falha ao carregar dados do dashboard:", error);
 
@@ -59,6 +73,7 @@ export default function Dashboard() {
         setAccessData([]);
         setBairrosData([]);
         setFiltersData([]);
+        setPropertiesData([]);
         setPropertyStats({ total: 0, ativos: 0, inativos: 0 });
         setLeadStats({ total: 0, novos: 0, emAtendimento: 0 });
       } finally {
@@ -161,6 +176,7 @@ export default function Dashboard() {
         summary={trafficSummary}
       />
       <InsightsGrid bairrosData={bairrosData} filtersData={filtersData} />
+      <PerformanceChart properties={propertiesData} period={period} />
     </main>
   );
 }

@@ -1,10 +1,8 @@
-import { useEffect } from "react";
 import FavoritoSection from "@sections/Favorito/Favorito";
+import { useDocumentTitle } from "@hooks/useDocumentTitle.js";
 
 export default function Favorito() {
-	useEffect(() => {
-		document.title = "Favoritos | Imobiliária Valdinei";
-	}, []);
+	useDocumentTitle('Meus Favoritos');
 
 	return (
 		<main>

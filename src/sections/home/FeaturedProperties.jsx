@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Search } from "lucide-react";
 import PropertyCard from "@components/ui/PropertyCard/PropertyCard.jsx";
-import { fetchPublishedProperties } from "@services/properties";
+import { getAllProperties } from "@services/propertyService.js";
 import styles from "./FeaturedProperties.module.css";
 
 const staggerContainer = {
@@ -38,10 +38,11 @@ export default function FeaturedProperties({ onPropertyClick }) {
 
     const loadProperties = async () => {
       try {
-        const items = await fetchPublishedProperties();
+        const allProperties = await getAllProperties();
+        const homeFeatures = allProperties.filter(p => p.featured && p.status !== 'Inativo');
 
         if (isMounted) {
-          setProperties(items.slice(0, 3));
+          setProperties(homeFeatures.slice(0, 3));
         }
       } finally {
         if (isMounted) {
@@ -94,11 +95,11 @@ export default function FeaturedProperties({ onPropertyClick }) {
           whileInView="show"
           viewport={{ once: true, margin: "-100px" }}
         >
-          {properties.map((property) => (
-            <motion.div key={property.id} variants={cardItem}>
+          {properties.map((property, index) => (
+            <motion.div key={property.firestoreId || property.id || index} variants={cardItem}>
               <PropertyCard
                 property={property}
-                onViewDetails={() => onPropertyClick && onPropertyClick(property.id)}
+                onViewDetails={() => onPropertyClick && onPropertyClick(property.firestoreId || property.id)}
               />
             </motion.div>
           ))}

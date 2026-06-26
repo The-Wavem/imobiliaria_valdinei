@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { logAddToWishlistAnalytics } from "@services/analyticsService.js";
+import { incrementPropertyFavorite } from "@services/propertyService.js";
 
 const STORAGE_KEY = "@wavem-valdinei:favorites";
 
@@ -45,6 +46,16 @@ export function useFavorites() {
       } catch (e) {
         console.error("Analytics Error", e);
       }
+    }
+
+    // Atualiza o ranking global silenciosamente
+    try {
+      const propertyId = property.firestoreId || property.id;
+      if (propertyId) {
+        incrementPropertyFavorite(propertyId, isFav ? -1 : 1);
+      }
+    } catch (e) {
+      console.error("Erro ao incrementar favorito no BD", e);
     }
 
     setFavorites(newFavorites);

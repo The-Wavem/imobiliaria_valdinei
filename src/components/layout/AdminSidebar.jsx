@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { signOut, updatePassword } from "firebase/auth";
 import {
@@ -10,6 +10,10 @@ import {
   Settings,
   Users,
   X,
+  ChevronLeft,
+  ChevronRight,
+  PanelLeftClose,
+  PanelLeftOpen
 } from "lucide-react";
 import Modal from "@components/ui/Modal/Modal.jsx";
 import Button from "@components/ui/Button/Button.jsx";
@@ -27,6 +31,7 @@ const navigationItems = [
 
 export default function AdminSidebar() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
   const [configTab, setConfigTab] = useState("menu");
@@ -36,6 +41,14 @@ export default function AdminSidebar() {
   const [passwordSuccess, setPasswordSuccess] = useState(false);
   const [isSavingPassword, setIsSavingPassword] = useState(false);
   const navigate = useNavigate();
+
+  // Sincroniza a largura da sidebar com o layout global
+  useEffect(() => {
+    document.documentElement.style.setProperty(
+      "--admin-sidebar-width",
+      isCollapsed ? "5.5rem" : "18.75rem"
+    );
+  }, [isCollapsed]);
 
   const resetPasswordState = () => {
     setNewPassword("");
@@ -139,15 +152,27 @@ export default function AdminSidebar() {
         {isOpen ? <X size={22} /> : <Menu size={22} />}
       </button>
 
-      <aside className={`${styles.sidebar} ${isOpen ? styles.sidebarOpen : ""}`}>
+      <aside
+        className={`${styles.sidebar} ${isOpen ? styles.sidebarOpen : ""} ${isCollapsed ? styles.sidebarCollapsed : ""}`}
+      >
         <div className={styles.brand}>
           <div className={styles.brandMark} aria-hidden="true">
             IV
           </div>
-          <div className={styles.brandInfo}>
-            <strong>Imobiliária Valdinei</strong>
-            <span>Painel administrativo</span>
-          </div>
+          {!isCollapsed && (
+            <div className={styles.brandInfo}>
+              <strong>Imobiliária Valdinei</strong>
+              <span>Painel administrativo</span>
+            </div>
+          )}
+
+          <button 
+            className={styles.collapseBtn} 
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            title={isCollapsed ? "Expandir menu" : "Recolher menu"}
+          >
+            {isCollapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+          </button>
         </div>
 
         <nav className={styles.navigation} aria-label="Navegação principal do admin">
@@ -164,8 +189,8 @@ export default function AdminSidebar() {
                 }
                 onClick={() => setIsOpen(false)}
               >
-                <Icon size={18} className={styles.navIcon} />
-                <span className={styles.navText}>{item.label}</span>
+                <Icon className={styles.navIcon} size={20} />
+                {!isCollapsed && <span className={styles.navText}>{item.label}</span>}
               </NavLink>
             );
           })}
@@ -173,13 +198,13 @@ export default function AdminSidebar() {
 
         <div className={styles.footer}>
           <button type="button" className={styles.footerButton} onClick={openConfigModal}>
-            <Settings size={18} />
-            <span className={styles.navText}>Configurações</span>
+            <Settings className={styles.navIcon} size={20} />
+            {!isCollapsed && <span className={styles.navText}>Configurações</span>}
           </button>
 
           <button type="button" className={`${styles.footerButton} ${styles.footerButtonDanger}`} onClick={openLogoutModal}>
-            <LogOut size={18} />
-            <span>Sair</span>
+            <LogOut className={styles.navIcon} size={20} />
+            {!isCollapsed && <span>Sair</span>}
           </button>
         </div>
       </aside>

@@ -8,12 +8,15 @@ import PropertyGrid from "@sections/listing/PropertyGrid.jsx";
 import { getPublicProperties } from "@services/propertyService.js";
 import { extractNeighborhood } from "@utils/address.js";
 import { parsePrice } from "@utils/validation.js";
+import { sortPropertiesByRelevance } from "@utils/rankingEngine.js";
 
 // Assets Premium para o Hero
 import buyVideo from "../../assets/videos/buy-bg.mp4";
 import buyThumb from "../../assets/images/buy-thumb.jpg";
+import { useDocumentTitle } from "@hooks/useDocumentTitle.js";
 
 export default function Buy() {
+  useDocumentTitle('Imóveis à Venda');
   const routerLocation = useLocation();
   const searchParams = new URLSearchParams(routerLocation.search);
   
@@ -126,6 +129,10 @@ export default function Buy() {
     });
   }, [properties, filters]);
 
+  const prioritizedProperties = useMemo(() => {
+    return sortPropertiesByRelevance(filteredProperties);
+  }, [filteredProperties]);
+
   const staggerContainer = {
     hidden: { opacity: 0 },
     show: { opacity: 1, transition: { staggerChildren: 0.15, delayChildren: 0.1 } },
@@ -158,7 +165,7 @@ export default function Buy() {
       </motion.div>
       <motion.div variants={fadeUpItem}>
         <PropertyGrid
-          properties={filteredProperties}
+          properties={prioritizedProperties}
           title="Imóveis para Comprar"
           onPropertyClick={handlePropertyClick}
           isLoading={isLoading}

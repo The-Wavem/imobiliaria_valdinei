@@ -125,6 +125,42 @@
   display: block;
 }
 
+.featuredStarBtn {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.featuredStarBtn:hover {
+  transform: scale(1.1);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.featuredStarActive {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
+.featuredStarActive:hover {
+  background: #a88220;
+  color: white;
+}
+
 .propertyTitle {
   color: var(--color-brand-secondary);
   font-size: 1rem;
@@ -151,7 +187,20 @@
 }
 
 .statusSelectWrapper {
-  min-width: 130px;
+  max-width: 140px;
+}
+
+.scoreBadge {
+  background: rgba(222, 255, 154, 0.1);
+  color: var(--color-brand-primary);
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 0.8rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid rgba(222, 255, 154, 0.3);
 }
 
 .actionsCell {
