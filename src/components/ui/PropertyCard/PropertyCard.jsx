@@ -70,6 +70,7 @@ export default function PropertyCard({ property, onViewDetails }) {
               alt={property.title}
               className={styles.image}
               referrerPolicy="no-referrer"
+              loading="lazy"
             />
           ) : (
             <div className={styles.imagePlaceholder}>

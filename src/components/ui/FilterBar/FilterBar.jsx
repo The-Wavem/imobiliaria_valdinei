@@ -18,16 +18,10 @@ const typeOptions = [
   { value: "terreno", label: "Terreno" },
 ];
 
-export default function FilterBar({ initialFilters = {}, onSearch, onAdvancedFiltersApply, properties = [] }) {
+export default function FilterBar({ filters = {}, onChange, onSearch, properties = [] }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isStuck, setIsStuck] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
-  const [filters, setFilters] = useState({
-    location: initialFilters.location || "",
-    propertyType: initialFilters.propertyType || "",
-    priceMin: initialFilters.priceMin || "",
-    priceMax: initialFilters.priceMax || "",
-  });
   const [advancedFilters, setAdvancedFilters] = useState({
     bedrooms: "Qualquer",
     bathrooms: "Qualquer",
@@ -62,11 +56,11 @@ export default function FilterBar({ initialFilters = {}, onSearch, onAdvancedFil
 
   const handleFieldChange = (field) => (event) => {
     const value = typeof event === "string" ? event : event?.target?.value;
-
-    setFilters((currentFilters) => ({
-      ...currentFilters,
+    onChange?.({
+      ...filters,
+      ...advancedFilters,
       [field]: value,
-    }));
+    });
   };
 
   const MAX_PRICE = 5000000; // 5 Milhões
@@ -78,11 +72,12 @@ export default function FilterBar({ initialFilters = {}, onSearch, onAdvancedFil
 
   const handleSliderChange = (newValues) => {
     const [min, max] = newValues;
-    setFilters((prev) => ({
-      ...prev,
+    onChange?.({
+      ...filters,
+      ...advancedFilters,
       priceMin: min === 0 ? "" : min,
       priceMax: max === MAX_PRICE ? "" : max,
-    }));
+    });
   };
 
   const formatPrice = (value) => {
@@ -107,16 +102,12 @@ export default function FilterBar({ initialFilters = {}, onSearch, onAdvancedFil
   };
 
   useEffect(() => {
-    if (initialFilters.location || initialFilters.propertyType || initialFilters.priceMin || initialFilters.priceMax) {
+    if (filters.location || filters.propertyType || filters.priceMin || filters.priceMax) {
       const currentFilters = { 
-        location: initialFilters.location || "",
-        propertyType: initialFilters.propertyType || "",
-        priceMin: initialFilters.priceMin || "",
-        priceMax: initialFilters.priceMax || "",
+        ...filters,
         ...advancedFilters 
       };
       trackAndLogSearch(currentFilters);
-      onSearch?.(currentFilters);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -126,9 +117,8 @@ export default function FilterBar({ initialFilters = {}, onSearch, onAdvancedFil
     try {
       const currentFilters = { ...filters, ...advancedFilters };
       trackAndLogSearch(currentFilters);
-      await onSearch?.(currentFilters);
+      await onChange?.(currentFilters);
     } finally {
-      // Mantém o spinner por ao menos 600ms para o usuário sentir o feedback
       setTimeout(() => setIsSearching(false), 600);
     }
   };
@@ -148,14 +138,10 @@ export default function FilterBar({ initialFilters = {}, onSearch, onAdvancedFil
       areaMin: "",
       areaMax: "",
     };
-    setFilters(emptyFilters);
     setAdvancedFilters(emptyAdvanced);
     
     const combinedEmpty = { ...emptyFilters, ...emptyAdvanced };
-    onSearch?.(combinedEmpty);
-    if (onAdvancedFiltersApply) {
-      onAdvancedFiltersApply(combinedEmpty);
-    }
+    onChange?.(combinedEmpty);
   };
 
   const hasActiveFilters =
@@ -173,7 +159,7 @@ export default function FilterBar({ initialFilters = {}, onSearch, onAdvancedFil
     setAdvancedFilters(nextAdvancedFilters);
     const currentFilters = { ...filters, ...nextAdvancedFilters };
     trackAndLogSearch(currentFilters);
-    onAdvancedFiltersApply?.(currentFilters);
+    onChange?.(currentFilters);
   };
 
   return (

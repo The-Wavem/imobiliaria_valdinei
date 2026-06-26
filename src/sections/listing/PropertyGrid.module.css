@@ -118,3 +118,64 @@
     border-radius: 28px;
   }
 }
+
+.paginationContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 4rem;
+  flex-wrap: wrap;
+}
+
+.navButton, .pageButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.5rem;
+  min-width: 2.5rem;
+  padding: 0 1rem;
+  border: 1px solid rgba(20, 20, 60, 0.1);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-weight: 600;
+  font-size: 0.875rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.pageButton {
+  padding: 0 0.5rem;
+}
+
+.navButton:hover:not(:disabled), .pageButton:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: rgba(199, 156, 49, 0.05);
+}
+
+.navButton:disabled, .pageButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.activePage {
+  background: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
+}
+
+.activePage:hover:not(:disabled) {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+@keyframes subtleFade {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fadeCard {
+  animation: subtleFade 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}

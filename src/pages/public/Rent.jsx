@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import Footer from "@components/layout/Footer.jsx";
 import FilterBar from "@components/ui/FilterBar/FilterBar.jsx";
 import CategoryHero from "@sections/listing/CategoryHero.jsx";
@@ -17,21 +17,34 @@ import { useDocumentTitle } from "@hooks/useDocumentTitle.js";
 
 export default function Rent() {
   useDocumentTitle('Imóveis para Alugar');
-  const routerLocation = useLocation();
-  const searchParams = new URLSearchParams(routerLocation.search);
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const initialFilters = useMemo(
-    () => ({
-      location: searchParams.get("location") || "",
-      propertyType: searchParams.get("propertyType") || "",
-    }),
-    [],
-  );
+  const currentFilters = {
+    location: searchParams.get('location') || '',
+    propertyType: searchParams.get('propertyType') || '',
+    priceMin: searchParams.get('priceMin') || '',
+    priceMax: searchParams.get('priceMax') || '',
+    page: searchParams.get('page') || '1'
+  };
 
-  const [filters, setFilters] = useState(initialFilters);
   const [properties, setProperties] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const navigate = useNavigate();
+
+  const handleFilterChange = (newFilters) => {
+    const params = new URLSearchParams(searchParams);
+
+    Object.entries(newFilters).forEach(([key, value]) => {
+      if (value) {
+        params.set(key, value);
+      } else {
+        params.delete(key);
+      }
+    });
+
+    params.set('page', '1');
+    setSearchParams(params);
+  };
 
   const handlePropertyClick = (propertyId) => {
     navigate(`/imovel/${propertyId}`);
@@ -56,23 +69,23 @@ export default function Rent() {
   const filteredProperties = useMemo(() => {
     return properties.filter((property) => {
       const feat = property.features || [];
-      const searchLocation = (filters.location || "").trim().toLowerCase();
-      const propertyType = filters.propertyType || "";
+      const searchLocation = (currentFilters.location || "").trim().toLowerCase();
+      const propertyType = currentFilters.propertyType || "";
       const priceMin =
-        filters.priceMin !== "" && filters.priceMin !== undefined
-          ? parsePrice(filters.priceMin)
+        currentFilters.priceMin !== "" && currentFilters.priceMin !== undefined
+          ? parsePrice(currentFilters.priceMin)
           : 0;
-      const priceMaxRaw = filters.priceMax;
+      const priceMaxRaw = currentFilters.priceMax;
       const priceMax =
         priceMaxRaw !== "" && priceMaxRaw !== undefined
           ? parsePrice(priceMaxRaw)
           : Number.POSITIVE_INFINITY;
-      const bedrooms = filters.bedrooms || "Qualquer";
-      const bathrooms = filters.bathrooms || "Qualquer";
-      const parking = filters.parking || "Qualquer";
-      const amenities = filters.amenities || [];
-      const areaMin = Number(filters.areaMin || 0);
-      const areaMax = Number(filters.areaMax || Number.POSITIVE_INFINITY);
+      const bedrooms = currentFilters.bedrooms || "Qualquer";
+      const bathrooms = currentFilters.bathrooms || "Qualquer";
+      const parking = currentFilters.parking || "Qualquer";
+      const amenities = currentFilters.amenities || [];
+      const areaMin = Number(currentFilters.areaMin || 0);
+      const areaMax = Number(currentFilters.areaMax || Number.POSITIVE_INFINITY);
       const loc =
         typeof property.location === "object" ? property.location : {};
       const propAddress = (loc.address || "").toLowerCase();
@@ -132,7 +145,7 @@ export default function Rent() {
         matchesAmenities
       );
     });
-  }, [properties, filters]);
+  }, [properties, currentFilters]);
 
   const prioritizedProperties = useMemo(() => {
     return sortPropertiesByRelevance(filteredProperties);
@@ -173,9 +186,9 @@ export default function Rent() {
           style={{ position: "relative", zIndex: 10 }}
         >
           <FilterBar
-            initialFilters={initialFilters}
-            onSearch={setFilters}
-            onAdvancedFiltersApply={setFilters}
+            filters={currentFilters}
+            onChange={handleFilterChange}
+            onSearch={handleFilterChange}
             properties={properties}
           />
         </motion.div>
