@@ -18,6 +18,7 @@ import {
   X,
   CarFront,
   PlaySquare,
+  Wand2,
 } from "lucide-react";
 import Button from "@components/ui/Button/Button.jsx";
 import Modal from "@components/ui/Modal/Modal.jsx";
@@ -28,6 +29,19 @@ import "react-quill-new/dist/quill.snow.css";
 import Loader from "@components/ui/Loader/Loader.jsx";
 import styles from "./PropertyFormModal.module.css";
 import { checkCodeExists } from "../../../../services/propertyService.js";
+
+const formatCurrencyDisplay = (value) => {
+  if (value === null || value === undefined || value === "") return "";
+  const digits = String(value).replace(/\D/g, "");
+  if (!digits) return "";
+  const num = parseInt(digits, 10);
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    maximumFractionDigits: 0,
+    minimumFractionDigits: 0,
+  }).format(num);
+};
 
 const tabOptions = [
   { id: "basic", label: "Básico" },
@@ -180,6 +194,11 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
       ...currentValue,
       [field]: value,
     }));
+  };
+
+  const handleCurrencyChange = (field, event) => {
+    const rawValue = event.target.value.replace(/\D/g, "");
+    updateField(field, rawValue);
   };
 
   const handleGenerateCode = async () => {
@@ -531,6 +550,75 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
     }
   };
 
+  const handleGenerateTitle = () => {
+    const { type, area, bedrooms, bairro, features } = formData;
+    let titleParts = [];
+    
+    if (type) {
+      titleParts.push(type);
+    } else {
+      titleParts.push("Imóvel");
+    }
+
+    if (features && features.length > 0) {
+      const topFeatures = features.slice(0, 2);
+      if (topFeatures.length > 0) {
+        titleParts.push(`com ${topFeatures.join(" e ")}`);
+      }
+    }
+
+    if (bedrooms && Number(bedrooms) > 0) {
+      titleParts.push(`- ${bedrooms} Quartos`);
+    }
+
+    if (area && Number(area) > 0) {
+      titleParts.push(`- ${area}m²`);
+    }
+
+    if (bairro) {
+      titleParts.push(`em ${bairro}`);
+    }
+
+    let generatedTitle = titleParts.join(" ");
+    if (!generatedTitle) generatedTitle = "Novo Imóvel";
+
+    updateField("title", generatedTitle);
+  };
+
+  const handleGenerateDescription = () => {
+    const { category, type, area, bedrooms, bathrooms, parkingSpaces, bairro, cidade, features } = formData;
+    
+    let html = "";
+    
+    // Intro
+    const tipoApresentacao = type || "este excelente imóvel";
+    const local = bairro ? `no bairro <strong>${bairro}</strong>${cidade ? ` em ${cidade}` : ''}` : "em uma ótima localização";
+    const cat = category ? ` disponível para <strong>${category.toLowerCase()}</strong>` : "";
+    
+    html += `<p>Apresentamos ${tipoApresentacao} ${local}${cat}, ideal para quem busca conforto e qualidade de vida.</p>`;
+    
+    // Estrutura
+    const estrutura = [];
+    if (area) estrutura.push(`<strong>${area}m²</strong> de área`);
+    if (bedrooms) estrutura.push(`<strong>${bedrooms} quartos</strong>`);
+    if (bathrooms) estrutura.push(`<strong>${bathrooms} banheiros</strong>`);
+    if (parkingSpaces) estrutura.push(`<strong>${parkingSpaces} vagas</strong> de garagem`);
+    
+    if (estrutura.length > 0) {
+      html += `<p>O imóvel conta com espaços bem distribuídos, totalizando ${estrutura.join(", ")}.</p>`;
+    }
+    
+    // Características
+    if (features && features.length > 0) {
+      html += `<br/><p>Além disso, a propriedade oferece excelentes diferenciais, como: <em>${features.join(", ")}</em>.</p>`;
+    }
+    
+    // Fechamento
+    html += `<br/><p>Não perca essa oportunidade única! Entre em contato conosco e agende uma visita para conhecer o seu novo lar.</p>`;
+    
+    setFormData((prev) => ({ ...prev, description: html }));
+  };
+
   return (
     <Modal
       isOpen={isOpen}
@@ -566,15 +654,26 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
 
         <div className={styles.modalBodyLayout}>
           <div className={styles.modalMainContent}>
-            {activeTab === "basic" ? (
+          {activeTab === "basic" ? (
             <section className={styles.tabPanel}>
             <div className={styles.formGrid}>
-              <Input
-                label="Título"
-                placeholder="Ex: Casa térrea com piscina"
-                value={formData.title}
-                onChange={(event) => updateField("title", event.target.value)}
-              />
+              <div className={styles.inputWithGenerate}>
+                <Input
+                  label="Título"
+                  placeholder="Ex: Casa térrea com piscina"
+                  value={formData.title}
+                  onChange={(event) => updateField("title", event.target.value)}
+                />
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  className={styles.generateBtn}
+                  onClick={handleGenerateTitle}
+                  title="Gerar título magicamente"
+                >
+                  <Wand2 size={16} />
+                </Button>
+              </div>
               <div className={styles.codeGroupContainer}>
                 <Input
                   label="Código"
@@ -597,24 +696,24 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
               </div>
               <Input
                 label="Preço"
-                type="number"
-                placeholder="0"
-                value={formData.price}
-                onChange={(event) => updateField("price", event.target.value)}
+                type="text"
+                placeholder="R$ 0"
+                value={formatCurrencyDisplay(formData.price)}
+                onChange={(event) => handleCurrencyChange("price", event)}
               />
               <Input
                 label="Condomínio"
-                type="number"
-                placeholder="0"
-                value={formData.condo}
-                onChange={(event) => updateField("condo", event.target.value)}
+                type="text"
+                placeholder="R$ 0"
+                value={formatCurrencyDisplay(formData.condo)}
+                onChange={(event) => handleCurrencyChange("condo", event)}
               />
               <Input
                 label="IPTU"
-                type="number"
-                placeholder="0"
-                value={formData.iptu}
-                onChange={(event) => updateField("iptu", event.target.value)}
+                type="text"
+                placeholder="R$ 0"
+                value={formatCurrencyDisplay(formData.iptu)}
+                onChange={(event) => handleCurrencyChange("iptu", event)}
               />
 
               <div className={styles.selectRow}>
@@ -726,7 +825,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                 label="Área (m²)"
                 icon={Ruler}
                 type="number"
-                placeholder="0"
+                placeholder="Ex: 150"
                 value={formData.area}
                 onChange={(event) => updateField("area", event.target.value)}
               />
@@ -1042,7 +1141,18 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
           <section className={styles.tabPanel}>
             <div className={styles.descriptionGroup} style={{ paddingBottom: '2rem' }}>
               <div className={styles.textareaField}>
-                <span className={styles.textareaLabel}>Descrição Completa</span>
+                <div className={styles.descriptionHeader}>
+                  <span className={styles.textareaLabel}>Descrição Completa</span>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={handleGenerateDescription}
+                    className={styles.generateDescBtn}
+                  >
+                    <Wand2 size={14} style={{ marginRight: '6px' }} />
+                    Gerar Descrição Automática
+                  </Button>
+                </div>
                 <ReactQuill
                   theme="snow"
                   value={formData.description}
