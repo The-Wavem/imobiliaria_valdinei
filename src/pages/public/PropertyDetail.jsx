@@ -170,6 +170,7 @@ export default function PropertyDetail() {
             <PropertyHeader
               title={property.title}
               location={property.location}
+              propertyId={property.id}
             />
           </MotionDiv>
           <MotionDiv variants={itemVariants}>
