@@ -70,9 +70,7 @@ export default function PropertyManager() {
       const matchesStatus =
         filterStatus === "Todos"
           ? true
-          : filterStatus === "Ativos"
-            ? property.active
-            : !property.active;
+          : property.status === filterStatus;
 
       return matchesSearch && matchesStatus;
     });

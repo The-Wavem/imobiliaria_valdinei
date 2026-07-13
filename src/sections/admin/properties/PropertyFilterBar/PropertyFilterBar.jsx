@@ -6,8 +6,11 @@ import styles from "./PropertyFilterBar.module.css";
 
 const statusOptions = [
   { label: "Todos os Status", value: "Todos" },
-  { label: "Ativos", value: "Ativos" },
-  { label: "Inativos", value: "Inativos" },
+  { label: "Disponível", value: "Disponível" },
+  { label: "Reservado", value: "Reservado" },
+  { label: "Vendido", value: "Vendido" },
+  { label: "Alugado", value: "Alugado" },
+  { label: "Inativo", value: "Inativo" },
 ];
 
 export default function PropertyFilterBar({
