@@ -19,12 +19,19 @@ export default function PropertyManager() {
   const [isLoading, setIsLoading] = useState(true);
   const [confirmDelete, setConfirmDelete] = useState({ isOpen: false, propertyId: null });
 
-  const totalProperties = properties.length;
-  const ativos = useMemo(
-    () => properties.filter((property) => property.active).length,
-    [properties],
-  );
-  const inativos = totalProperties - ativos;
+  const statsCounts = useMemo(() => {
+    const counts = { total: properties.length, disponiveis: 0, reservados: 0, vendidos: 0, alugados: 0, inativos: 0 };
+    properties.forEach((p) => {
+      const st = p.status;
+      if (st === 'Disponível' || !st) counts.disponiveis++;
+      else if (st === 'Reservado') counts.reservados++;
+      else if (st === 'Vendido') counts.vendidos++;
+      else if (st === 'Alugado') counts.alugados++;
+      else if (st === 'Inativo') counts.inativos++;
+      else counts.inativos++; // Fallback
+    });
+    return counts;
+  }, [properties]);
 
   const loadProperties = async () => {
     setIsLoading(true);
@@ -146,11 +153,7 @@ export default function PropertyManager() {
     <main className="admin-container">
       <h1 className="admin-title">Imóveis</h1>
 
-      <PropertyStats
-        total={totalProperties}
-        ativos={ativos}
-        inativos={inativos}
-      />
+      <PropertyStats {...statsCounts} />
 
       <PropertyFilterBar
         searchTerm={searchTerm}

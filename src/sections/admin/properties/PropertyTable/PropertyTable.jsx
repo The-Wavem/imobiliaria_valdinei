@@ -104,7 +104,17 @@ export default function PropertyTable({
                   const price = Number(
                     property.price || property.pricing?.price || 0,
                   );
-                  const isActive = property.status === "Ativo" || property.status === "Disponível";
+                  const getRowStatusClass = (status) => {
+                    switch(status) {
+                      case 'Disponível': return styles.rowStatusDisponivel;
+                      case 'Reservado': return styles.rowStatusReservado;
+                      case 'Vendido': return styles.rowStatusVendido;
+                      case 'Alugado': return styles.rowStatusAlugado;
+                      case 'Inativo': return styles.rowStatusInativo;
+                      default: return styles.rowStatusDisponivel;
+                    }
+                  };
+
                   const views = property.views || 0; // Contagem de views
                   const shares = property.shares || 0; // Contagem de compartilhamentos
                   const scoreData = getScore(property);
@@ -113,7 +123,7 @@ export default function PropertyTable({
                   return (
                     <tr
                       key={property.firestoreId || property.id || property.code}
-                      className={`${styles.row} ${isActive ? styles.rowActive : styles.rowInactive}`.trim()}
+                      className={`${styles.row} ${getRowStatusClass(property.status)}`.trim()}
                     >
                       <td data-label="Foto">
                         <div className={styles.cellContent} style={{ position: "relative", width: "max-content" }}>

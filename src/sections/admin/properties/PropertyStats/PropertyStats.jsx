@@ -1,4 +1,4 @@
-import { BadgeCheck, Ban, Building2 } from "lucide-react";
+import { BadgeCheck, Ban, Building2, Key, Handshake, CalendarClock } from "lucide-react";
 import styles from "./PropertyStats.module.css";
 
 const stats = [
@@ -9,21 +9,39 @@ const stats = [
     icon: Building2,
   },
   {
-    key: "ativos",
-    label: "Ativos",
-    hint: "Publicados na vitrine",
+    key: "disponiveis",
+    label: "Disponíveis",
+    hint: "Prontos para negócio",
     icon: BadgeCheck,
+  },
+  {
+    key: "reservados",
+    label: "Reservados",
+    hint: "Aguardando fechamento",
+    icon: CalendarClock,
+  },
+  {
+    key: "vendidos",
+    label: "Vendidos",
+    hint: "Negócio concluído",
+    icon: Handshake,
+  },
+  {
+    key: "alugados",
+    label: "Alugados",
+    hint: "Com contrato ativo",
+    icon: Key,
   },
   {
     key: "inativos",
     label: "Inativos",
-    hint: "Não exibidos ao público",
+    hint: "Ocultos do sistema",
     icon: Ban,
   },
 ];
 
-export default function PropertyStats({ total = 0, ativos = 0, inativos = 0 }) {
-  const values = { total, ativos, inativos };
+export default function PropertyStats({ total = 0, disponiveis = 0, reservados = 0, vendidos = 0, alugados = 0, inativos = 0 }) {
+  const values = { total, disponiveis, reservados, vendidos, alugados, inativos };
 
   return (
     <section className={styles.section} aria-label="Resumo dos imóveis">
