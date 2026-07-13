@@ -29,6 +29,7 @@ import "react-quill-new/dist/quill.snow.css";
 import Loader from "@components/ui/Loader/Loader.jsx";
 import styles from "./PropertyFormModal.module.css";
 import { checkCodeExists } from "../../../../services/propertyService.js";
+import { uploadPropertyImage } from "../../../../services/storageService.js";
 
 const formatCurrencyDisplay = (value) => {
   if (value === null || value === undefined || value === "") return "";
@@ -110,6 +111,27 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
   const [codeError, setCodeError] = useState("");
   const [isGeneratingCode, setIsGeneratingCode] = useState(false);
   const [showTips, setShowTips] = useState(false);
+  const [isUploadingMedia, setIsUploadingMedia] = useState(false);
+
+  const handleFileUpload = async (event) => {
+    const files = Array.from(event.target.files);
+    if (!files.length) return;
+
+    setIsUploadingMedia(true);
+    try {
+      const code = formData.code || 'novo';
+      for (const file of files) {
+        const url = await uploadPropertyImage(file, code);
+        addPhoto(url);
+      }
+    } catch (error) {
+      console.error("Erro no upload de arquivos:", error);
+    } finally {
+      setIsUploadingMedia(false);
+      // Reset input value so same files can be selected again
+      event.target.value = '';
+    }
+  };
 
   useEffect(() => {
     if (!isOpen) {
@@ -1056,15 +1078,36 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
         {activeTab === "media" ? (
           <section className={styles.tabPanel}>
             <div className={styles.mediaDropzone}>
-              <div className={styles.mediaDropzoneIcon} aria-hidden="true">
-                <Camera size={34} />
-              </div>
-              <div className={styles.mediaDropzoneText}>
-                <strong>Adicione fotos ou vídeos do imóvel</strong>
-                <span>
-                  Você pode inserir URLs ou simular a seleção de arquivos com o
-                  botão abaixo.
-                </span>
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                id="property-image-upload"
+                style={{ display: "none" }}
+                onChange={handleFileUpload}
+              />
+              <div
+                className={styles.mediaDropzoneClickable}
+                onClick={() => document.getElementById("property-image-upload").click()}
+              >
+                {isUploadingMedia ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+                    <Loader size={34} />
+                    <div style={{ marginTop: '1rem', fontWeight: 600, color: 'var(--text-color)' }}>Enviando imagens para a nuvem...</div>
+                  </div>
+                ) : (
+                  <>
+                    <div className={styles.mediaDropzoneIcon} aria-hidden="true">
+                      <Camera size={34} />
+                    </div>
+                    <div className={styles.mediaDropzoneText}>
+                      <strong>Clique aqui para fazer upload de fotos reais</strong>
+                      <span>
+                        Selecione as imagens diretamente do seu computador. Ou você pode inserir URLs na opção abaixo.
+                      </span>
+                    </div>
+                  </>
+                )}
               </div>
 
               <div className={styles.mediaDropzoneActions}>
