@@ -27,10 +27,12 @@ const formatPropertyData = (data) => {
     active: data.status ? data.status !== "Inativo" : true,
     pricing: {
       price: Number(data.price || data.pricing?.price || 0),
+      rentPrice: Number(data.rentPrice || data.pricing?.rentPrice || 0),
       condo: Number(data.condo || data.pricing?.condo || 0),
       iptu: Number(data.iptu || data.pricing?.iptu || 0),
     },
     area: Number(data.area || loc.area || 0),
+    landArea: Number(data.landArea || loc.landArea || 0),
     bedrooms: Number(data.bedrooms || loc.bedrooms || 0),
     bathrooms: Number(data.bathrooms || loc.bathrooms || 0),
     parkingSpaces: Number(data.parkingSpaces || loc.parkingSpaces || 0),
@@ -123,8 +125,16 @@ export async function getPublicProperties(categoryParam) {
     const snapshot = await getDocs(propertiesQuery);
 
     return snapshot.docs.map(mapPropertyDocument).filter((property) => {
+      if (!categoryParam) return property.active;
+      
+      const propCategory = property.category?.toLowerCase() || "";
+      const targetCategory = categoryParam.toLowerCase();
+      
       const matchesCategory =
-        property.category?.toLowerCase() === categoryParam?.toLowerCase();
+        propCategory === targetCategory || 
+        propCategory === "venda e aluguel" || 
+        propCategory === "ambos";
+        
       return property.active && matchesCategory;
     });
   } catch (error) {

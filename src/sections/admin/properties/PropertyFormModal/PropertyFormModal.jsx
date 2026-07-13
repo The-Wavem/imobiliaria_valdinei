@@ -56,6 +56,7 @@ const categoryOptions = [
   { label: "Selecione", value: "" },
   { label: "Alugar", value: "Alugar" },
   { label: "Comprar", value: "Comprar" },
+  { label: "Venda e Aluguel", value: "Venda e Aluguel" },
 ];
 
 const baseTypes = ["Casa", "Apartamento", "Comercial", "Cobertura"];
@@ -74,9 +75,9 @@ const baseFeatures = [
 ];
 
 const defaultForm = {
-  title: "", code: "", price: "", condo: "", iptu: "",
+  title: "", code: "", price: "", rentPrice: "", condo: "", iptu: "",
   category: "", type: "", cep: "", logradouro: "", numero: "", complemento: "", bairro: "", cidade: "", estado: "",
-  area: "", bedrooms: "", bathrooms: "", parkingSpaces: "",
+  area: "", landArea: "", bedrooms: "", bathrooms: "", parkingSpaces: "",
   features: [], photos: [], videos: [], description: "",
   status: "Disponível",
   featured: false
@@ -134,6 +135,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
         title: property.title || property.content?.summary || "",
         code: property.code || "",
         price: property.pricing?.price || property.price || "",
+        rentPrice: property.pricing?.rentPrice || property.rentPrice || "",
         condo: property.pricing?.condo || property.condo || "",
         iptu: property.pricing?.iptu || property.iptu || "",
         category: property.category || "",
@@ -146,6 +148,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
         cidade: property.location?.cidade || property.location?.city || property.city || "",
         estado: property.location?.estado || property.location?.state || property.state || "",
         area: property.area || property.location?.area || "",
+        landArea: property.landArea || property.location?.landArea || "",
         bedrooms: property.bedrooms || property.location?.bedrooms || "",
         bathrooms: property.bathrooms || property.location?.bathrooms || "",
         parkingSpaces: property.parkingSpaces || property.location?.parkingSpaces || "",
@@ -694,13 +697,35 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                   {isGeneratingCode ? "Gerando..." : "Gerar Código"}
                 </Button>
               </div>
-              <Input
-                label="Preço"
-                type="text"
-                placeholder="R$ 0"
-                value={formatCurrencyDisplay(formData.price)}
-                onChange={(event) => handleCurrencyChange("price", event)}
-              />
+              <div className={styles.selectRow}>
+                <Select
+                  label="Categoria"
+                  value={formData.category}
+                  onChange={(value) => updateField("category", value)}
+                  options={categoryOptions}
+                />
+              </div>
+
+              {(formData.category === "Comprar" || formData.category === "Venda e Aluguel") && (
+                <Input
+                  label="Preço de Venda"
+                  type="text"
+                  placeholder="R$ 0"
+                  value={formatCurrencyDisplay(formData.price)}
+                  onChange={(event) => handleCurrencyChange("price", event)}
+                />
+              )}
+
+              {(formData.category === "Alugar" || formData.category === "Venda e Aluguel") && (
+                <Input
+                  label="Preço de Aluguel"
+                  type="text"
+                  placeholder="R$ 0"
+                  value={formatCurrencyDisplay(formData.rentPrice)}
+                  onChange={(event) => handleCurrencyChange("rentPrice", event)}
+                />
+              )}
+
               <Input
                 label="Condomínio"
                 type="text"
@@ -715,15 +740,6 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                 value={formatCurrencyDisplay(formData.iptu)}
                 onChange={(event) => handleCurrencyChange("iptu", event)}
               />
-
-              <div className={styles.selectRow}>
-                <Select
-                  label="Categoria"
-                  value={formData.category}
-                  onChange={(value) => updateField("category", value)}
-                  options={categoryOptions}
-                />
-              </div>
 
               <div className={styles.featuredToggleContainer}>
                 <label className={styles.featuredToggleLabel}>
@@ -822,12 +838,20 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
           <section className={styles.tabPanel}>
             <div className={styles.formGrid}>
               <Input
-                label="Área (m²)"
+                label="Área Construída (m²)"
                 icon={Ruler}
                 type="number"
                 placeholder="Ex: 150"
                 value={formData.area}
                 onChange={(event) => updateField("area", event.target.value)}
+              />
+              <Input
+                label="Área do Terreno (m²)"
+                icon={Ruler}
+                type="number"
+                placeholder="Ex: 300 (opcional)"
+                value={formData.landArea}
+                onChange={(event) => updateField("landArea", event.target.value)}
               />
               <Input
                 label="Quartos"

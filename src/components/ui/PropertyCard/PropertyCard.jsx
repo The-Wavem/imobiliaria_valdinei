@@ -169,12 +169,28 @@ export default function PropertyCard({ property, onViewDetails }) {
           </Link>
         </h3>
 
-        <p className={styles.price}>
-          {Number(property.price || property.pricing?.price || 0).toLocaleString("pt-BR", {
-            style: "currency",
-            currency: "BRL",
-          })}
-        </p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', marginBottom: '1rem' }}>
+          {(property.category === "Venda e Aluguel" || property.category === "Ambos") ? (
+            <>
+              <p className={styles.price} style={{ fontSize: '1.1rem', margin: 0 }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: 'normal', color: 'var(--color-text-muted)', marginRight: '4px' }}>Venda:</span> 
+                {Number(property.price || property.pricing?.price || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+              </p>
+              <p className={styles.price} style={{ fontSize: '1.1rem', margin: 0 }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: 'normal', color: 'var(--color-text-muted)', marginRight: '4px' }}>Aluguel:</span> 
+                {Number(property.rentPrice || property.pricing?.rentPrice || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+              </p>
+            </>
+          ) : property.category === "Alugar" ? (
+            <p className={styles.price} style={{ margin: 0 }}>
+              {Number(property.rentPrice || property.pricing?.rentPrice || property.price || property.pricing?.price || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+            </p>
+          ) : (
+            <p className={styles.price} style={{ margin: 0 }}>
+              {Number(property.price || property.pricing?.price || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+            </p>
+          )}
+        </div>
 
         <div className={styles.stats}>
           {beds > 0 && (

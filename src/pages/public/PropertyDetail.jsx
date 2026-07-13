@@ -178,6 +178,7 @@ export default function PropertyDetail() {
               beds={property.beds}
               baths={property.baths}
               area={property.area}
+              landArea={property.landArea}
               parking={property.parking}
             />
           </MotionDiv>
@@ -200,6 +201,8 @@ export default function PropertyDetail() {
             <ContactSidebar
               code={property.code}
               price={property.price}
+              rentPrice={property.pricing?.rentPrice || property.rentPrice}
+              category={property.category}
               condo={property.condo}
               iptu={property.iptu}
               propertyTitle={property.title}

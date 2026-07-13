@@ -27,6 +27,8 @@ function buildWhatsAppMessage({ propertyTitle, propertyCode, propertyPrice, clie
 export default function ContactSidebar({
   code,
   price,
+  rentPrice,
+  category,
   condo,
   iptu,
   onScheduleVisit,
@@ -162,11 +164,36 @@ export default function ContactSidebar({
         </div>
 
         <div className={styles.priceWrap}>
-          <div className={styles.priceLabel}>Valor</div>
-          <div className={styles.priceValue}>
-            <span className={styles.currency}>R$</span>
-            <span className={styles.amount}>{price.toLocaleString("pt-BR")}</span>
-          </div>
+          {(category === "Venda e Aluguel" || category === "Ambos") ? (
+            <>
+              <div className={styles.priceLabel}>Valor de Venda</div>
+              <div className={styles.priceValue}>
+                <span className={styles.currency}>R$</span>
+                <span className={styles.amount}>{price ? price.toLocaleString("pt-BR") : "---"}</span>
+              </div>
+              <div className={styles.priceLabel} style={{ marginTop: '0.75rem' }}>Valor de Aluguel</div>
+              <div className={styles.priceValue}>
+                <span className={styles.currency}>R$</span>
+                <span className={styles.amount}>{rentPrice ? rentPrice.toLocaleString("pt-BR") : "---"}</span>
+              </div>
+            </>
+          ) : category === "Alugar" ? (
+            <>
+              <div className={styles.priceLabel}>Valor de Aluguel</div>
+              <div className={styles.priceValue}>
+                <span className={styles.currency}>R$</span>
+                <span className={styles.amount}>{rentPrice ? rentPrice.toLocaleString("pt-BR") : (price ? price.toLocaleString("pt-BR") : "---")}</span>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className={styles.priceLabel}>Valor de Venda</div>
+              <div className={styles.priceValue}>
+                <span className={styles.currency}>R$</span>
+                <span className={styles.amount}>{price ? price.toLocaleString("pt-BR") : "---"}</span>
+              </div>
+            </>
+          )}
           <div className={styles.code}>Código: {code}</div>
         </div>
 
