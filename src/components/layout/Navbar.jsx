@@ -1,7 +1,7 @@
 import { Heart, Menu } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { useFavorites } from "@hooks/useFavorites";
-import logoImg from "../../assets/images/logo.webp";
+import logoImg from "../../assets/images/logo.png";
 import styles from "./Navbar.module.css";
 
 const navigationItems = [
