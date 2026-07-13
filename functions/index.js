@@ -19,7 +19,7 @@ const escapeXml = (unsafe) => {
 exports.apiCanalPro = onRequest(async (req, res) => {
     try {
         const snapshot = await admin.firestore().collection('properties')
-            .where('status', '==', 'Ativo')
+            .where('status', '==', 'Disponível')
             .get();
 
         let xmlString = `<?xml version="1.0" encoding="UTF-8"?>\n`;
