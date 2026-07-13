@@ -1,4 +1,4 @@
-import { Pencil, ToggleLeft, ToggleRight, Trash2, Eye, Star } from "lucide-react";
+import { Pencil, ToggleLeft, ToggleRight, Trash2, Eye, Star, Share2 } from "lucide-react";
 import Button from "@components/ui/Button/Button.jsx";
 import Select from "@components/ui/Select/Select.jsx";
 import { calculateTotalScore } from "@utils/rankingEngine.js";
@@ -87,8 +87,8 @@ export default function PropertyTable({
                 <th>Tipo / Categoria</th>
                 <th>Nota</th>
                 <th>Status</th>
-                <th>Populariedade</th>
-                <th>Views</th>
+                <th>Wavem Rank</th>
+                <th>Métricas</th>
                 <th>Ações</th>
               </tr>
             </thead>
@@ -104,8 +104,9 @@ export default function PropertyTable({
                   const price = Number(
                     property.price || property.pricing?.price || 0,
                   );
-                  const isActive = property.status === "Ativo"; // Checagem direta do status
+                  const isActive = property.status === "Ativo" || property.status === "Disponível";
                   const views = property.views || 0; // Contagem de views
+                  const shares = property.shares || 0; // Contagem de compartilhamentos
                   const scoreData = getScore(property);
                   const wavemRank = calculateTotalScore(property);
 
@@ -219,25 +220,28 @@ export default function PropertyTable({
                         </div>
                       </td>
 
-                      <td data-label="Views">
+                      <td data-label="Métricas">
                         <div
                           className={styles.cellContent}
                           style={{
                             flexDirection: "row",
                             alignItems: "center",
-                            gap: "0.4rem",
+                            gap: "0.8rem",
                             color: "var(--color-text-muted)",
                           }}
                         >
-                          <Eye size={16} />
-                          <strong
-                            style={{
-                              fontSize: "1rem",
-                              color: "var(--color-brand-secondary)",
-                            }}
-                          >
-                            {views}
-                          </strong>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }} title="Visualizações">
+                            <Eye size={16} />
+                            <strong style={{ fontSize: "1rem", color: "var(--color-brand-secondary)" }}>
+                              {views}
+                            </strong>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }} title="Compartilhamentos">
+                            <Share2 size={14} />
+                            <strong style={{ fontSize: "1rem", color: "var(--color-brand-secondary)" }}>
+                              {shares}
+                            </strong>
+                          </div>
                         </div>
                       </td>
 

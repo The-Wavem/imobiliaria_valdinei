@@ -16,12 +16,28 @@ service cloud.firestore {
       allow create, delete: if isAdmin();
 
       // Atualização: Admin pode tudo.
-      // Visitante comum PODE APENAS incrementar o contador de visualizações e score.
-      allow update: if isAdmin() || (
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['views', 'score']) 
-        && request.resource.data.views == resource.data.views + 1
-        && request.resource.data.score == resource.data.score + 1
-      );
+      // Visitantes comuns podem apenas interagir com métricas específicas (visualizações, compartilhamentos, favoritos e leads).
+      allow update: if isAdmin() 
+        || (
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['views', 'score']) 
+          && request.resource.data.views == resource.data.views + 1
+          && request.resource.data.score == resource.data.score + 1
+        )
+        || (
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['shares', 'score']) 
+          && request.resource.data.shares == resource.data.shares + 1
+          && request.resource.data.score == resource.data.score + 100
+        )
+        || (
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['favoriteCount', 'score']) 
+          && (request.resource.data.favoriteCount == resource.data.favoriteCount + 1 || request.resource.data.favoriteCount == resource.data.favoriteCount - 1)
+          && (request.resource.data.score == resource.data.score + 50 || request.resource.data.score == resource.data.score - 50)
+        )
+        || (
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['leadCount', 'score']) 
+          && request.resource.data.leadCount == resource.data.leadCount + 1
+          && request.resource.data.score == resource.data.score + 500
+        );
     }
 
     // Regras para a coleção de leads (contatos)

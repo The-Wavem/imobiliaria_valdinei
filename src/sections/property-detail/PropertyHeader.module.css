@@ -25,3 +25,27 @@
 
 .priceWrap { text-align: right; }
 .price { font-size: 1.25rem; font-weight: 700; color: var(--color-brand-secondary); }
+
+.shareButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1.25rem;
+  background-color: var(--color-primary);
+  border: none;
+  color: white;
+  border-radius: var(--radius-md);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-primary);
+}
+
+.shareButton:hover {
+  background-color: var(--color-secondary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-secondary);
+}

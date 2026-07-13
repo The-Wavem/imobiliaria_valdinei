@@ -52,6 +52,7 @@ const formatPropertyData = (data) => {
     },
     featured: Boolean(data.featured),
     views: Number(data.views) || 0,
+    shares: Number(data.shares) || 0,
     updatedAt: new Date().toISOString(),
   };
 
@@ -140,6 +141,17 @@ export const incrementPropertyViews = async (propertyId) => {
     await updateDoc(propertyRef, { views: increment(1), score: increment(1) });
   } catch (error) {
     console.error(`Erro ao registrar view para o imóvel ${propertyId}:`, error);
+  }
+};
+
+export const incrementPropertyShares = async (propertyId) => {
+  if (!propertyId) return;
+
+  try {
+    const propertyRef = doc(db, "properties", propertyId);
+    await updateDoc(propertyRef, { shares: increment(1), score: increment(100) });
+  } catch (error) {
+    console.error(`Erro ao registrar compartilhamento para o imóvel ${propertyId}:`, error);
   }
 };
 

@@ -1,4 +1,4 @@
-import { CalendarDays, Home, Users } from "lucide-react";
+import { CalendarDays, Home, Users, Share2 } from "lucide-react";
 import styles from "./DashboardStats.module.css";
 
 const numberFormatter = new Intl.NumberFormat("pt-BR");
@@ -25,13 +25,21 @@ const metricDefinitions = [
     badge: "Triagem",
     icon: CalendarDays,
   },
+  {
+    key: "shares",
+    label: "Compartilhamentos",
+    detail: "Mídia orgânica total",
+    badge: "Social",
+    icon: Share2,
+  },
 ];
 
-export default function DashboardStats({ totalAccess = 0, totalProperties = 0, pendingLeads = 0 }) {
+export default function DashboardStats({ totalAccess = 0, totalProperties = 0, pendingLeads = 0, totalShares = 0 }) {
   const metricValues = {
     access: totalAccess,
     properties: totalProperties,
     requests: pendingLeads,
+    shares: totalShares,
   };
 
   return (

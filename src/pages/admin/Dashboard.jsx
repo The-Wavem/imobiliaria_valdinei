@@ -95,6 +95,11 @@ export default function Dashboard() {
     [accessData],
   );
 
+  const totalShares = useMemo(
+    () => propertiesData.reduce((total, prop) => total + (Number(prop.shares) || 0), 0),
+    [propertiesData],
+  );
+
   const accessChartData = useMemo(() => {
     if (accessData.length === 0) {
       return [];
@@ -168,6 +173,7 @@ export default function Dashboard() {
         totalAccess={totalAccess}
         totalProperties={propertyStats.total}
         pendingLeads={leadStats.novos}
+        totalShares={totalShares}
       />
       <OverviewChart
         data={accessChartData}
