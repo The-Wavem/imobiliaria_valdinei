@@ -20,6 +20,29 @@ const cleanNumber = (value) => {
 const cleanList = (values = []) =>
   [...new Set(values.map((item) => cleanText(item)).filter(Boolean))];
 
+const normalizeMediaList = (values = []) => {
+  const items = Array.isArray(values) ? values : [values];
+  const urls = [];
+
+  items.forEach((item) => {
+    const text = cleanText(item);
+    if (!text) return;
+
+    const matches = text.match(/https?:\/\/[^\s"'<>]+/g);
+    if (matches?.length) {
+      urls.push(...matches.map((url) => url.trim()));
+      return;
+    }
+
+    text.split(/[\n,;]+/).forEach((part) => {
+      const value = cleanText(part);
+      if (value) urls.push(value);
+    });
+  });
+
+  return [...new Set(urls.filter(Boolean))];
+};
+
 const buildKeywords = (property) =>
   cleanList([
     property.title,
@@ -31,8 +54,8 @@ const buildKeywords = (property) =>
   ]);
 
 export function buildPropertyDocument(formData, options = {}) {
-  const photos = cleanList([
-    ...(Array.isArray(formData.photos) ? formData.photos : []),
+  const photos = normalizeMediaList([
+    ...(Array.isArray(formData.photos) ? formData.photos : [formData.photos]),
     formData.imageUrl,
   ]);
   const coverImage = photos[0] || cleanText(formData.imageUrl);

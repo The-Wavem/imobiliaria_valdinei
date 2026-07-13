@@ -297,19 +297,47 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
     setNewFeature("");
   };
 
-  const addPhoto = (urlValue) => {
-    const value = urlValue.trim();
+  const extractPhotoUrls = (rawValue) => {
+    const textValue = String(rawValue || "");
+    const urlMatches = textValue.match(/https?:\/\/[^\s"'<>]+/g) || [];
 
-    if (!value) {
+    if (urlMatches.length > 0) {
+      return [...new Set(urlMatches.map((item) => item.trim()).filter(Boolean))];
+    }
+
+    return textValue
+      .split(/[\n,;]+/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+  };
+
+  const addPhoto = (urlValue) => {
+    const nextUrls = extractPhotoUrls(urlValue);
+
+    if (nextUrls.length === 0) {
       return;
     }
 
     setFormData((currentValue) => ({
       ...currentValue,
-      photos: [...currentValue.photos, value],
-      imageUrl:
-        currentValue.photos.length === 0 ? value : currentValue.imageUrl,
+      photos: [
+        ...currentValue.photos,
+        ...nextUrls.filter((item) => !currentValue.photos.includes(item)),
+      ],
+      imageUrl: currentValue.photos.length === 0 ? nextUrls[0] : currentValue.imageUrl,
     }));
+  };
+
+  const handlePhotoPaste = (event) => {
+    const pastedValue = event.clipboardData.getData("text");
+
+    if (!pastedValue || !/[\n,;]/.test(pastedValue)) {
+      return;
+    }
+
+    event.preventDefault();
+    addPhoto(pastedValue);
+    setNewPhotoUrl("");
   };
 
   const removePhoto = (photoIndex) => {
@@ -1043,9 +1071,10 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                 <Input
                   label="URL da mídia"
                   icon={ImagePlus}
-                  placeholder="Cole a URL da foto"
+                  placeholder="Cole uma ou mais URLs da foto"
                   value={newPhotoUrl}
                   onChange={(event) => setNewPhotoUrl(event.target.value)}
+                  onPaste={handlePhotoPaste}
                   className={styles.mediaDropzoneInput}
                 />
                 <Button
@@ -1063,9 +1092,12 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                     setNewPhotoUrl("");
                   }}
                 >
-                  Procurar arquivos
+                  Adicionar links
                 </Button>
               </div>
+              <span className={styles.mediaDropzoneHint}>
+                Você pode colar várias URLs separadas por linha, vírgula ou ponto e vírgula.
+              </span>
             </div>
 
             <div className={styles.galleryShell}>

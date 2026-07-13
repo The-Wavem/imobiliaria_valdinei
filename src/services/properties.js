@@ -17,6 +17,29 @@ const getTimestampMillis = (value) => {
   return 0;
 };
 
+const normalizeMediaList = (values = []) => {
+  const items = Array.isArray(values) ? values : [values];
+  const urls = [];
+
+  items.forEach((item) => {
+    const text = typeof item === "string" ? item.trim() : "";
+    if (!text) return;
+
+    const matches = text.match(/https?:\/\/[^\s"'<>]+/g);
+    if (matches?.length) {
+      urls.push(...matches.map((url) => url.trim()));
+      return;
+    }
+
+    text.split(/[\n,;]+/).forEach((part) => {
+      const value = part.trim();
+      if (value) urls.push(value);
+    });
+  });
+
+  return [...new Set(urls.filter(Boolean))];
+};
+
 export function mapPropertyDocument(snapshot) {
   const data = snapshot.data() || {};
   const pricing = data.pricing || {};
@@ -25,9 +48,13 @@ export function mapPropertyDocument(snapshot) {
   const content = data.content || {};
   const statusObj = typeof data.status === "object" && data.status !== null ? data.status : {};
   
-  const photosArray = Array.isArray(data.photos) 
-    ? data.photos.filter(Boolean) 
-    : (Array.isArray(media.photos) ? media.photos.filter(Boolean) : []);
+  const photosArray = normalizeMediaList(
+    Array.isArray(data.photos) && data.photos.length > 0
+      ? data.photos
+      : Array.isArray(media.photos) && media.photos.length > 0
+        ? media.photos
+        : data.photos || media.photos || []
+  );
     
   // Now 'active' is a top-level boolean in the document.
   const isActive = data.active !== undefined ? data.active : (

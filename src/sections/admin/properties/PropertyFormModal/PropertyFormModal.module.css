@@ -550,6 +550,12 @@
   flex-wrap: wrap;
 }
 
+.mediaDropzoneHint {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
 .mediaDropzoneInput {
   flex: 1 1 20rem;
   min-width: 0;

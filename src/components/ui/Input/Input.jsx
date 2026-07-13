@@ -14,6 +14,7 @@ export default function Input({
   successText,
   maxLength,
   onKeyDown,
+  onPaste,
 }) {
   const inputId = useId();
 
@@ -37,6 +38,7 @@ export default function Input({
           onChange={onChange}
           maxLength={maxLength}
           onKeyDown={onKeyDown}
+          onPaste={onPaste}
         />
       </div>
       

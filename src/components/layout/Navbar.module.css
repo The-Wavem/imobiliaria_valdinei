@@ -68,7 +68,7 @@
   color: rgba(255, 255, 255, 0.84);
   text-decoration: none;
   font-weight: 600;
-  font-size: 0.97rem;
+  font-size: 1.1rem;
   transition: color var(--transition-fast), transform var(--transition-fast);
 }
 
