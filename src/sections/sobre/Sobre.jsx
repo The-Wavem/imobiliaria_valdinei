@@ -58,7 +58,7 @@ export default function Sobre() {
               região.
             </span> 
             <span className={styles.paragraph}>
-              Com o CRECI 9720-J, operamos com total seriedade e
+              Com o CRECI F34715, operamos com total seriedade e
               profissionalismo. Atuamos em diversos bairros, do Centro ao Batel,
               entendendo que não estamos apenas vendendo metros quadrados, mas sim
               realizando sonhos e facilitando novos começos para todas as

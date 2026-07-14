@@ -1,6 +1,8 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import styles from "./HomeAbout.module.css";
+import valdineiHomeImg from "../../assets/images/valdinei home.jpeg";
+import logoImg from "../../assets/images/logo.png";
 
 const staggerContainer = {
   hidden: { opacity: 0 },
@@ -34,11 +36,11 @@ export default function HomeAbout() {
       >
         <motion.div className={styles.imageWrapper} variants={slideRightItem}>
           <img 
-            src="/VALDINEI_SOBRE.png" 
+            src={valdineiHomeImg}
             alt="Corretor Valdinei" 
             className={styles.image} 
             onError={(e) => {
-               e.target.src = 'https://media.istockphoto.com/id/1327592420/es/vector/icono-de-marcador-de-posici%C3%B3n-de-foto-de-avatar-predeterminado-foto-de-perfil-gris-hombre-de.jpg?s=612x612&w=0&k=20&c=nm6SQ9wO3_plDHiLT9kqG4g8ixisNLGSwvatKAgM55w=';
+              e.currentTarget.src = logoImg;
             }}
           />
         </motion.div>
