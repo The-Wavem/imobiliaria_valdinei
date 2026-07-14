@@ -21,6 +21,26 @@ const escapeXml = (unsafe) => {
   });
 };
 
+const mapPropertyType = (rawType) => {
+  if (!rawType) return null;
+  const typeStr = String(rawType).toLowerCase().trim();
+  
+  if (typeStr.includes('apartamento') || typeStr.includes('flat') || typeStr.includes('studio') || typeStr.includes('loft') || typeStr.includes('cobertura') || typeStr.includes('apto') || typeStr.includes('duplex')) {
+      return 'Apartamento';
+  }
+  if (typeStr.includes('casa') || typeStr.includes('sobrado') || typeStr.includes('chácara') || typeStr.includes('chacara') || typeStr.includes('sítio') || typeStr.includes('sitio') || typeStr.includes('fazenda') || typeStr.includes('villa')) {
+      return 'Casa';
+  }
+  if (typeStr.includes('terreno') || typeStr.includes('lote') || typeStr.includes('área') || typeStr.includes('area')) {
+      return 'Terreno';
+  }
+  if (typeStr.includes('comercial') || typeStr.includes('loja') || typeStr.includes('galpão') || typeStr.includes('galpao') || typeStr.includes('barracão') || typeStr.includes('barracao') || typeStr.includes('sala') || typeStr.includes('prédio') || typeStr.includes('predio') || typeStr.includes('ponto')) {
+      return 'Comercial';
+  }
+  
+  return null;
+};
+
 exports.apiCanalPro = onRequest(async (req, res) => {
   try {
     const snapshot = await admin
@@ -37,30 +57,21 @@ exports.apiCanalPro = onRequest(async (req, res) => {
       const property = doc.data();
 
       // Validação Rígida: Requisitos Mínimos para Integração
-      const tipo = property.type || property.tipoImovel || property.tipo || "";
+      const rawTipo = property.type || property.tipoImovel || property.tipo || "";
+      const mappedTipo = mapPropertyType(rawTipo);
+
       const cidade = property.location?.cidade || property.cidade || "";
       const bairro = property.location?.bairro || property.bairro || "";
       const area = Number(property.area || property.areaUtil || 0);
 
       const rawPrice = property.pricing?.price || property.price || 0;
-      const rawRentPrice =
-        property.pricing?.rentPrice || property.rentPrice || 0;
+      const rawRentPrice = property.pricing?.rentPrice || property.rentPrice || 0;
       const hasValidPrice = Number(rawPrice) > 0 || Number(rawRentPrice) > 0;
 
-      const hasPhotos =
-        property.photos &&
-        Array.isArray(property.photos) &&
-        property.photos.length > 0;
+      const hasPhotos = property.photos && Array.isArray(property.photos) && property.photos.length > 0;
 
-      if (
-        !tipo ||
-        !cidade ||
-        !bairro ||
-        area <= 0 ||
-        !hasValidPrice ||
-        !hasPhotos
-      ) {
-        return; // Pula este imóvel pois está incompleto para o portal
+      if (!mappedTipo || !cidade || !bairro || area <= 0 || !hasValidPrice || !hasPhotos) {
+        return; // Pula este imóvel pois está incompleto ou o tipo não é suportado pelo portal
       }
 
       xmlString += `    <Imovel>\n`;
@@ -70,9 +81,7 @@ exports.apiCanalPro = onRequest(async (req, res) => {
       xmlString += `      <CodigoImovel>${escapeXml(code)}</CodigoImovel>\n`;
 
       // <TipoImovel>
-      if (property.type) {
-        xmlString += `      <TipoImovel>${escapeXml(property.type)}</TipoImovel>\n`;
-      }
+      xmlString += `      <TipoImovel>${mappedTipo}</TipoImovel>\n`;
 
       // <PrecoVenda> e <PrecoLocacao>
       const category = property.category
@@ -126,8 +135,27 @@ exports.apiCanalPro = onRequest(async (req, res) => {
         xmlString += `      <QtdSuites>${escapeXml(suites)}</QtdSuites>\n`;
 
       const areaXml = property.area || property.areaUtil || "";
-      if (areaXml !== "")
+      if (areaXml !== "") {
         xmlString += `      <AreaUtil>${escapeXml(areaXml)}</AreaUtil>\n`;
+      }
+
+      // Observacao
+      const obs = property.content?.description || property.description || property.observacoes || "";
+      if (obs) {
+        xmlString += `      <Observacao><![CDATA[${obs}]]></Observacao>\n`;
+      }
+
+      // Caracteristicas
+      const caracteristicas = property.features || property.comodidades || property.caracteristicas || [];
+      if (Array.isArray(caracteristicas) && caracteristicas.length > 0) {
+        xmlString += `      <Caracteristicas>\n`;
+        caracteristicas.forEach(feat => {
+           if (feat) {
+               xmlString += `        <Caracteristica>${escapeXml(feat)}</Caracteristica>\n`;
+           }
+        });
+        xmlString += `      </Caracteristicas>\n`;
+      }
 
       // Fotos
       if (
