@@ -4,105 +4,164 @@ const admin = require("firebase-admin");
 admin.initializeApp();
 
 const escapeXml = (unsafe) => {
-    if (unsafe === null || unsafe === undefined) return '';
-    return String(unsafe).replace(/[<>&'"]/g, function (c) {
-        switch (c) {
-            case '<': return '&lt;';
-            case '>': return '&gt;';
-            case '&': return '&amp;';
-            case '\'': return '&apos;';
-            case '"': return '&quot;';
-        }
-    });
+  if (unsafe === null || unsafe === undefined) return "";
+  return String(unsafe).replace(/[<>&'"]/g, function (c) {
+    switch (c) {
+      case "<":
+        return "&lt;";
+      case ">":
+        return "&gt;";
+      case "&":
+        return "&amp;";
+      case "'":
+        return "&apos;";
+      case '"':
+        return "&quot;";
+    }
+  });
 };
 
 exports.apiCanalPro = onRequest(async (req, res) => {
-    try {
-        const snapshot = await admin.firestore().collection('properties')
-            .where('status', '==', 'Disponível')
-            .get();
+  try {
+    const snapshot = await admin
+      .firestore()
+      .collection("properties")
+      .where("status", "==", "Disponível")
+      .get();
 
-        let xmlString = `<?xml version="1.0" encoding="UTF-8"?>\n`;
-        xmlString += `<Carga xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\n`;
-        xmlString += `  <Imoveis>\n`;
+    let xmlString = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+    xmlString += `<Carga xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\n`;
+    xmlString += `  <Imoveis>\n`;
 
-        snapshot.forEach(doc => {
-            const property = doc.data();
-            xmlString += `    <Imovel>\n`;
-            
-            // <CodigoImovel>
-            const code = property.code || doc.id;
-            xmlString += `      <CodigoImovel>${escapeXml(code)}</CodigoImovel>\n`;
-            
-            // <TipoImovel>
-            if (property.type) {
-                xmlString += `      <TipoImovel>${escapeXml(property.type)}</TipoImovel>\n`;
-            }
-            
-            // <PrecoVenda> e <PrecoLocacao>
-            const category = property.category ? String(property.category).toLowerCase() : '';
-            const price = property.pricing?.price || property.price || '';
-            const rentPrice = property.pricing?.rentPrice || property.rentPrice || '';
+    snapshot.forEach((doc) => {
+      const property = doc.data();
 
-            if (category.includes('venda') || category.includes('ambos')) {
-                if (price) xmlString += `      <PrecoVenda>${escapeXml(price)}</PrecoVenda>\n`;
-            }
-            if (category.includes('loca') || category.includes('alug') || category.includes('ambos')) {
-                if (rentPrice) xmlString += `      <PrecoLocacao>${escapeXml(rentPrice)}</PrecoLocacao>\n`;
-                else if (price && !category.includes('ambos') && !category.includes('venda')) {
-                    xmlString += `      <PrecoLocacao>${escapeXml(price)}</PrecoLocacao>\n`;
-                }
-            }
+      // Validação Rígida: Requisitos Mínimos para Integração
+      const tipo = property.type || property.tipoImovel || property.tipo || "";
+      const cidade = property.location?.cidade || property.cidade || "";
+      const bairro = property.location?.bairro || property.bairro || "";
+      const area = Number(property.area || property.areaUtil || 0);
 
-            // Bairro e Cidade
-            const bairro = property.location?.bairro || property.bairro || '';
-            if (bairro) xmlString += `      <Bairro>${escapeXml(bairro)}</Bairro>\n`;
+      const rawPrice = property.pricing?.price || property.price || 0;
+      const rawRentPrice =
+        property.pricing?.rentPrice || property.rentPrice || 0;
+      const hasValidPrice = Number(rawPrice) > 0 || Number(rawRentPrice) > 0;
 
-            const cidade = property.location?.cidade || property.cidade || '';
-            if (cidade) xmlString += `      <Cidade>${escapeXml(cidade)}</Cidade>\n`;
+      const hasPhotos =
+        property.photos &&
+        Array.isArray(property.photos) &&
+        property.photos.length > 0;
 
-            // Quartos, Banheiros, Vagas, Suítes, Área Útil
-            const quartos = property.bedrooms || property.quartos || '';
-            if (quartos !== '') xmlString += `      <QtdDormitorios>${escapeXml(quartos)}</QtdDormitorios>\n`;
+      if (
+        !tipo ||
+        !cidade ||
+        !bairro ||
+        area <= 0 ||
+        !hasValidPrice ||
+        !hasPhotos
+      ) {
+        return; // Pula este imóvel pois está incompleto para o portal
+      }
 
-            const banheiros = property.bathrooms || property.banheiros || '';
-            if (banheiros !== '') xmlString += `      <QtdBanheiros>${escapeXml(banheiros)}</QtdBanheiros>\n`;
+      xmlString += `    <Imovel>\n`;
 
-            const vagas = property.parkingSpaces || property.vagas || '';
-            if (vagas !== '') xmlString += `      <QtdVagas>${escapeXml(vagas)}</QtdVagas>\n`;
+      // <CodigoImovel>
+      const code = property.code || doc.id;
+      xmlString += `      <CodigoImovel>${escapeXml(code)}</CodigoImovel>\n`;
 
-            const suites = property.suites || '';
-            if (suites !== '') xmlString += `      <QtdSuites>${escapeXml(suites)}</QtdSuites>\n`;
+      // <TipoImovel>
+      if (property.type) {
+        xmlString += `      <TipoImovel>${escapeXml(property.type)}</TipoImovel>\n`;
+      }
 
-            const area = property.area || property.areaUtil || '';
-            if (area !== '') xmlString += `      <AreaUtil>${escapeXml(area)}</AreaUtil>\n`;
-            
-            // Fotos
-            if (property.photos && Array.isArray(property.photos) && property.photos.length > 0) {
-                xmlString += `      <Fotos>\n`;
-                property.photos.forEach((photoUrl, index) => {
-                    const url = typeof photoUrl === 'string' ? photoUrl : (photoUrl.url || photoUrl.src || '');
-                    if (url) {
-                        const isPrincipal = index === 0 ? '1' : '0';
-                        xmlString += `        <Foto>\n`;
-                        xmlString += `          <Principal>${isPrincipal}</Principal>\n`;
-                        xmlString += `          <URLArquivo>${escapeXml(url)}</URLArquivo>\n`;
-                        xmlString += `        </Foto>\n`;
-                    }
-                });
-                xmlString += `      </Fotos>\n`;
-            }
+      // <PrecoVenda> e <PrecoLocacao>
+      const category = property.category
+        ? String(property.category).toLowerCase()
+        : "";
+      const price = property.pricing?.price || property.price || "";
+      const rentPrice = property.pricing?.rentPrice || property.rentPrice || "";
 
-            xmlString += `    </Imovel>\n`;
+      if (category.includes("venda") || category.includes("ambos")) {
+        if (price)
+          xmlString += `      <PrecoVenda>${escapeXml(price)}</PrecoVenda>\n`;
+      }
+      if (
+        category.includes("loca") ||
+        category.includes("alug") ||
+        category.includes("ambos")
+      ) {
+        if (rentPrice)
+          xmlString += `      <PrecoLocacao>${escapeXml(rentPrice)}</PrecoLocacao>\n`;
+        else if (
+          price &&
+          !category.includes("ambos") &&
+          !category.includes("venda")
+        ) {
+          xmlString += `      <PrecoLocacao>${escapeXml(price)}</PrecoLocacao>\n`;
+        }
+      }
+
+      // Bairro e Cidade
+      const bairroXml = property.location?.bairro || property.bairro || "";
+      if (bairroXml) xmlString += `      <Bairro>${escapeXml(bairroXml)}</Bairro>\n`;
+
+      const cidadeXml = property.location?.cidade || property.cidade || "";
+      if (cidadeXml) xmlString += `      <Cidade>${escapeXml(cidadeXml)}</Cidade>\n`;
+
+      // Quartos, Banheiros, Vagas, Suítes, Área Útil
+      const quartos = property.bedrooms || property.quartos || "";
+      if (quartos !== "")
+        xmlString += `      <QtdDormitorios>${escapeXml(quartos)}</QtdDormitorios>\n`;
+
+      const banheiros = property.bathrooms || property.banheiros || "";
+      if (banheiros !== "")
+        xmlString += `      <QtdBanheiros>${escapeXml(banheiros)}</QtdBanheiros>\n`;
+
+      const vagas = property.parkingSpaces || property.vagas || "";
+      if (vagas !== "")
+        xmlString += `      <QtdVagas>${escapeXml(vagas)}</QtdVagas>\n`;
+
+      const suites = property.suites || "";
+      if (suites !== "")
+        xmlString += `      <QtdSuites>${escapeXml(suites)}</QtdSuites>\n`;
+
+      const areaXml = property.area || property.areaUtil || "";
+      if (areaXml !== "")
+        xmlString += `      <AreaUtil>${escapeXml(areaXml)}</AreaUtil>\n`;
+
+      // Fotos
+      if (
+        property.photos &&
+        Array.isArray(property.photos) &&
+        property.photos.length > 0
+      ) {
+        xmlString += `      <Fotos>\n`;
+        property.photos.forEach((photoUrl, index) => {
+          const url =
+            typeof photoUrl === "string"
+              ? photoUrl
+              : photoUrl.url || photoUrl.src || "";
+          if (url) {
+            const isPrincipal = index === 0 ? "1" : "0";
+            xmlString += `        <Foto>\n`;
+            xmlString += `          <Principal>${isPrincipal}</Principal>\n`;
+            xmlString += `          <URLArquivo>${escapeXml(url)}</URLArquivo>\n`;
+            xmlString += `        </Foto>\n`;
+          }
         });
+        xmlString += `      </Fotos>\n`;
+      }
 
-        xmlString += `  </Imoveis>\n`;
-        xmlString += `</Carga>\n`;
+      xmlString += `    </Imovel>\n`;
+    });
 
-        res.set('Content-Type', 'application/xml; charset=utf-8');
-        res.status(200).send(xmlString);
-    } catch (error) {
-        console.error("Erro ao gerar XML Canal Pro:", error);
-        res.status(500).send("Erro interno ao gerar o feed XML.");
-    }
+    xmlString += `  </Imoveis>\n`;
+    xmlString += `</Carga>\n`;
+
+    res.set("Content-Type", "application/xml; charset=utf-8");
+    res.status(200).send(xmlString);
+  } catch (error) {
+    console.error("Erro ao gerar XML Canal Pro:", error);
+    res.status(500).send("Erro interno ao gerar o feed XML.");
+  }
 });
