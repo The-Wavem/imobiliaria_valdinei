@@ -34,11 +34,12 @@ export function useFavorites() {
   }, []);
 
   const toggleFavorite = (property) => {
-    const isFav = favorites.some((fav) => fav.id === property.id);
+    const propertyId = property.firestoreId || property.id;
+    const isFav = favorites.some((fav) => (fav.firestoreId || fav.id) === propertyId);
     let newFavorites;
 
     if (isFav) {
-      newFavorites = favorites.filter((fav) => fav.id !== property.id);
+      newFavorites = favorites.filter((fav) => (fav.firestoreId || fav.id) !== propertyId);
     } else {
       newFavorites = [...favorites, property];
       try {
@@ -67,7 +68,7 @@ export function useFavorites() {
   };
 
   const isFavorite = (propertyId) => {
-    return favorites.some((fav) => fav.id === propertyId);
+    return favorites.some((fav) => (fav.firestoreId || fav.id) === propertyId);
   };
 
   return { favorites, toggleFavorite, isFavorite };

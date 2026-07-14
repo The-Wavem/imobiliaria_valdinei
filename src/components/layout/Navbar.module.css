@@ -5,6 +5,7 @@
   background: #14143C;
   backdrop-filter: blur(16px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  --navbar-logo-size: var(--header-logo-size, 45px);
 }
 
 .container {
@@ -26,8 +27,8 @@
 }
 
 .logo_navbar {
-  width: 64px;
-  height: 64px;
+  width: var(--navbar-logo-size);
+  height: var(--navbar-logo-size);
 }
 
 .brandMark {

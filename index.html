@@ -11,7 +11,8 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest">
     
-    <meta name="theme-color" content="#0a0a0a" /> <title>Imobiliária Valdinei | Imóveis para Venda e Locação</title>
+    <meta name="theme-color" content="#0B112C" />
+    <title>Imobiliária Valdinei | Imóveis para Venda e Locação</title>
     <meta name="description" content="Encontre casas, apartamentos, sobrados e terrenos para comprar ou alugar em Curitiba e região. Atendimento exclusivo e as melhores oportunidades imobiliárias." />
     <meta name="robots" content="index, follow" />
     <link rel="canonical" href="https://imobiliaria-valdinei.firebaseapp.com" />
@@ -31,10 +32,265 @@
     <link rel="preconnect" href="https://firebase.googleapis.com" />
     
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+    <style>
+      :root {
+        --preloader-bg: #0B112C;
+        --preloader-gold: #D4AF37;
+        --preloader-gold-soft: rgba(212, 175, 55, 0.08);
+        --preloader-fade: 500ms;
+        --preloader-logo-size: clamp(3.8rem, 10vw, 5.3rem);
+        --preloader-orbit-size: clamp(11.25rem, 31vw, 16.25rem);
+      }
+
+      html,
+      body {
+        min-height: 100%;
+      }
+
+      body.is-preloading {
+        overflow: hidden;
+        touch-action: none;
+      }
+
+      #vs-preloader {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: grid;
+        place-items: center;
+        background:
+          radial-gradient(circle at 50% 42%, rgba(255, 255, 255, 0.04), transparent 28%),
+          var(--preloader-bg);
+        opacity: 1;
+        transition: opacity var(--preloader-fade) cubic-bezier(0.4, 0, 0.2, 1);
+        will-change: opacity;
+      }
+
+      #vs-preloader.is-fading {
+        opacity: 0;
+      }
+
+      .vs-preloader__scene {
+        position: relative;
+        width: min(86vw, 24rem);
+        aspect-ratio: 1;
+        display: grid;
+        place-items: center;
+      }
+
+      .vs-preloader__logo-wrap {
+        position: relative;
+        width: var(--preloader-logo-size);
+        height: var(--preloader-logo-size);
+        display: grid;
+        place-items: center;
+        transform: translateY(1px);
+      }
+
+      .vs-preloader__logo {
+        position: relative;
+        z-index: 2;
+        width: 100%;
+        height: auto;
+        display: block;
+        object-fit: contain;
+        object-position: center;
+        user-select: none;
+        -webkit-user-drag: none;
+        filter: drop-shadow(0 0 16px rgba(212, 175, 55, 0.18));
+      }
+
+      .vs-preloader__logo-fallback {
+        position: relative;
+        z-index: 2;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        color: #D4AF37;
+        font-family: Georgia, 'Times New Roman', serif;
+        font-size: clamp(4rem, 16vw, 7rem);
+        font-weight: 700;
+        letter-spacing: -0.08em;
+        line-height: 1;
+        text-shadow: 0 0 18px rgba(212, 175, 55, 0.22);
+      }
+
+      .vs-preloader__logo.is-hidden {
+        display: none;
+      }
+
+      .vs-preloader__logo-fallback.is-visible {
+        display: flex;
+      }
+
+      .vs-preloader__orbit {
+        position: absolute;
+        inset: 50%;
+        width: var(--preloader-orbit-size);
+        height: var(--preloader-orbit-size);
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+        z-index: 1;
+      }
+
+      .vs-preloader__orbit svg {
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+      }
+
+      .vs-preloader__guide,
+      .vs-preloader__arc {
+        fill: none;
+        transform-origin: 50% 50%;
+        transform-box: fill-box;
+      }
+
+      .vs-preloader__guide {
+        stroke: var(--preloader-gold);
+        stroke-width: 1;
+        opacity: 0.08;
+      }
+
+      .vs-preloader__arc {
+        stroke: url(#vs-preloader-gold-gradient);
+        stroke-width: 2.05;
+        stroke-linecap: round;
+        stroke-dasharray: 22 250;
+        stroke-dashoffset: 0;
+        filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.24));
+        animation:
+          vs-preloader-spin 1.9s linear infinite,
+          vs-preloader-pulse 2.35s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+      }
+
+      .vs-preloader__shine {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(212, 175, 55, 0.12), transparent 56%);
+        filter: blur(18px);
+        opacity: 0.45;
+      }
+
+      @keyframes vs-preloader-spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      @keyframes vs-preloader-pulse {
+        0%,
+        100% {
+          stroke-dasharray: 22 250;
+          stroke-dashoffset: 0;
+        }
+        45% {
+          stroke-dasharray: 84 188;
+          stroke-dashoffset: -26;
+        }
+        60% {
+          stroke-dasharray: 124 128;
+          stroke-dashoffset: -52;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .vs-preloader__scene {
+          width: min(88vw, 19rem);
+        }
+
+        :root {
+          --preloader-logo-size: 4rem;
+          --preloader-orbit-size: 11rem;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        #vs-preloader,
+        .vs-preloader__arc {
+          animation: none !important;
+          transition-duration: 1ms;
+        }
+      }
+    </style>
   </head>
 
-  <body>
+  <body class="is-preloading">
+    <div id="vs-preloader" aria-label="Carregando o site" role="status" aria-live="polite">
+      <div class="vs-preloader__scene">
+        <div class="vs-preloader__shine" aria-hidden="true"></div>
+
+        <div class="vs-preloader__logo-wrap">
+          <div class="vs-preloader__orbit" aria-hidden="true">
+            <svg viewBox="0 0 200 200" focusable="false" aria-hidden="true">
+              <defs>
+                <linearGradient id="vs-preloader-gold-gradient" x1="18%" y1="18%" x2="82%" y2="82%">
+                  <stop offset="0%" stop-color="#F6E08A" />
+                  <stop offset="42%" stop-color="#D4AF37" />
+                  <stop offset="100%" stop-color="#9C7720" />
+                </linearGradient>
+              </defs>
+
+              <circle class="vs-preloader__guide" cx="100" cy="100" r="72"></circle>
+              <circle class="vs-preloader__arc" cx="100" cy="100" r="72"></circle>
+            </svg>
+          </div>
+
+          <img class="vs-preloader__logo" alt="Valdinei S. de Souza" data-vs-logo />
+          <div class="vs-preloader__logo-fallback" aria-hidden="true">VS</div>
+        </div>
+      </div>
+    </div>
+
     <div id="root"></div>
+    <script type="module">
+      import logoUrl from '/src/assets/images/logo.png';
+
+      const preloaderLogo = document.querySelector('[data-vs-logo]');
+
+      if (preloaderLogo) {
+        preloaderLogo.src = logoUrl;
+      }
+    </script>
     <script type="module" src="/src/main.jsx"></script>
+    <script>
+      (function () {
+        const preloader = document.getElementById('vs-preloader');
+        const body = document.body;
+        const fadeDuration = 500;
+
+        if (!preloader) {
+          body.classList.remove('is-preloading');
+          return;
+        }
+
+        const finish = () => {
+          if (!preloader.isConnected) {
+            body.classList.remove('is-preloading');
+            return;
+          }
+
+          preloader.classList.add('is-fading');
+
+          window.setTimeout(() => {
+            preloader.remove();
+            body.classList.remove('is-preloading');
+          }, fadeDuration);
+        };
+
+        if (document.readyState === 'complete') {
+          finish();
+        } else {
+          window.addEventListener('load', finish, { once: true });
+        }
+      })();
+    </script>
   </body>
 </html>

@@ -6,6 +6,7 @@ import { addLead } from "@services/leadService.js";
 import { validateContactForm, sanitizeFormData } from "@utils/validation.js";
 import styles from "./Contact.module.css";
 
+
 const initialFormState = {
   name: "",
   email: "",

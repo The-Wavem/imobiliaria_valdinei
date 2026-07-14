@@ -4,23 +4,25 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  overflow: visible;
+  transform-origin: center;
 }
 
-.ringOuter,
-.ringInner {
-  position: absolute;
-  border-radius: 50%;
-  border: 3px solid transparent;
+.guide,
+.arc {
+  fill: none;
+  transform-box: fill-box;
+  transform-origin: center;
 }
 
-.ringOuter {
-  inset: 0;
-  border-top-color: var(--color-brand-primary);
-  border-bottom-color: var(--color-brand-primary);
+.guide {
+  stroke: rgba(212, 175, 55, 0.08);
+  stroke-width: 4.5;
 }
 
-.ringInner {
-  inset: 22%;
-  border-left-color: var(--color-brand-secondary);
-  border-right-color: var(--color-brand-secondary);
+.arc {
+  stroke: #D4AF37;
+  stroke-width: 4.75;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.22));
 }

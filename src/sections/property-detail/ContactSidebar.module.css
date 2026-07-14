@@ -20,12 +20,14 @@
 }
 
 .agentPhoto {
-  width: 52px;
-  height: 52px;
+  width: 92px;
+  height: 92px;
   border-radius: 50%;
   object-fit: cover;
+  object-position: center top;
   flex-shrink: 0;
-  border: 2px solid rgba(199, 156, 49, 0.5);
+  border: 3px solid rgba(199, 156, 49, 0.55);
+  box-shadow: 0 8px 22px rgba(20, 20, 60, 0.16);
 }
 
 .agentMeta {

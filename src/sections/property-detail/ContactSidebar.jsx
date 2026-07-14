@@ -5,6 +5,7 @@ import { addLead } from "@services/leadService";
 import { logWhatsAppClickAnalytics } from "@services/analyticsService.js";
 import { validateName, validatePhone, sanitizeFormData } from "@utils/validation.js";
 import styles from "./ContactSidebar.module.css";
+import logoImg from "../../assets/images/valdinei entre em contato.png"; 
 
 const VALDINEI_PHONE = import.meta.env.VITE_VALDINEI_PHONE;
 
@@ -154,12 +155,12 @@ export default function ContactSidebar({
         <div className={styles.agentCard}>
           <img
             className={styles.agentPhoto}
-            src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=120&q=80"
+            src={logoImg}
             alt="Valdinei Souza"
           />
           <div className={styles.agentMeta}>
             <div className={styles.agentName}>Valdinei Souza</div>
-            <div className={styles.agentRole}>Corretor Responsável · CRECI 9720-J</div>
+            <div className={styles.agentRole}>Corretor Responsável · CRECI F34715</div>
           </div>
         </div>
 
