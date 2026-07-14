@@ -1,8 +1,43 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, Component } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import Loader from "@components/ui/Loader/Loader.jsx";
 import PublicLayout from "@/components/layout/PublicLayout";
 import PrivateLayout from "@/components/layout/PrivateLayout";
+
+class ChunkErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error, errorInfo) {
+    const msg = error.message ? error.message.toLowerCase() : "";
+    const isChunkError = 
+      error.name === 'ChunkLoadError' ||
+      msg.includes('failed to fetch dynamically imported module') ||
+      msg.includes('dynamically imported module') ||
+      msg.includes('expected a javascript-or-wasm module script');
+      
+    if (isChunkError) {
+      window.location.reload(true);
+    } else {
+      console.error(error, errorInfo);
+    }
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: "1rem" }}>
+          <Loader size={48} />
+          <p>Carregando nova versão do sistema...</p>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 const Home = lazy(() => import("@/pages/public/Home.jsx"));
 const Rent = lazy(() => import("@/pages/public/Rent.jsx"));
@@ -21,8 +56,9 @@ const Servicos = lazy(() => import("@/pages/public/Services.jsx"));
 
 export default function Router() {
   return (
-    <Suspense
-      fallback={
+    <ChunkErrorBoundary>
+      <Suspense
+        fallback={
         <div
           style={{
             minHeight: "100vh",
@@ -62,5 +98,6 @@ export default function Router() {
         </Route>
       </Routes>
     </Suspense>
+    </ChunkErrorBoundary>
   );
 }

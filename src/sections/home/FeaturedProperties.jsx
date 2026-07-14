@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Search } from "lucide-react";
 import PropertyCard from "@components/ui/PropertyCard/PropertyCard.jsx";
-import { getAllProperties } from "@services/propertyService.js";
+import { getPublicProperties } from "@services/propertyService.js";
 import styles from "./FeaturedProperties.module.css";
 
 const staggerContainer = {
@@ -38,8 +38,8 @@ export default function FeaturedProperties({ onPropertyClick }) {
 
     const loadProperties = async () => {
       try {
-        const allProperties = await getAllProperties();
-        const homeFeatures = allProperties.filter(p => p.featured && p.status !== 'Inativo');
+        const allProperties = await getPublicProperties();
+        const homeFeatures = allProperties.filter(p => p.featured);
 
         if (isMounted) {
           setProperties(homeFeatures.slice(0, 3));
@@ -50,7 +50,6 @@ export default function FeaturedProperties({ onPropertyClick }) {
         }
       }
     };
-
     loadProperties();
 
     return () => {

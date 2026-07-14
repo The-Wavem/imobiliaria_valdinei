@@ -3,10 +3,12 @@ import logoImg from "../../assets/images/logo.png";
 import styles from "./Footer.module.css";
 
 const quickLinks = [
-  { label: "Imóveis em Destaque", to: "/#destaques" },
-  { label: "Sobre a Empresa", to: "/#sobre-nos" },
-  { label: "Nossos Serviços", to: "/#servicos" },
-  { label: "Fale Conosco", to: "/contato" },
+  { label: "Início", to: "/" },
+  { label: "Alugar", to: "/alugar" },
+  { label: "Comprar", to: "/comprar" },
+  { label: "Sobre Nós", to: "/sobre-nos" },
+  { label: "Serviços", to: "/servicos" },
+  { label: "Contato", to: "/contato" },
 ];
 
 export default function Footer() {
@@ -42,14 +44,9 @@ export default function Footer() {
         </div>
 
         <div>
-          <h2 className={styles.title}>Localização</h2>
+          <h2 className={styles.title}>Contato</h2>
           <address className={styles.address}>
-            Rua XV de Novembro, 456 - Centro
-            <br />
-            Curitiba - PR, 80020-310
-            <br />
-            <br />
-            (41) 99999-9999
+            (41) 98859-1433
             <br />
             contato@valdineisouza.com.br
           </address>
@@ -60,6 +57,18 @@ export default function Footer() {
         <p>
           © 2026 Valdinei Souza Imóveis para Todos. Todos os direitos
           reservados.
+        </p>
+        <p style={{ marginTop: "12px" }}>
+          Feito pela{" "}
+          <a
+            href="https://thewavem.web.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles.link}
+            style={{ fontWeight: "bold" }}
+          >
+            Wavem
+          </a>
         </p>
       </div>
     </footer>

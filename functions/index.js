@@ -253,7 +253,7 @@ exports.apiCanalPro = onRequest(async (req, res) => {
       xmlString += `        <Name>Imobiliária Valdinei</Name>\n`;
       xmlString += `        <Email>contato@imobiliariavaldinei.com.br</Email>\n`;
       // Adicione a tag <Telephone> se necessário, ex:
-      // xmlString += `        <Telephone>(41) 99999-9999</Telephone>\n`;
+      // xmlString += `        <Telephone>(41) 98859-1433</Telephone>\n`;
       xmlString += `      </ContactInfo>\n`;
 
       xmlString += `    </Listing>\n`;
