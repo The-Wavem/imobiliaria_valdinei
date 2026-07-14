@@ -186,6 +186,7 @@ export default function Rent() {
           style={{ position: "relative", zIndex: 10 }}
         >
           <FilterBar
+            mode="rent"
             filters={currentFilters}
             onChange={handleFilterChange}
             onSearch={handleFilterChange}

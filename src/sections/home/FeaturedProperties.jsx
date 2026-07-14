@@ -50,7 +50,6 @@ export default function FeaturedProperties({ onPropertyClick }) {
         }
       }
     };
-
     loadProperties();
 
     return () => {

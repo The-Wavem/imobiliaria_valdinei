@@ -21,7 +21,16 @@ export default function Contact() {
   const [isSuccess, setIsSuccess] = useState(false);
 
   const handleFieldChange = (field) => (event) => {
-    const value = typeof event === "string" ? event : event?.target?.value;
+    let value = typeof event === "string" ? event : event?.target?.value;
+
+    if (field === "phone") {
+      const numbers = value.replace(/\D/g, "");
+      if (numbers.length === 0) value = "";
+      else if (numbers.length <= 2) value = `(${numbers}`;
+      else if (numbers.length <= 6) value = `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
+      else if (numbers.length <= 10) value = `(${numbers.slice(0, 2)}) ${numbers.slice(2, 6)}-${numbers.slice(6)}`;
+      else value = `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7, 11)}`;
+    }
 
     setFormData((currentData) => ({
       ...currentData,
@@ -95,16 +104,16 @@ export default function Contact() {
             independente do seu orçamento.
           </p>
 
-          <div className={styles.phoneCard}>
+          <a href="https://wa.me/5541988591433" target="_blank" rel="noopener noreferrer" className={styles.phoneCard}>
             <div className={styles.phoneIcon}>
               <Phone size={24} />
             </div>
 
             <div>
               <p className={styles.phoneLabel}>Atendimento via WhatsApp</p>
-              <p className={styles.phoneNumber}>(41) 99999-9999</p>
+              <p className={styles.phoneNumber}>(41) 98859-1433</p>
             </div>
-          </div>
+          </a>
         </div>
 
         <div className={styles.formCard}>

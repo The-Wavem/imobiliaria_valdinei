@@ -18,10 +18,16 @@ const typeOptions = [
   { value: "terreno", label: "Terreno" },
 ];
 
-export default function FilterBar({ filters = {}, onChange, onSearch, properties = [] }) {
+export default function FilterBar({ mode = "buy", filters = {}, onChange, onSearch, properties = [] }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isStuck, setIsStuck] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
+  const [localFilters, setLocalFilters] = useState(filters);
+  
+  useEffect(() => {
+    setLocalFilters(filters);
+  }, [filters]);
+
   const [advancedFilters, setAdvancedFilters] = useState({
     bedrooms: "Qualquer",
     bathrooms: "Qualquer",
@@ -56,32 +62,33 @@ export default function FilterBar({ filters = {}, onChange, onSearch, properties
 
   const handleFieldChange = (field) => (event) => {
     const value = typeof event === "string" ? event : event?.target?.value;
-    onChange?.({
-      ...filters,
-      ...advancedFilters,
+    setLocalFilters((prev) => ({
+      ...prev,
       [field]: value,
-    });
+    }));
   };
 
-  const MAX_PRICE = 5000000; // 5 Milhões
+  const isRent = mode === "rent";
+  const MAX_PRICE = isRent ? 100000 : 5000000;
+  const STEP = isRent ? 500 : 50000;
+  const MIN_DISTANCE = isRent ? 1000 : 100000;
 
   const sliderValue = [
-    filters.priceMin === "" ? 0 : Number(filters.priceMin),
-    filters.priceMax === "" ? MAX_PRICE : Number(filters.priceMax)
+    localFilters.priceMin === "" || localFilters.priceMin === undefined ? 0 : Number(localFilters.priceMin),
+    localFilters.priceMax === "" || localFilters.priceMax === undefined ? MAX_PRICE : Number(localFilters.priceMax)
   ];
 
   const handleSliderChange = (newValues) => {
     const [min, max] = newValues;
-    onChange?.({
-      ...filters,
-      ...advancedFilters,
+    setLocalFilters((prev) => ({
+      ...prev,
       priceMin: min === 0 ? "" : min,
       priceMax: max === MAX_PRICE ? "" : max,
-    });
+    }));
   };
 
   const formatPrice = (value) => {
-    if (value === MAX_PRICE) return "R$ 5 Mi+";
+    if (value === MAX_PRICE) return isRent ? `R$ ${MAX_PRICE / 1000} mil+` : "R$ 5 Mi+";
     if (value >= 1000000) return `R$ ${(value / 1000000).toFixed(1).replace(".0", "")} Mi`;
     if (value >= 1000) return `R$ ${value / 1000} mil`;
     return `R$ ${value}`;
@@ -115,9 +122,10 @@ export default function FilterBar({ filters = {}, onChange, onSearch, properties
   const handleSearch = async () => {
     setIsSearching(true);
     try {
-      const currentFilters = { ...filters, ...advancedFilters };
+      const currentFilters = { ...localFilters, ...advancedFilters };
       trackAndLogSearch(currentFilters);
       await onChange?.(currentFilters);
+      await onSearch?.(currentFilters);
     } finally {
       setTimeout(() => setIsSearching(false), 600);
     }
@@ -138,17 +146,19 @@ export default function FilterBar({ filters = {}, onChange, onSearch, properties
       areaMin: "",
       areaMax: "",
     };
+    setLocalFilters(emptyFilters);
     setAdvancedFilters(emptyAdvanced);
     
     const combinedEmpty = { ...emptyFilters, ...emptyAdvanced };
     onChange?.(combinedEmpty);
+    onSearch?.(combinedEmpty);
   };
 
   const hasActiveFilters =
-    Boolean(filters.location) ||
-    Boolean(filters.propertyType) ||
-    Boolean(filters.priceMin) ||
-    Boolean(filters.priceMax) ||
+    Boolean(localFilters.location) ||
+    Boolean(localFilters.propertyType) ||
+    Boolean(localFilters.priceMin) ||
+    Boolean(localFilters.priceMax) ||
     Object.entries(advancedFilters).some(([key, val]) => {
       if (key === "amenities") return val.length > 0;
       if (key === "areaMin" || key === "areaMax") return Boolean(val);
@@ -157,9 +167,10 @@ export default function FilterBar({ filters = {}, onChange, onSearch, properties
 
   const handleApplyAdvancedFilters = (nextAdvancedFilters) => {
     setAdvancedFilters(nextAdvancedFilters);
-    const currentFilters = { ...filters, ...nextAdvancedFilters };
+    const currentFilters = { ...localFilters, ...nextAdvancedFilters };
     trackAndLogSearch(currentFilters);
     onChange?.(currentFilters);
+    onSearch?.(currentFilters);
   };
 
   return (
@@ -170,18 +181,18 @@ export default function FilterBar({ filters = {}, onChange, onSearch, properties
             icon={MapPin}
             label="Localização"
             options={locationOptions}
-            value={filters.location}
+            value={localFilters.location}
             onChange={handleFieldChange("location")}
-            className={`${styles.fieldItem} ${filters.location ? styles.activeFilter : ""}`}
+            className={`${styles.fieldItem} ${localFilters.location ? styles.activeFilter : ""}`}
           />
 
           <Select
             icon={Home}
             label="Tipo de Imóvel"
             options={typeOptions}
-            value={filters.propertyType}
+            value={localFilters.propertyType}
             onChange={handleFieldChange("propertyType")}
-            className={`${styles.fieldItem} ${filters.propertyType ? styles.activeFilter : ""}`}
+            className={`${styles.fieldItem} ${localFilters.propertyType ? styles.activeFilter : ""}`}
           />
 
           <div className={styles.priceGroup}>
@@ -195,11 +206,11 @@ export default function FilterBar({ filters = {}, onChange, onSearch, properties
                 className={styles.slider}
                 min={0}
                 max={MAX_PRICE}
-                step={50000}
+                step={STEP}
                 value={sliderValue}
                 onChange={handleSliderChange}
                 pearling
-                minDistance={100000}
+                minDistance={MIN_DISTANCE}
                 renderTrack={(props, state) => {
                   const { key, ...restProps } = props;
                   return (

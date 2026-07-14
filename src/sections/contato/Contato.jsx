@@ -64,11 +64,20 @@ export default function ContatoSection() {
   };
 
   const handleFieldChange = (field) => (event) => {
-    const { value } = event.target;
+    let { value } = event.target;
+
+    if (field === "phone") {
+      const numbers = value.replace(/\D/g, "");
+      if (numbers.length === 0) value = "";
+      else if (numbers.length <= 2) value = `(${numbers}`;
+      else if (numbers.length <= 6) value = `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
+      else if (numbers.length <= 10) value = `(${numbers.slice(0, 2)}) ${numbers.slice(2, 6)}-${numbers.slice(6)}`;
+      else value = `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7, 11)}`;
+    }
 
     // Respeita o limite máximo de caracteres sem deixar digitar além
     const limit = FIELD_LIMITS[field]?.max;
-    if (limit && value.length > limit) return;
+    if (field !== "phone" && limit && value.length > limit) return;
 
     const updated = { ...formData, [field]: value };
     setFormData(updated);
@@ -166,15 +175,15 @@ export default function ContatoSection() {
             </div>
 
             <div className={styles.contactCards}>
-              <motion.div className={styles.contactCard} variants={itemVariants}>
+              <a href="https://wa.me/5541988591433" target="_blank" rel="noopener noreferrer" className={`${styles.contactCard} ${styles.pulse}`}>
                 <div className={styles.contactIcon}>
                   <Phone size={26} />
                 </div>
                 <div>
                   <span className={styles.contactLabel}>Telefone</span>
-                  <strong className={styles.contactValue}>(41) 99999-9999</strong>
+                  <strong className={styles.contactValue}>(41) 98859-1433</strong>
                 </div>
-              </motion.div>
+              </a>
 
               <motion.div className={styles.contactCard} variants={itemVariants}>
                 <div className={styles.contactIcon}>

@@ -6,6 +6,11 @@ import Router from './Router.jsx'
 import '@/theme/reset.css'
 import '@/theme/main.css'
 
+// Solução para erro de módulos ausentes pós-deploy (Vite chunk load error)
+window.addEventListener('vite:preloadError', () => {
+  window.location.reload()
+})
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
