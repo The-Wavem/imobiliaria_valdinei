@@ -84,38 +84,25 @@ exports.apiCanalPro = onRequest(async (req, res) => {
       xmlString += `      <TipoImovel>${mappedTipo}</TipoImovel>\n`;
 
       // <PrecoVenda> e <PrecoLocacao>
-      const category = property.category
-        ? String(property.category).toLowerCase()
-        : "";
-      const price = property.pricing?.price || property.price || "";
-      const rentPrice = property.pricing?.rentPrice || property.rentPrice || "";
+      const price = Number(property.pricing?.price || property.price || 0);
+      const rentPrice = Number(property.pricing?.rentPrice || property.rentPrice || 0);
 
-      if (category.includes("venda") || category.includes("ambos")) {
-        if (price)
-          xmlString += `      <PrecoVenda>${escapeXml(price)}</PrecoVenda>\n`;
+      if (price > 0) {
+        xmlString += `      <PrecoVenda>${price}</PrecoVenda>\n`;
       }
-      if (
-        category.includes("loca") ||
-        category.includes("alug") ||
-        category.includes("ambos")
-      ) {
-        if (rentPrice)
-          xmlString += `      <PrecoLocacao>${escapeXml(rentPrice)}</PrecoLocacao>\n`;
-        else if (
-          price &&
-          !category.includes("ambos") &&
-          !category.includes("venda")
-        ) {
-          xmlString += `      <PrecoLocacao>${escapeXml(price)}</PrecoLocacao>\n`;
-        }
+      if (rentPrice > 0) {
+        xmlString += `      <PrecoLocacao>${rentPrice}</PrecoLocacao>\n`;
       }
 
-      // Bairro e Cidade
-      const bairroXml = property.location?.bairro || property.bairro || "";
-      if (bairroXml) xmlString += `      <Bairro>${escapeXml(bairroXml)}</Bairro>\n`;
+      // Estado, Cidade e Bairro
+      const estadoXml = property.location?.estado || property.location?.uf || property.estado || property.uf || "";
+      if (estadoXml) xmlString += `      <Estado>${escapeXml(estadoXml)}</Estado>\n`;
 
       const cidadeXml = property.location?.cidade || property.cidade || "";
       if (cidadeXml) xmlString += `      <Cidade>${escapeXml(cidadeXml)}</Cidade>\n`;
+
+      const bairroXml = property.location?.bairro || property.bairro || "";
+      if (bairroXml) xmlString += `      <Bairro>${escapeXml(bairroXml)}</Bairro>\n`;
 
       // Quartos, Banheiros, Vagas, Suítes, Área Útil
       const quartos = property.bedrooms || property.quartos || "";
