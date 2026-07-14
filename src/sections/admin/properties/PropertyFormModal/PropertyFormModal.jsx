@@ -539,6 +539,13 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
         }
       }
 
+      if (!formData.photos || formData.photos.length === 0) {
+        alert("É obrigatório enviar pelo menos uma foto do imóvel para integração com os portais.");
+        setActiveTab("media");
+        setIsSaving(false);
+        return;
+      }
+
       const payload = { ...formData };
       
       // Reordenar fotos para garantir que a capa (coverPhotoIndex) seja a primeira
