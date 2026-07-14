@@ -26,16 +26,16 @@ const mapPropertyType = (rawType) => {
   const typeStr = String(rawType).toLowerCase().trim();
   
   if (typeStr.includes('apartamento') || typeStr.includes('flat') || typeStr.includes('studio') || typeStr.includes('loft') || typeStr.includes('cobertura') || typeStr.includes('apto') || typeStr.includes('duplex')) {
-      return 'Apartamento';
+      return { usage: 'Residential', type: 'Residential / Apartment' };
   }
   if (typeStr.includes('casa') || typeStr.includes('sobrado') || typeStr.includes('chácara') || typeStr.includes('chacara') || typeStr.includes('sítio') || typeStr.includes('sitio') || typeStr.includes('fazenda') || typeStr.includes('villa')) {
-      return 'Casa';
+      return { usage: 'Residential', type: 'Residential / Home' };
   }
   if (typeStr.includes('terreno') || typeStr.includes('lote') || typeStr.includes('área') || typeStr.includes('area')) {
-      return 'Terreno';
+      return { usage: 'Residential', type: 'Residential / Land Lot' };
   }
   if (typeStr.includes('comercial') || typeStr.includes('loja') || typeStr.includes('galpão') || typeStr.includes('galpao') || typeStr.includes('barracão') || typeStr.includes('barracao') || typeStr.includes('sala') || typeStr.includes('prédio') || typeStr.includes('predio') || typeStr.includes('ponto')) {
-      return 'Comercial';
+      return { usage: 'Commercial', type: 'Commercial / Building' };
   }
   
   return null;
@@ -50,15 +50,20 @@ exports.apiCanalPro = onRequest(async (req, res) => {
       .get();
 
     let xmlString = `<?xml version="1.0" encoding="UTF-8"?>\n`;
-    xmlString += `<Carga xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\n`;
-    xmlString += `  <Imoveis>\n`;
+    xmlString += `<ListingDataFeed xmlns="http://www.vivareal.com/schemas/1.0/VRSync" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.vivareal.com/schemas/1.0/VRSync  http://xml.vivareal.com/vrsync.xsd">\n`;
+    xmlString += `  <Header>\n`;
+    xmlString += `    <Provider>The Wavem</Provider>\n`;
+    xmlString += `    <Email>contato@thewavem.com</Email>\n`;
+    xmlString += `    <PublishDate>${new Date().toISOString()}</PublishDate>\n`;
+    xmlString += `  </Header>\n`;
+    xmlString += `  <Listings>\n`;
 
     snapshot.forEach((doc) => {
       const property = doc.data();
 
       // Validação Rígida: Requisitos Mínimos para Integração
       const rawTipo = property.type || property.tipoImovel || property.tipo || "";
-      const mappedTipo = mapPropertyType(rawTipo);
+      const mapped = mapPropertyType(rawTipo);
 
       const cidade = property.location?.cidade || property.cidade || "";
       const bairro = property.location?.bairro || property.bairro || "";
@@ -70,113 +75,119 @@ exports.apiCanalPro = onRequest(async (req, res) => {
 
       const hasPhotos = property.photos && Array.isArray(property.photos) && property.photos.length > 0;
 
-      if (!mappedTipo || !cidade || !bairro || area <= 0 || !hasValidPrice || !hasPhotos) {
+      if (!mapped || !cidade || !bairro || area <= 0 || !hasValidPrice || !hasPhotos) {
         return; // Pula este imóvel pois está incompleto ou o tipo não é suportado pelo portal
       }
 
-      xmlString += `    <Imovel>\n`;
+      xmlString += `    <Listing>\n`;
 
-      // <CodigoImovel>
       const code = property.code || doc.id;
-      xmlString += `      <CodigoImovel>${escapeXml(code)}</CodigoImovel>\n`;
+      xmlString += `      <ListingID>${escapeXml(code)}</ListingID>\n`;
 
-      // <TipoImovel>
-      xmlString += `      <TipoImovel>${mappedTipo}</TipoImovel>\n`;
+      const title = property.title || property.content?.summary || `Lindo imóvel em ${escapeXml(cidade)}`;
+      xmlString += `      <Title><![CDATA[${title}]]></Title>\n`;
 
-      // <PrecoVenda> e <PrecoLocacao>
-      const price = Number(property.pricing?.price || property.price || 0);
-      const rentPrice = Number(property.pricing?.rentPrice || property.rentPrice || 0);
-
-      if (price > 0) {
-        xmlString += `      <PrecoVenda>${price}</PrecoVenda>\n`;
+      // TransactionType
+      const price = Number(rawPrice);
+      const rentPrice = Number(rawRentPrice);
+      let transactionType = 'For Sale';
+      if (price > 0 && rentPrice > 0) {
+        transactionType = 'Sale/Rent';
+      } else if (rentPrice > 0) {
+        transactionType = 'For Rent';
       }
-      if (rentPrice > 0) {
-        xmlString += `      <PrecoLocacao>${rentPrice}</PrecoLocacao>\n`;
-      }
+      xmlString += `      <TransactionType>${transactionType}</TransactionType>\n`;
 
-      // Estado, Cidade e Bairro
-      const estadoXml = property.location?.estado || property.location?.uf || property.estado || property.uf || "";
-      if (estadoXml) xmlString += `      <Estado>${escapeXml(estadoXml)}</Estado>\n`;
+      // Media
+      xmlString += `      <Media>\n`;
+      property.photos.forEach((photoUrl, index) => {
+        const url = typeof photoUrl === "string" ? photoUrl : photoUrl.url || photoUrl.src || "";
+        if (url) {
+          const isPrimary = index === 0 ? "true" : "false";
+          xmlString += `        <Item medium="image" primary="${isPrimary}">${escapeXml(url)}</Item>\n`;
+        }
+      });
+      xmlString += `      </Media>\n`;
 
-      const cidadeXml = property.location?.cidade || property.cidade || "";
-      if (cidadeXml) xmlString += `      <Cidade>${escapeXml(cidadeXml)}</Cidade>\n`;
-
-      const bairroXml = property.location?.bairro || property.bairro || "";
-      if (bairroXml) xmlString += `      <Bairro>${escapeXml(bairroXml)}</Bairro>\n`;
-
-      // Quartos, Banheiros, Vagas, Suítes, Área Útil
-      const quartos = property.bedrooms || property.quartos || "";
-      if (quartos !== "")
-        xmlString += `      <QtdDormitorios>${escapeXml(quartos)}</QtdDormitorios>\n`;
-
-      const banheiros = property.bathrooms || property.banheiros || "";
-      if (banheiros !== "")
-        xmlString += `      <QtdBanheiros>${escapeXml(banheiros)}</QtdBanheiros>\n`;
-
-      const vagas = property.parkingSpaces || property.vagas || "";
-      if (vagas !== "")
-        xmlString += `      <QtdVagas>${escapeXml(vagas)}</QtdVagas>\n`;
-
-      const suites = property.suites || "";
-      if (suites !== "")
-        xmlString += `      <QtdSuites>${escapeXml(suites)}</QtdSuites>\n`;
-
-      const areaXml = property.area || property.areaUtil || "";
-      if (areaXml !== "") {
-        xmlString += `      <AreaUtil>${escapeXml(areaXml)}</AreaUtil>\n`;
-      }
-
-      // Observacao
+      // Details
+      xmlString += `      <Details>\n`;
+      xmlString += `        <UsageType>${mapped.usage}</UsageType>\n`;
+      xmlString += `        <PropertyType>${mapped.type}</PropertyType>\n`;
+      
       const obs = property.content?.description || property.description || property.observacoes || "";
       if (obs) {
-        xmlString += `      <Observacao><![CDATA[${obs}]]></Observacao>\n`;
+        xmlString += `        <Description><![CDATA[${obs}]]></Description>\n`;
       }
-
-      // Caracteristicas
+      
+      if (price > 0) {
+        xmlString += `        <ListPrice currency="BRL">${price}</ListPrice>\n`;
+      }
+      if (rentPrice > 0) {
+        xmlString += `        <RentalPrice currency="BRL" period="Monthly">${rentPrice}</RentalPrice>\n`;
+      }
+      
+      const condo = Number(property.pricing?.condominio || property.condominio || 0);
+      if (condo > 0) {
+        xmlString += `        <PropertyAdministrationFee currency="BRL">${condo}</PropertyAdministrationFee>\n`;
+      }
+      
+      const iptu = Number(property.pricing?.iptu || property.iptu || 0);
+      if (iptu > 0) {
+        xmlString += `        <Iptu currency="BRL" period="Yearly">${iptu}</Iptu>\n`;
+      }
+      
+      xmlString += `        <LivingArea unit="square metres">${area}</LivingArea>\n`;
+      
+      const quartos = property.bedrooms || property.quartos || "";
+      if (quartos !== "") xmlString += `        <Bedrooms>${escapeXml(quartos)}</Bedrooms>\n`;
+      
+      const banheiros = property.bathrooms || property.banheiros || "";
+      if (banheiros !== "") xmlString += `        <Bathrooms>${escapeXml(banheiros)}</Bathrooms>\n`;
+      
+      const vagas = property.parkingSpaces || property.vagas || "";
+      if (vagas !== "") xmlString += `        <Garage>${escapeXml(vagas)}</Garage>\n`;
+      
       const caracteristicas = property.features || property.comodidades || property.caracteristicas || [];
       if (Array.isArray(caracteristicas) && caracteristicas.length > 0) {
-        xmlString += `      <Caracteristicas>\n`;
+        xmlString += `        <Features>\n`;
         caracteristicas.forEach(feat => {
-           if (feat) {
-               xmlString += `        <Caracteristica>${escapeXml(feat)}</Caracteristica>\n`;
-           }
+           if (feat) xmlString += `          <Feature>${escapeXml(feat)}</Feature>\n`;
         });
-        xmlString += `      </Caracteristicas>\n`;
+        xmlString += `        </Features>\n`;
       }
+      xmlString += `      </Details>\n`;
 
-      // Fotos
-      if (
-        property.photos &&
-        Array.isArray(property.photos) &&
-        property.photos.length > 0
-      ) {
-        xmlString += `      <Fotos>\n`;
-        property.photos.forEach((photoUrl, index) => {
-          const url =
-            typeof photoUrl === "string"
-              ? photoUrl
-              : photoUrl.url || photoUrl.src || "";
-          if (url) {
-            const isPrincipal = index === 0 ? "1" : "0";
-            xmlString += `        <Foto>\n`;
-            xmlString += `          <Principal>${isPrincipal}</Principal>\n`;
-            xmlString += `          <URLArquivo>${escapeXml(url)}</URLArquivo>\n`;
-            xmlString += `        </Foto>\n`;
-          }
-        });
-        xmlString += `      </Fotos>\n`;
-      }
+      // Location
+      xmlString += `      <Location displayAddress="All">\n`;
+      xmlString += `        <Country abbreviation="BR">Brasil</Country>\n`;
+      
+      const estadoXml = property.location?.estado || property.location?.uf || property.estado || property.uf || "";
+      if (estadoXml) xmlString += `        <State abbreviation="${escapeXml(estadoXml)}">${escapeXml(estadoXml)}</State>\n`;
+      
+      if (cidade) xmlString += `        <City>${escapeXml(cidade)}</City>\n`;
+      if (bairro) xmlString += `        <Neighborhood>${escapeXml(bairro)}</Neighborhood>\n`;
+      
+      const street = property.location?.logradouro || property.location?.street || property.logradouro || property.rua || "";
+      if (street) xmlString += `        <Address>${escapeXml(street)}</Address>\n`;
+      
+      const streetNumber = property.location?.numero || property.location?.number || property.numero || property.number || "";
+      if (streetNumber) xmlString += `        <StreetNumber>${escapeXml(streetNumber)}</StreetNumber>\n`;
+      
+      const zip = property.location?.cep || property.location?.zipCode || property.cep || property.zipCode || "";
+      if (zip) xmlString += `        <PostalCode>${escapeXml(zip)}</PostalCode>\n`;
+      
+      xmlString += `      </Location>\n`;
 
-      xmlString += `    </Imovel>\n`;
+      xmlString += `    </Listing>\n`;
     });
 
-    xmlString += `  </Imoveis>\n`;
-    xmlString += `</Carga>\n`;
+    xmlString += `  </Listings>\n`;
+    xmlString += `</ListingDataFeed>\n`;
 
     res.set("Content-Type", "application/xml; charset=utf-8");
     res.status(200).send(xmlString);
   } catch (error) {
-    console.error("Erro ao gerar XML Canal Pro:", error);
-    res.status(500).send("Erro interno ao gerar o feed XML.");
+    console.error("Erro ao gerar XML Canal Pro (VRSync):", error);
+    res.status(500).send("Erro interno ao gerar o feed XML VRSync.");
   }
 });
