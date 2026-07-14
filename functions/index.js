@@ -41,6 +41,25 @@ const mapPropertyType = (rawType) => {
   return null;
 };
 
+const featureMapper = {
+  'churrasqueira': 'BBQ',
+  'piscina': 'Pool',
+  'varanda gourmet': 'Gourmet Balcony',
+  'portaria 24h': 'Concierge 24h',
+  'ar-condicionado': 'Cooling',
+  'pet friendly': 'Pets Allowed',
+  'academia': 'Gym',
+  'elevador': 'Elevator',
+  'mobiliado': 'Furnished',
+  'playground': 'Playground'
+};
+
+const mapFeature = (rawFeat) => {
+  if (!rawFeat) return null;
+  const featKey = String(rawFeat).toLowerCase().trim();
+  return featureMapper[featKey] || null;
+};
+
 exports.apiCanalPro = onRequest(async (req, res) => {
   try {
     const snapshot = await admin
@@ -149,11 +168,15 @@ exports.apiCanalPro = onRequest(async (req, res) => {
       
       const caracteristicas = property.features || property.comodidades || property.caracteristicas || [];
       if (Array.isArray(caracteristicas) && caracteristicas.length > 0) {
-        xmlString += `        <Features>\n`;
+        let featuresXml = "";
         caracteristicas.forEach(feat => {
-           if (feat) xmlString += `          <Feature>${escapeXml(feat)}</Feature>\n`;
+           const mappedFeat = mapFeature(feat);
+           if (mappedFeat) featuresXml += `          <Feature>${escapeXml(mappedFeat)}</Feature>\n`;
         });
-        xmlString += `        </Features>\n`;
+        
+        if (featuresXml) {
+          xmlString += `        <Features>\n${featuresXml}        </Features>\n`;
+        }
       }
       xmlString += `      </Details>\n`;
 
@@ -173,10 +196,24 @@ exports.apiCanalPro = onRequest(async (req, res) => {
       const streetNumber = property.location?.numero || property.location?.number || property.numero || property.number || "";
       if (streetNumber) xmlString += `        <StreetNumber>${escapeXml(streetNumber)}</StreetNumber>\n`;
       
-      const zip = property.location?.cep || property.location?.zipCode || property.cep || property.zipCode || "";
-      if (zip) xmlString += `        <PostalCode>${escapeXml(zip)}</PostalCode>\n`;
+      let zip = property.location?.cep || property.location?.zipCode || property.cep || property.zipCode || "";
+      if (zip) {
+        zip = String(zip).replace(/\D/g, "");
+        if (zip.length === 8) {
+           zip = `${zip.substring(0, 5)}-${zip.substring(5)}`;
+        }
+        xmlString += `        <PostalCode>${escapeXml(zip)}</PostalCode>\n`;
+      }
       
       xmlString += `      </Location>\n`;
+
+      // ContactInfo
+      xmlString += `      <ContactInfo>\n`;
+      xmlString += `        <Name>Imobiliária Valdinei</Name>\n`;
+      xmlString += `        <Email>contato@imobiliariavaldinei.com.br</Email>\n`;
+      // Adicione a tag <Telephone> se necessário, ex:
+      // xmlString += `        <Telephone>(41) 99999-9999</Telephone>\n`;
+      xmlString += `      </ContactInfo>\n`;
 
       xmlString += `    </Listing>\n`;
     });
