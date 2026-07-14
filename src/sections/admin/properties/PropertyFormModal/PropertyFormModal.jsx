@@ -62,24 +62,20 @@ const categoryOptions = [
 
 const baseTypes = ["Casa", "Apartamento", "Comercial", "Cobertura"];
 
-const baseFeatures = [
-  "Piscina",
-  "Churrasqueira",
-  "Academia",
-  "Varanda gourmet",
-  "Portaria 24h",
-  "Playground",
-  "Elevador",
-  "Ar-condicionado",
-  "Mobiliado",
-  "Pet friendly",
+const basePropertyFeatures = [
+  "Aceita animais", "Ar-condicionado", "Closet", "Cozinha americana", "Lareira", "Mobiliado", "Varanda gourmet"
+];
+
+const baseCondoFeatures = [
+  "Academia", "Churrasqueira", "Cinema", "Espaço gourmet", "Jardim", "Piscina", "Playground", "Elevador", "Lavanderia", "Portaria 24h", "Pet friendly"
 ];
 
 const defaultForm = {
   title: "", code: "", price: "", rentPrice: "", condo: "", iptu: "",
   category: "", type: "", cep: "", logradouro: "", numero: "", complemento: "", bairro: "", cidade: "", estado: "",
-  area: "", landArea: "", bedrooms: "", bathrooms: "", parkingSpaces: "",
-  features: [], photos: [], videos: [], description: "",
+  area: "", landArea: "", bedrooms: "", bathrooms: "", parkingSpaces: "", suites: "", unitFloor: "", floors: "", buildings: "", yearBuilt: "", unitsPerFloor: "",
+  displayAddress: "All",
+  caracteristicas_imovel: [], caracteristicas_condominio: [], photos: [], videos: [], description: "",
   status: "Disponível",
   featured: false
 };
@@ -97,10 +93,12 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
   const [activeTab, setActiveTab] = useState("basic");
   const [formData, setFormData] = useState(defaultForm);
   const [availableTypes, setAvailableTypes] = useState(baseTypes);
-  const [availableFeatures, setAvailableFeatures] = useState(baseFeatures);
+  const [availablePropertyFeatures, setAvailablePropertyFeatures] = useState(basePropertyFeatures);
+  const [availableCondoFeatures, setAvailableCondoFeatures] = useState(baseCondoFeatures);
   const [isAddingType, setIsAddingType] = useState(false);
   const [newType, setNewType] = useState("");
-  const [newFeature, setNewFeature] = useState("");
+  const [newPropertyFeature, setNewPropertyFeature] = useState("");
+  const [newCondoFeature, setNewCondoFeature] = useState("");
   const [newPhotoUrl, setNewPhotoUrl] = useState("");
   const [newVideoUrl, setNewVideoUrl] = useState("");
   const [coverPhotoIndex, setCoverPhotoIndex] = useState(0);
@@ -142,7 +140,8 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
     setActiveTab("basic");
     setIsAddingType(false);
     setNewType("");
-    setNewFeature("");
+    setNewPropertyFeature("");
+    setNewCondoFeature("");
     setNewPhotoUrl("");
     setNewVideoUrl("");
     setCoverPhotoIndex(0);
@@ -174,7 +173,15 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
         bedrooms: property.bedrooms || property.location?.bedrooms || "",
         bathrooms: property.bathrooms || property.location?.bathrooms || "",
         parkingSpaces: property.parkingSpaces || property.location?.parkingSpaces || "",
-        features: property.features || [],
+        suites: property.suites || property.location?.suites || "",
+        unitFloor: property.unitFloor || "",
+        floors: property.floors || property.condoData?.floors || "",
+        buildings: property.buildings || property.condoData?.buildings || "",
+        yearBuilt: property.yearBuilt || property.condoData?.yearBuilt || "",
+        unitsPerFloor: property.unitsPerFloor || property.condoData?.unitsPerFloor || "",
+        displayAddress: property.displayAddress || "All",
+        caracteristicas_imovel: property.caracteristicas_imovel || property.features || [],
+        caracteristicas_condominio: property.caracteristicas_condominio || property.condoFeatures || [],
         photos: property.photos || [],
         videos: property.videos || [],
         description: property.content?.description || property.description || "",
@@ -190,10 +197,24 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
         );
       }
 
-      if (Array.isArray(property.features)) {
-        setAvailableFeatures((currentValue) => {
+      if (Array.isArray(property.caracteristicas_imovel) || Array.isArray(property.features)) {
+        setAvailablePropertyFeatures((currentValue) => {
           const nextValues = [...currentValue];
-          property.features.forEach((feature) => {
+          const incoming = property.caracteristicas_imovel || property.features || [];
+          incoming.forEach((feature) => {
+            if (!nextValues.includes(feature)) {
+              nextValues.push(feature);
+            }
+          });
+          return nextValues;
+        });
+      }
+
+      if (Array.isArray(property.caracteristicas_condominio) || Array.isArray(property.condoFeatures)) {
+        setAvailableCondoFeatures((currentValue) => {
+          const nextValues = [...currentValue];
+          const incoming = property.caracteristicas_condominio || property.condoFeatures || [];
+          incoming.forEach((feature) => {
             if (!nextValues.includes(feature)) {
               nextValues.push(feature);
             }
@@ -299,24 +320,34 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
     }
   };
 
-  const handleAddFeature = () => {
-    const value = newFeature.trim();
+  const handleAddPropertyFeature = () => {
+    const value = newPropertyFeature.trim();
     if (!value) return;
-
-    setAvailableFeatures((currentValue) =>
-      currentValue.includes(value)
-        ? currentValue
-        : [...currentValue, value],
+    setAvailablePropertyFeatures((currentValue) =>
+      currentValue.includes(value) ? currentValue : [...currentValue, value],
     );
-
     setFormData((currentValue) => ({
       ...currentValue,
-      features: currentValue.features.includes(value)
-        ? currentValue.features
-        : [...currentValue.features, value],
+      caracteristicas_imovel: currentValue.caracteristicas_imovel.includes(value)
+        ? currentValue.caracteristicas_imovel
+        : [...currentValue.caracteristicas_imovel, value],
     }));
+    setNewPropertyFeature("");
+  };
 
-    setNewFeature("");
+  const handleAddCondoFeature = () => {
+    const value = newCondoFeature.trim();
+    if (!value) return;
+    setAvailableCondoFeatures((currentValue) =>
+      currentValue.includes(value) ? currentValue : [...currentValue, value],
+    );
+    setFormData((currentValue) => ({
+      ...currentValue,
+      caracteristicas_condominio: currentValue.caracteristicas_condominio.includes(value)
+        ? currentValue.caracteristicas_condominio
+        : [...currentValue.caracteristicas_condominio, value],
+    }));
+    setNewCondoFeature("");
   };
 
   const extractPhotoUrls = (rawValue) => {
@@ -399,16 +430,21 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
     }));
   };
 
-  const toggleFeature = (feature) => {
+  const togglePropertyFeature = (feature) => {
     setFormData((currentValue) => {
-      const selectedFeatures = currentValue.features.includes(feature)
-        ? currentValue.features.filter((item) => item !== feature)
-        : [...currentValue.features, feature];
+      const selectedFeatures = currentValue.caracteristicas_imovel.includes(feature)
+        ? currentValue.caracteristicas_imovel.filter((item) => item !== feature)
+        : [...currentValue.caracteristicas_imovel, feature];
+      return { ...currentValue, caracteristicas_imovel: selectedFeatures };
+    });
+  };
 
-      return {
-        ...currentValue,
-        features: selectedFeatures,
-      };
+  const toggleCondoFeature = (feature) => {
+    setFormData((currentValue) => {
+      const selectedFeatures = currentValue.caracteristicas_condominio.includes(feature)
+        ? currentValue.caracteristicas_condominio.filter((item) => item !== feature)
+        : [...currentValue.caracteristicas_condominio, feature];
+      return { ...currentValue, caracteristicas_condominio: selectedFeatures };
     });
   };
 
@@ -435,15 +471,19 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
     updateField("type", formData.type === typeToRemove ? "" : formData.type);
   };
 
-  const deleteFeature = (featureToRemove) => {
-    setAvailableFeatures((currentValue) =>
-      currentValue.filter((item) => item !== featureToRemove),
-    );
+  const deletePropertyFeature = (featureToRemove) => {
+    setAvailablePropertyFeatures((currentValue) => currentValue.filter((item) => item !== featureToRemove));
     setFormData((currentValue) => ({
       ...currentValue,
-      features: currentValue.features.filter(
-        (item) => item !== featureToRemove,
-      ),
+      caracteristicas_imovel: currentValue.caracteristicas_imovel.filter((item) => item !== featureToRemove),
+    }));
+  };
+
+  const deleteCondoFeature = (featureToRemove) => {
+    setAvailableCondoFeatures((currentValue) => currentValue.filter((item) => item !== featureToRemove));
+    setFormData((currentValue) => ({
+      ...currentValue,
+      caracteristicas_condominio: currentValue.caracteristicas_condominio.filter((item) => item !== featureToRemove),
     }));
   };
 
@@ -454,7 +494,8 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
       formData.logradouro.trim() !== "" ||
       formData.photos.length > 0 ||
       formData.videos.length > 0 ||
-      formData.features.length > 0
+      formData.caracteristicas_imovel.length > 0 ||
+      formData.caracteristicas_condominio.length > 0
     );
   }, [formData]);
 
@@ -465,7 +506,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
     { id: 'bedrooms', check: (d) => Number(d.bedrooms) > 0, points: 5, tip: "Informe o número de quartos" },
     { id: 'bathrooms', check: (d) => Number(d.bathrooms) > 0, points: 5, tip: "Informe o número de banheiros" },
     { id: 'cep', check: (d) => !!d.cep?.trim() && !!d.logradouro?.trim(), points: 10, tip: "Informe a localização (CEP e Logradouro)" },
-    { id: 'features', check: (d) => d.features?.length >= 3, points: 10, tip: "Adicione pelo menos 3 características" },
+    { id: 'features', check: (d) => (d.caracteristicas_imovel?.length + d.caracteristicas_condominio?.length) >= 3, points: 10, tip: "Adicione pelo menos 3 características" },
     { id: 'photos', check: (d) => d.photos?.length > 0, points: 15, tip: "Adicione fotos ao anúncio" },
     { id: 'photos_more', check: (d) => d.photos?.length > 4, points: 10, tip: "Adicione mais de 4 fotos" },
     { id: 'desc', check: (d) => d.description?.length > 50, points: 15, tip: "Escreva uma descrição detalhada (mais de 50 caracteres)" },
@@ -611,7 +652,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
   };
 
   const handleGenerateTitle = () => {
-    const { type, area, bedrooms, bairro, features } = formData;
+    const { type, area, bedrooms, bairro } = formData;
     let titleParts = [];
     
     if (type) {
@@ -620,8 +661,9 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
       titleParts.push("Imóvel");
     }
 
-    if (features && features.length > 0) {
-      const topFeatures = features.slice(0, 2);
+    const allFeatures = [].concat(formData.caracteristicas_imovel || [], formData.caracteristicas_condominio || []);
+    if (allFeatures.length > 0) {
+      const topFeatures = allFeatures.slice(0, 2);
       if (topFeatures.length > 0) {
         titleParts.push(`com ${topFeatures.join(" e ")}`);
       }
@@ -629,6 +671,8 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
 
     if (bedrooms && Number(bedrooms) > 0) {
       titleParts.push(`- ${bedrooms} Quartos`);
+    } else if (formData.suites && Number(formData.suites) > 0) {
+      titleParts.push(`- ${formData.suites} Suítes`);
     }
 
     if (area && Number(area) > 0) {
@@ -646,7 +690,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
   };
 
   const handleGenerateDescription = () => {
-    const { category, type, area, bedrooms, bathrooms, parkingSpaces, bairro, cidade, features } = formData;
+    const { category, type, area, bedrooms, suites, bathrooms, parkingSpaces, unitFloor, floors, unitsPerFloor, buildings, yearBuilt, bairro, cidade } = formData;
     
     let html = "";
     
@@ -660,17 +704,34 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
     // Estrutura
     const estrutura = [];
     if (area) estrutura.push(`<strong>${area}m²</strong> de área`);
-    if (bedrooms) estrutura.push(`<strong>${bedrooms} quartos</strong>`);
+    if (bedrooms) estrutura.push(`<strong>${bedrooms} quartos</strong>${suites ? ` (sendo <strong>${suites} suítes</strong>)` : ""}`);
+    else if (suites) estrutura.push(`<strong>${suites} suítes</strong>`);
     if (bathrooms) estrutura.push(`<strong>${bathrooms} banheiros</strong>`);
     if (parkingSpaces) estrutura.push(`<strong>${parkingSpaces} vagas</strong> de garagem`);
+    if (unitFloor) {
+      const isNumber = !isNaN(unitFloor);
+      estrutura.push(`situado no <strong>${unitFloor}${isNumber ? 'º andar' : ''}</strong>`);
+    }
     
     if (estrutura.length > 0) {
-      html += `<p>O imóvel conta com espaços bem distribuídos, totalizando ${estrutura.join(", ")}.</p>`;
+      html += `<p>O imóvel conta com espaços bem distribuídos, contemplando ${estrutura.join(", ")}.</p>`;
+    }
+
+    // Estrutura do Condominio
+    const condoEstrutura = [];
+    if (buildings) condoEstrutura.push(`<strong>${buildings} torre(s)</strong>`);
+    if (floors) condoEstrutura.push(`<strong>${floors} andares</strong>`);
+    if (unitsPerFloor) condoEstrutura.push(`<strong>${unitsPerFloor} unidades por andar</strong>`);
+    if (yearBuilt) condoEstrutura.push(`construção do ano de <strong>${yearBuilt}</strong>`);
+
+    if (condoEstrutura.length > 0) {
+      html += `<br/><p>O condomínio possui infraestrutura que abrange ${condoEstrutura.join(", ")}.</p>`;
     }
     
     // Características
-    if (features && features.length > 0) {
-      html += `<br/><p>Além disso, a propriedade oferece excelentes diferenciais, como: <em>${features.join(", ")}</em>.</p>`;
+    const allFeatures = [].concat(formData.caracteristicas_imovel || [], formData.caracteristicas_condominio || []);
+    if (allFeatures.length > 0) {
+      html += `<br/><p>Além disso, a propriedade oferece excelentes diferenciais, como: <em>${allFeatures.join(", ")}</em>.</p>`;
     }
     
     // Fechamento
@@ -921,6 +982,16 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                 }
               />
               <Input
+                label="Suítes"
+                icon={BedDouble}
+                type="number"
+                placeholder="0"
+                value={formData.suites}
+                onChange={(event) =>
+                  updateField("suites", event.target.value)
+                }
+              />
+              <Input
                 label="Banheiros"
                 icon={Bath}
                 type="number"
@@ -940,6 +1011,61 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                   updateField("parkingSpaces", event.target.value)
                 }
               />
+              <Input
+                label="Andar do imóvel"
+                type="text"
+                placeholder="Ex: 5, Térreo, Cobertura"
+                value={formData.unitFloor}
+                onChange={(event) =>
+                  updateField("unitFloor", event.target.value)
+                }
+              />
+            </div>
+            
+            <div className={styles.featureIntro} style={{ marginTop: '2.5rem' }}>
+              <div>
+                <h3 className={styles.featureTitle}>Sobre o Condomínio</h3>
+              </div>
+              <p className={styles.featureDescription}>Detalhes da infraestrutura predial.</p>
+            </div>
+            
+            <div className={styles.formGrid}>
+              <Input
+                label="Nº de Andares"
+                type="number"
+                placeholder="Ex: 10"
+                value={formData.floors}
+                onChange={(event) =>
+                  updateField("floors", event.target.value)
+                }
+              />
+              <Input
+                label="Unidades por Andar"
+                type="number"
+                placeholder="Ex: 4"
+                value={formData.unitsPerFloor}
+                onChange={(event) =>
+                  updateField("unitsPerFloor", event.target.value)
+                }
+              />
+              <Input
+                label="Nº de Torres (Buildings)"
+                type="number"
+                placeholder="Ex: 2"
+                value={formData.buildings}
+                onChange={(event) =>
+                  updateField("buildings", event.target.value)
+                }
+              />
+              <Input
+                label="Ano de Construção"
+                type="number"
+                placeholder="Ex: 2015"
+                value={formData.yearBuilt}
+                onChange={(event) =>
+                  updateField("yearBuilt", event.target.value)
+                }
+              />
             </div>
           </section>
         ) : null}
@@ -947,6 +1073,16 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
         {activeTab === "location" ? (
           <section className={styles.tabPanel}>
             <div className={styles.formGrid}>
+              <Select
+                label="Mostrar Endereço"
+                options={[
+                  { label: "Completo", value: "All" },
+                  { label: "Somente Rua", value: "Street" },
+                  { label: "Somente Bairro", value: "Neighborhood" },
+                ]}
+                value={formData.displayAddress}
+                onChange={(value) => updateField("displayAddress", value)}
+              />
               <Input
                 label="CEP"
                 placeholder="Apenas números"
@@ -1022,58 +1158,74 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
             <div className={styles.featureIntro}>
               <div>
                 <p className={styles.featureKicker}>Comodidades</p>
-                <h3 className={styles.featureTitle}>
-                  Selecione as características do imóvel
-                </h3>
+                <h3 className={styles.featureTitle}>Características do Imóvel</h3>
               </div>
-              <p className={styles.featureDescription}>
-                Organize os diferenciais do anúncio e deixe a vitrine mais
-                clara.
-              </p>
+              <p className={styles.featureDescription}>Diferenciais exclusivos deste imóvel (ex: Ar-condicionado, varanda).</p>
             </div>
 
             <div className={styles.featureToolbar}>
               <Input
-                label="Nova característica"
+                label="Nova característica (Imóvel)"
                 placeholder="Ex: Piso aquecido"
-                value={newFeature}
-                onChange={(event) => setNewFeature(event.target.value)}
+                value={newPropertyFeature}
+                onChange={(event) => setNewPropertyFeature(event.target.value)}
                 onKeyDown={(event) => {
                   if (event.key === "Enter") {
                     event.preventDefault();
-                    handleAddFeature();
+                    handleAddPropertyFeature();
                   }
                 }}
                 className={styles.featureToolbarInput}
               />
-              <Button
-                type="button"
-                variant="primary"
-                className={styles.featureToolbarButton}
-                onClick={handleAddFeature}
-              >
-                Adicionar
-              </Button>
+              <Button type="button" variant="primary" className={styles.featureToolbarButton} onClick={handleAddPropertyFeature}>Adicionar</Button>
             </div>
 
             <div className={styles.featureGrid}>
-              {availableFeatures.map((featureItem) => (
+              {availablePropertyFeatures.map((featureItem) => (
                 <div key={featureItem} className={styles.featureCard}>
                   <label className={styles.featureCheckLabel}>
-                    <input
-                      type="checkbox"
-                      checked={formData.features.includes(featureItem)}
-                      onChange={() => toggleFeature(featureItem)}
-                    />
+                    <input type="checkbox" checked={formData.caracteristicas_imovel.includes(featureItem)} onChange={() => togglePropertyFeature(featureItem)} />
                     <span>{featureItem}</span>
                   </label>
+                  <button type="button" className={styles.featureDeleteButton} onClick={() => deletePropertyFeature(featureItem)}>
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
 
-                  <button
-                    type="button"
-                    className={styles.featureDeleteButton}
-                    onClick={() => deleteFeature(featureItem)}
-                    aria-label={`Remover característica ${featureItem}`}
-                  >
+            <div className={styles.featureIntro} style={{ marginTop: '2.5rem' }}>
+              <div>
+                <h3 className={styles.featureTitle}>Características do Condomínio</h3>
+              </div>
+              <p className={styles.featureDescription}>Infraestrutura do prédio ou área comum (ex: Piscina, Portaria).</p>
+            </div>
+
+            <div className={styles.featureToolbar}>
+              <Input
+                label="Nova característica (Condomínio)"
+                placeholder="Ex: Sala de jogos"
+                value={newCondoFeature}
+                onChange={(event) => setNewCondoFeature(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    handleAddCondoFeature();
+                  }
+                }}
+                className={styles.featureToolbarInput}
+              />
+              <Button type="button" variant="primary" className={styles.featureToolbarButton} onClick={handleAddCondoFeature}>Adicionar</Button>
+            </div>
+
+            <div className={styles.featureGrid}>
+              {availableCondoFeatures.map((featureItem) => (
+                <div key={featureItem} className={styles.featureCard}>
+                  <label className={styles.featureCheckLabel}>
+                    <input type="checkbox" checked={formData.caracteristicas_condominio.includes(featureItem)} onChange={() => toggleCondoFeature(featureItem)} />
+                    <span>{featureItem}</span>
+                  </label>
+                  <button type="button" className={styles.featureDeleteButton} onClick={() => deleteCondoFeature(featureItem)}>
                     <Trash2 size={14} />
                   </button>
                 </div>

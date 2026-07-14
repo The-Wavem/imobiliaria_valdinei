@@ -34,8 +34,17 @@ const formatPropertyData = (data) => {
     area: Number(data.area || loc.area || 0),
     landArea: Number(data.landArea || loc.landArea || 0),
     bedrooms: Number(data.bedrooms || loc.bedrooms || 0),
+    suites: Number(data.suites || loc.suites || 0),
     bathrooms: Number(data.bathrooms || loc.bathrooms || 0),
     parkingSpaces: Number(data.parkingSpaces || loc.parkingSpaces || 0),
+    unitFloor: data.unitFloor || "",
+    displayAddress: data.displayAddress || "All",
+    condoData: {
+      floors: Number(data.floors || data.condoData?.floors || 0),
+      buildings: Number(data.buildings || data.condoData?.buildings || 0),
+      yearBuilt: Number(data.yearBuilt || data.condoData?.yearBuilt || 0),
+      unitsPerFloor: Number(data.unitsPerFloor || data.condoData?.unitsPerFloor || 0),
+    },
     location: {
       cep: loc.cep || data.cep || "",
       logradouro: loc.logradouro || loc.street || data.logradouro || data.street || "",
@@ -46,7 +55,9 @@ const formatPropertyData = (data) => {
       estado: loc.estado || loc.state || data.estado || data.state || "",
       address: loc.address || data.address || "",
     },
-    features: data.features || [],
+    caracteristicas_imovel: data.caracteristicas_imovel || data.features || [],
+    caracteristicas_condominio: data.caracteristicas_condominio || data.condoFeatures || [],
+    features: [].concat(data.caracteristicas_imovel || data.features || [], data.caracteristicas_condominio || data.condoFeatures || []),
     photos: data.photos || [],
     videos: data.videos || [],
     content: {

@@ -42,22 +42,32 @@ const mapPropertyType = (rawType) => {
 };
 
 const featureMapper = {
-  'churrasqueira': 'BBQ',
-  'piscina': 'Pool',
-  'varanda gourmet': 'Gourmet Balcony',
-  'portaria 24h': 'Concierge 24h',
+  'aceita animais': 'Pets Allowed',
   'ar-condicionado': 'Cooling',
-  'pet friendly': 'Pets Allowed',
-  'academia': 'Gym',
-  'elevador': 'Elevator',
+  'closet': 'Closet',
+  'cozinha americana': 'American Kitchen',
+  'lareira': 'Fireplace',
   'mobiliado': 'Furnished',
-  'playground': 'Playground'
-};
-
-const mapFeature = (rawFeat) => {
-  if (!rawFeat) return null;
-  const featKey = String(rawFeat).toLowerCase().trim();
-  return featureMapper[featKey] || null;
+  'varanda gourmet': 'Gourmet Balcony',
+  'academia': 'Gym',
+  'churrasqueira': 'BBQ',
+  'cinema': 'Media Room',
+  'espaço gourmet': 'Gourmet Area',
+  'jardim': 'Garden Area',
+  'piscina': 'Pool',
+  'playground': 'Playground',
+  'quadra de squash': 'Squash',
+  'quadra de tênis': 'Tennis court',
+  'quadra poliesportiva': 'Sports Court',
+  'acesso para deficientes': 'Disabled Access',
+  'bicicletário': 'Bicycles Place',
+  'coworking': 'Coworking',
+  'elevador': 'Elevator',
+  'lavanderia': 'Laundry',
+  'sauna': 'Sauna',
+  'spa': 'Spa',
+  'portaria 24h': 'Concierge 24h',
+  'pet friendly': 'Pets Allowed'
 };
 
 exports.apiCanalPro = onRequest(async (req, res) => {
@@ -160,28 +170,59 @@ exports.apiCanalPro = onRequest(async (req, res) => {
       const quartos = property.bedrooms || property.quartos || "";
       if (quartos !== "") xmlString += `        <Bedrooms>${escapeXml(quartos)}</Bedrooms>\n`;
       
+      const suites = property.suites || property.location?.suites || "";
+      if (suites !== "") xmlString += `        <Suites>${escapeXml(suites)}</Suites>\n`;
+      
       const banheiros = property.bathrooms || property.banheiros || "";
       if (banheiros !== "") xmlString += `        <Bathrooms>${escapeXml(banheiros)}</Bathrooms>\n`;
       
       const vagas = property.parkingSpaces || property.vagas || "";
       if (vagas !== "") xmlString += `        <Garage>${escapeXml(vagas)}</Garage>\n`;
+
+      const unitFloor = property.unitFloor || "";
+      if (unitFloor !== "") xmlString += `        <UnitFloor>${escapeXml(unitFloor)}</UnitFloor>\n`;
+
+      const buildings = property.buildings || property.condoData?.buildings || "";
+      if (buildings !== "") xmlString += `        <Buildings>${escapeXml(buildings)}</Buildings>\n`;
+
+      const floors = property.floors || property.condoData?.floors || "";
+      if (floors !== "") xmlString += `        <Floors>${escapeXml(floors)}</Floors>\n`;
+
+      const unitsPerFloor = property.unitsPerFloor || property.condoData?.unitsPerFloor || "";
+      if (unitsPerFloor !== "") xmlString += `        <UnitsPerFloor>${escapeXml(unitsPerFloor)}</UnitsPerFloor>\n`;
+
+      const yearBuilt = property.yearBuilt || property.condoData?.yearBuilt || "";
+      if (yearBuilt !== "") xmlString += `        <YearBuilt>${escapeXml(yearBuilt)}</YearBuilt>\n`;
       
-      const caracteristicas = property.features || property.comodidades || property.caracteristicas || [];
-      if (Array.isArray(caracteristicas) && caracteristicas.length > 0) {
-        let featuresXml = "";
-        caracteristicas.forEach(feat => {
-           const mappedFeat = mapFeature(feat);
-           if (mappedFeat) featuresXml += `          <Feature>${escapeXml(mappedFeat)}</Feature>\n`;
+      // Concatena características do imóvel e do condomínio
+      const featsImovel = property.features || property.comodidades || property.caracteristicas || [];
+      const featsCondo = property.condoFeatures || property.caracteristicasCondominio || [];
+      const todasCaracteristicas = [].concat(featsImovel, featsCondo);
+
+      let featuresXml = "";
+      
+      if (todasCaracteristicas.length > 0) {
+        todasCaracteristicas.forEach(feat => {
+           if (!feat) return;
+           const featKey = String(feat).toLowerCase().trim();
+           const mappedFeat = featureMapper[featKey];
+           
+           // Valida e evita gerar tags duplicadas
+           if (mappedFeat && !featuresXml.includes(`>${escapeXml(mappedFeat)}<`)) {
+             featuresXml += `          <Feature>${escapeXml(mappedFeat)}</Feature>\n`;
+           }
         });
-        
-        if (featuresXml) {
-          xmlString += `        <Features>\n${featuresXml}        </Features>\n`;
-        }
       }
+
+      if (featuresXml) {
+        xmlString += `        <Features>\n${featuresXml}        </Features>\n`;
+      }
+
       xmlString += `      </Details>\n`;
 
       // Location
-      xmlString += `      <Location displayAddress="All">\n`;
+      const displayAddress = property.displayAddress || property.location?.displayAddress || "All";
+      xmlString += `      <Location displayAddress="${escapeXml(displayAddress)}">\n`;
       xmlString += `        <Country abbreviation="BR">Brasil</Country>\n`;
       
       const estadoXml = property.location?.estado || property.location?.uf || property.estado || property.uf || "";
