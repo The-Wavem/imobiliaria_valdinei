@@ -203,8 +203,8 @@ export default function PropertyDetail() {
               price={property.price}
               rentPrice={property.pricing?.rentPrice || property.rentPrice}
               category={property.category}
-              condo={property.condo}
-              iptu={property.iptu}
+              condo={property.pricing?.condo || property.pricing?.condominio || property.condo || 0}
+              iptu={property.pricing?.iptu || property.iptu || 0}
               propertyTitle={property.title}
               propertyId={property.id}
               status={property.status}

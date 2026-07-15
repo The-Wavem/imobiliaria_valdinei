@@ -155,7 +155,7 @@ exports.apiCanalPro = onRequest(async (req, res) => {
         xmlString += `        <RentalPrice currency="BRL" period="Monthly">${rentPrice}</RentalPrice>\n`;
       }
       
-      const condo = Number(property.pricing?.condominio || property.condominio || 0);
+      const condo = Number(property.pricing?.condo || property.pricing?.condominio || property.condominio || 0);
       if (condo > 0) {
         xmlString += `        <PropertyAdministrationFee currency="BRL">${condo}</PropertyAdministrationFee>\n`;
       }
