@@ -27,7 +27,7 @@
   font-weight: 600;
   color: var(--color-brand-secondary);
   border-bottom: 1px solid #E2E8F0;
-  padding: 0 0 2rem 0;
+  padding: 1.2rem 0;
 }
 
 .info li svg {
@@ -55,7 +55,6 @@
   }
   
   .info li {
-    padding: 0 0 1.25rem 0;
-    margin-bottom: 1.25rem;
+    padding: 1.25rem 0;
   }
 }
