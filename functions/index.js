@@ -138,6 +138,16 @@ exports.apiCanalPro = onRequest(async (req, res) => {
       });
       xmlString += `      </Media>\n`;
 
+      // Video (VRSync schema often accepts it as a child of Listing alongside Media)
+      let videoUrl = property.videoUrl || property.video;
+      if (!videoUrl && property.videos && Array.isArray(property.videos) && property.videos.length > 0) {
+        videoUrl = property.videos[0];
+      }
+      
+      if (videoUrl && typeof videoUrl === 'string' && videoUrl.trim() !== '') {
+        xmlString += `      <Video>${escapeXml(videoUrl.trim())}</Video>\n`;
+      }
+
       // Details
       xmlString += `      <Details>\n`;
       xmlString += `        <UsageType>${mapped.usage}</UsageType>\n`;

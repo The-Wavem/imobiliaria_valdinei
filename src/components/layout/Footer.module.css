@@ -76,4 +76,8 @@
     gap: 32px;
     padding-top: 56px;
   }
+  
+  .bottomBar {
+    padding-bottom: 96px;
+  }
 }

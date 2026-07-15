@@ -39,7 +39,14 @@ export default function PropertyGallery({
   useEffect(() => {
     if (isOpen) {
       setModalIndex(initialIndex);
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "auto";
     }
+    
+    return () => {
+      document.body.style.overflow = "auto";
+    };
   }, [isOpen, initialIndex]);
 
   if (mediaList.length === 0) return null;

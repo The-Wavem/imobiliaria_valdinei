@@ -33,20 +33,30 @@
 
 /* Mobile: sidebar becomes fixed bottom bar */
 @media (max-width: 900px) {
-  .container {
-    grid-template-columns: 1fr;
+  .page {
+    padding: 1.5rem 1rem 7rem;
+    width: 100%;
+    max-width: 100vw;
+    box-sizing: border-box;
+    overflow-x: hidden;
   }
 
-  .page {
-    padding: 1.5rem 1rem;
+  .container {
+    grid-template-columns: 1fr;
+    width: 100%;
+    box-sizing: border-box;
+    gap: 2.5rem;
   }
 
   .left {
-    gap: 3rem;
+    gap: 2.5rem;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .sidebar {
     position: static;
+    width: 100%;
   }
 }
 
