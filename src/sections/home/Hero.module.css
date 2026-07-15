@@ -249,9 +249,17 @@
     max-width: 100%;
     justify-self: start;
   }
+}
 
+@media (max-width: 768px) {
   .fieldsGrid {
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+  }
+  
+  .fieldsGrid > * {
+    width: 100%;
   }
 }
 

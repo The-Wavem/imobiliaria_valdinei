@@ -164,7 +164,7 @@ export default function Hero() {
           </div>
 
           <div className={styles.fields}>
-            <div className={styles.fieldsGrid} style={{ gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
+            <div className={styles.fieldsGrid}>
               <Select
                 icon={MapPin}
                 label="Localização"

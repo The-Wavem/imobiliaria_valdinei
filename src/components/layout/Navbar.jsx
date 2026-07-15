@@ -1,6 +1,7 @@
-import { Heart, Menu } from "lucide-react";
+import { Heart, Menu, X } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { useFavorites } from "@hooks/useFavorites";
+import { useState } from "react";
 import logoImg from "../../assets/images/logo.png";
 import styles from "./Navbar.module.css";
 
@@ -15,6 +16,7 @@ const navigationItems = [
 
 export default function Navbar() {
   const { favorites } = useFavorites();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
     <header className={styles.header}>
@@ -61,11 +63,49 @@ export default function Navbar() {
             type="button"
             className={styles.menuButton}
             aria-label="Abrir menu"
+            onClick={() => setIsMenuOpen(true)}
           >
             <Menu size={20} />
           </button>
         </div>
       </div>
+
+      {isMenuOpen && (
+        <>
+          <div 
+            className={styles.mobileOverlay} 
+            onClick={() => setIsMenuOpen(false)} 
+            aria-hidden="true"
+          />
+          <div className={styles.mobileSidebar}>
+            <div className={styles.mobileSidebarHeader}>
+              <img src={logoImg} alt="Logo Valdinei Souza" className={styles.mobileLogo} />
+              <button 
+                type="button" 
+                className={styles.closeButton}
+                onClick={() => setIsMenuOpen(false)}
+                aria-label="Fechar menu"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            <nav className={styles.mobileNav}>
+              {navigationItems.map((item) => (
+                <NavLink
+                  key={item.label}
+                  to={item.to}
+                  onClick={() => setIsMenuOpen(false)}
+                  className={({ isActive }) =>
+                    `${styles.mobileLink} ${isActive ? styles.mobileLinkActive : ""}`.trim()
+                  }
+                >
+                  {item.label}
+                </NavLink>
+              ))}
+            </nav>
+          </div>
+        </>
+      )}
     </header>
   );
 }
