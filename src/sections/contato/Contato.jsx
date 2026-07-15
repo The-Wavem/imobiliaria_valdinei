@@ -175,7 +175,7 @@ export default function ContatoSection() {
             </div>
 
             <div className={styles.contactCards}>
-              <a href="https://wa.me/5541988591433" target="_blank" rel="noopener noreferrer" className={`${styles.contactCard} ${styles.pulse}`}>
+              <a href="tel:+5541988591433" className={`${styles.contactCard} ${styles.pulse}`}>
                 <div className={styles.contactIcon}>
                   <Phone size={26} />
                 </div>
@@ -185,7 +185,10 @@ export default function ContatoSection() {
                 </div>
               </a>
 
-              <motion.div className={styles.contactCard} variants={itemVariants}>
+              <a 
+                href="mailto:contato@valdineisouza.com.br" 
+                className={styles.contactCard}
+              >
                 <div className={styles.contactIcon}>
                   <Mail size={26} />
                 </div>
@@ -193,7 +196,7 @@ export default function ContatoSection() {
                   <span className={styles.contactLabel}>E-mail</span>
                   <strong className={styles.contactValue}>contato@valdineisouza.com.br</strong>
                 </div>
-              </motion.div>
+              </a>
             </div>
 
             <Button
