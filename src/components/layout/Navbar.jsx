@@ -1,7 +1,8 @@
 import { Heart, Menu, X } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { useFavorites } from "@hooks/useFavorites";
-import { useState } from "react";
+import React, { useState } from "react";
+import { createPortal } from "react-dom";
 import logoImg from "../../assets/images/logo.png";
 import styles from "./Navbar.module.css";
 
@@ -17,6 +18,17 @@ const navigationItems = [
 export default function Navbar() {
   const { favorites } = useFavorites();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  React.useEffect(() => {
+    if (isMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "auto";
+    }
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, [isMenuOpen]);
 
   return (
     <header className={styles.header}>
@@ -70,7 +82,7 @@ export default function Navbar() {
         </div>
       </div>
 
-      {isMenuOpen && (
+      {isMenuOpen && typeof window !== "undefined" && createPortal(
         <>
           <div 
             className={styles.mobileOverlay} 
@@ -104,7 +116,8 @@ export default function Navbar() {
               ))}
             </nav>
           </div>
-        </>
+        </>,
+        document.body
       )}
     </header>
   );
