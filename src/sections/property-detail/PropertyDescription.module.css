@@ -40,6 +40,11 @@
 
 .richTextContainer {
   margin-top: 1rem;
+  width: 100%;
+  max-width: 100%;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
 }
 
 .richTextContainer p {

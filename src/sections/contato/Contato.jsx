@@ -203,7 +203,10 @@ export default function ContatoSection() {
               variant="primary"
               type="button"
               className={styles.whatsappButton}
-              onClick={() => logWhatsAppClickAnalytics("Contato Geral", "pagina_contato")}
+              onClick={() => {
+                logWhatsAppClickAnalytics("Contato Geral", "pagina_contato");
+                window.open("https://wa.me/5541988591433", "_blank");
+              }}
             >
               <MessageCircle size={18} />
               Falar pelo WhatsApp

@@ -376,6 +376,7 @@ a.contactCard.pulse:hover {
     margin-top: 0;
     width: 100%;
     box-sizing: border-box;
+    align-items: stretch;
   }
 
   .infoColumn {
@@ -388,6 +389,8 @@ a.contactCard.pulse:hover {
 
   .formCard {
     padding: 1.5rem 1.1rem 1.2rem;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .inlineFields {
