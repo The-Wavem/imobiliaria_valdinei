@@ -138,6 +138,16 @@ exports.apiCanalPro = onRequest(async (req, res) => {
       });
       xmlString += `      </Media>\n`;
 
+      // Video (VRSync schema often accepts it as a child of Listing alongside Media)
+      let videoUrl = property.videoUrl || property.video;
+      if (!videoUrl && property.videos && Array.isArray(property.videos) && property.videos.length > 0) {
+        videoUrl = property.videos[0];
+      }
+      
+      if (videoUrl && typeof videoUrl === 'string' && videoUrl.trim() !== '') {
+        xmlString += `      <Video>${escapeXml(videoUrl.trim())}</Video>\n`;
+      }
+
       // Details
       xmlString += `      <Details>\n`;
       xmlString += `        <UsageType>${mapped.usage}</UsageType>\n`;
@@ -155,7 +165,7 @@ exports.apiCanalPro = onRequest(async (req, res) => {
         xmlString += `        <RentalPrice currency="BRL" period="Monthly">${rentPrice}</RentalPrice>\n`;
       }
       
-      const condo = Number(property.pricing?.condominio || property.condominio || 0);
+      const condo = Number(property.pricing?.condo || property.pricing?.condominio || property.condominio || 0);
       if (condo > 0) {
         xmlString += `        <PropertyAdministrationFee currency="BRL">${condo}</PropertyAdministrationFee>\n`;
       }
@@ -236,6 +246,9 @@ exports.apiCanalPro = onRequest(async (req, res) => {
       
       const streetNumber = property.location?.numero || property.location?.number || property.numero || property.number || "";
       if (streetNumber) xmlString += `        <StreetNumber>${escapeXml(streetNumber)}</StreetNumber>\n`;
+      
+      const complement = property.location?.complemento || property.location?.complement || property.complemento || property.complement || "";
+      if (complement) xmlString += `        <Complement>${escapeXml(complement)}</Complement>\n`;
       
       let zip = property.location?.cep || property.location?.zipCode || property.cep || property.zipCode || "";
       if (zip) {

@@ -71,19 +71,36 @@
 
 @media (max-width: 900px) {
   .mosaicContainer {
-    grid-template-columns: 1fr;
-    grid-template-rows: 60% 40%;
-    height: min(600px, 75vh);
-  }
-}
-
-@media (max-width: 480px) {
-  .mosaicContainer {
-    grid-template-rows: 55% 45%;
-    gap: 0.4rem;
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    height: 320px;
+    gap: 0.5rem;
+    padding-bottom: 0.5rem;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    max-width: 100vw;
+    box-sizing: border-box;
   }
   
+  .mosaicContainer::-webkit-scrollbar {
+    display: none; /* Oculta no Chrome/Safari */
+  }
+
+  .mainPhoto {
+    flex: 0 0 85%;
+    height: 100%;
+    scroll-snap-align: center;
+  }
+
   .sidePhotos {
-    gap: 0.4rem;
+    flex: 0 0 85%;
+    height: 100%;
+    scroll-snap-align: center;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 0.5rem;
   }
 }

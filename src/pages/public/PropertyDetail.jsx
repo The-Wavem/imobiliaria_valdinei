@@ -136,7 +136,11 @@ export default function PropertyDetail() {
       ? [property.image]
       : [];
 
-  const rawVideos = property.videos || [];
+  let rawVideos = property.videos || [];
+  if (!Array.isArray(rawVideos)) rawVideos = [rawVideos];
+  if (rawVideos.length === 0 && property.videoUrl) rawVideos = [property.videoUrl];
+  if (rawVideos.length === 0 && property.video) rawVideos = [property.video];
+
   const safeImages = galleryImages.filter(Boolean);
   
   const videoThumbnails = rawVideos.map((url) => {
@@ -151,7 +155,7 @@ export default function PropertyDetail() {
 
       <PropertyGallery 
         images={galleryImages} 
-        videos={property.videos || []}
+        videos={rawVideos}
         title={property.title} 
         isOpen={isGalleryOpen}
         onClose={() => setIsGalleryOpen(false)}
@@ -171,6 +175,11 @@ export default function PropertyDetail() {
               title={property.title}
               location={property.location}
               propertyId={property.id}
+              price={property.price}
+              rentPrice={property.pricing?.rentPrice || property.rentPrice}
+              condo={property.pricing?.condo || property.pricing?.condominio || property.condo || 0}
+              iptu={property.pricing?.iptu || property.iptu || 0}
+              category={property.category}
             />
           </MotionDiv>
           <MotionDiv variants={itemVariants}>
@@ -197,20 +206,20 @@ export default function PropertyDetail() {
         </MotionSection>
 
         <aside className={styles.sidebar}>
-          <MotionDiv variants={sidebarVariants}>
+          <div>
             <ContactSidebar
               code={property.code}
               price={property.price}
               rentPrice={property.pricing?.rentPrice || property.rentPrice}
               category={property.category}
-              condo={property.condo}
-              iptu={property.iptu}
+              condo={property.pricing?.condo || property.pricing?.condominio || property.condo || 0}
+              iptu={property.pricing?.iptu || property.iptu || 0}
               propertyTitle={property.title}
               propertyId={property.id}
               status={property.status}
               onScheduleVisit={() => setIsVisitModalOpen(true)}
             />
-          </MotionDiv>
+          </div>
         </aside>
       </MotionMain>
 

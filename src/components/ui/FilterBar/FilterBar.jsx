@@ -20,6 +20,7 @@ const typeOptions = [
 
 export default function FilterBar({ mode = "buy", filters = {}, onChange, onSearch, properties = [] }) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   const [isStuck, setIsStuck] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [localFilters, setLocalFilters] = useState(filters);
@@ -176,7 +177,18 @@ export default function FilterBar({ mode = "buy", filters = {}, onChange, onSear
   return (
     <section className={`${styles.bar} ${isStuck ? styles.isStuck : ""}`}>
       <div className={styles.container}>
-        <div className={styles.topRow}>
+        <Button 
+          className={styles.mobileFilterToggle} 
+          variant="primary" 
+          onClick={() => setShowFilters(!showFilters)}
+        >
+          <SlidersHorizontal size={18} />
+          <span>{showFilters ? "Esconder Filtros" : "Filtros e Busca"}</span>
+        </Button>
+
+        <div className={`${styles.filterContent} ${showFilters ? styles.showMobileFilters : ""}`}>
+          <div className={styles.filterContentInner}>
+            <div className={styles.topRow}>
           <Select
             icon={MapPin}
             label="Localização"
@@ -283,6 +295,8 @@ export default function FilterBar({ mode = "buy", filters = {}, onChange, onSear
             </motion.div>
           )}
         </AnimatePresence>
+          </div>
+        </div>
       </div>
     </section>
   );

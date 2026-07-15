@@ -7,7 +7,7 @@ import { validateName, validatePhone, sanitizeFormData } from "@utils/validation
 import styles from "./ContactSidebar.module.css";
 import logoImg from "../../assets/images/valdinei entre em contato.png"; 
 
-const VALDINEI_PHONE = import.meta.env.VITE_VALDINEI_PHONE;
+const VALDINEI_PHONE = import.meta.env.VITE_VALDINEI_PHONE || "";
 
 function buildWhatsAppMessage({ propertyTitle, propertyCode, propertyPrice, clientName, clientMessage, propertyLink }) {
   const price = propertyPrice ? Number(propertyPrice).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : 'Sob consulta';
@@ -139,7 +139,21 @@ export default function ContactSidebar({
   };
 
   const updateField = (field) => (e) => {
-    setForm((prev) => ({ ...prev, [field]: e.target.value }));
+    let { value } = e.target;
+
+    if (field === "phone") {
+      const numbers = value.replace(/\D/g, "");
+      if (numbers.length === 0) value = "";
+      else if (numbers.length <= 2) value = `(${numbers}`;
+      else if (numbers.length <= 6) value = `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
+      else if (numbers.length <= 10) value = `(${numbers.slice(0, 2)}) ${numbers.slice(2, 6)}-${numbers.slice(6)}`;
+      else value = `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7, 11)}`;
+    }
+
+    if (field === "name" && value.length > 80) return;
+    if (field === "message" && value.length > 500) return;
+
+    setForm((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) setErrors((prev) => ({ ...prev, [field]: undefined }));
   };
 
@@ -211,16 +225,47 @@ export default function ContactSidebar({
 
         {(!status || status === "Disponível" || status === "Ativo") && (
           <div className={styles.cta}>
-            <button type="button" className={styles.whatsappBtn} onClick={openModal}>
+            <button 
+              type="button" 
+              className={`${styles.whatsappBtn} ${styles.whatsappBtnDesktop}`} 
+              onClick={() => {
+                if (typeof window !== 'undefined') {
+                  const text = encodeURIComponent(`Olá Valdinei! Gostaria de mais informações sobre o imóvel: ${propertyTitle} (Cód: ${code}).\n\nLink: ${window.location.href}`);
+                  window.open(`https://wa.me/55${VALDINEI_PHONE.replace(/\D/g, '')}?text=${text}`, "_blank", "noopener,noreferrer");
+                  if (logWhatsAppClickAnalytics) logWhatsAppClickAnalytics();
+                }
+              }}
+            >
               <MessageCircle size={20} />
               <span>Quero esse imóvel</span>
             </button>
-            <button type="button" className={styles.visitBtn} onClick={onScheduleVisit}>
-              Agendar Visita
+
+            <button type="button" className={`${styles.visitBtn} ${styles.visitBtnDesktop}`} onClick={onScheduleVisit || openModal}>
+              <span>Agendar Visita</span>
             </button>
           </div>
         )}
       </aside>
+
+      {(!status || status === "Disponível" || status === "Ativo") && typeof window !== 'undefined' && createPortal(
+        <div className={styles.mobileCtaContainer}>
+          <a 
+            href={`https://wa.me/55${VALDINEI_PHONE.replace(/\D/g, '')}?text=${encodeURIComponent(`Olá Valdinei! Gostaria de mais informações sobre o imóvel: ${propertyTitle} (Cód: ${code}).\n\nLink: ${window.location.href}`)}`}
+            target="_blank" 
+            rel="noopener noreferrer"
+            className={styles.whatsappBtnMobile}
+            onClick={() => logWhatsAppClickAnalytics && logWhatsAppClickAnalytics()}
+          >
+            <MessageCircle size={20} />
+            <span>WhatsApp</span>
+          </a>
+
+          <button type="button" className={styles.visitBtnMobile} onClick={openModal}>
+            <span>Contatar</span>
+          </button>
+        </div>,
+        document.body
+      )}
 
       {isModalOpen && createPortal(
         <div

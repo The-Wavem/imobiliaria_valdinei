@@ -6,6 +6,10 @@
   margin-bottom: 1rem;
 }
 
+.mobilePriceCard {
+  display: none;
+}
+
 .title {
   font-family: var(--font-display);
   font-weight: 700;
@@ -48,4 +52,80 @@
   background-color: var(--color-secondary);
   transform: translateY(-2px);
   box-shadow: var(--shadow-secondary);
+}
+
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.25rem;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .header > div {
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .title {
+    font-size: 1.35rem;
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+
+  .shareButton {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .mobilePriceCard {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding: 1rem 1.25rem;
+    background-color: var(--color-background-alt, #f8fafc);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    border-left: 4px solid var(--color-primary);
+    border-radius: var(--radius-md);
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .priceRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+  .priceLabel {
+    font-size: 0.75rem;
+    color: var(--color-text-muted, #64748b);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  
+  .priceValue {
+    font-family: var(--font-display);
+    font-size: 1.45rem;
+    font-weight: 800;
+    color: var(--color-primary);
+  }
+  
+  .taxesRow {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--color-text-muted, #64748b);
+    margin-top: 0.25rem;
+    padding-top: 0.5rem;
+    border-top: 1px dashed rgba(0, 0, 0, 0.1);
+  }
+  
+  .separator {
+    opacity: 0.5;
+  }
 }

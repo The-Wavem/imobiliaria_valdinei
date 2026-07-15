@@ -45,3 +45,11 @@
 .featureLabel {
 	line-height: 1;
 }
+
+@media (max-width: 768px) {
+  .section {
+    max-width: 100vw;
+    overflow-x: hidden;
+    box-sizing: border-box;
+  }
+}

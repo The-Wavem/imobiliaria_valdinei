@@ -39,10 +39,22 @@ export default function VisitModal({ isOpen, onClose, property }) {
   }, [isOpen]);
 
   const updateField = (field) => (eventOrValue) => {
-    const value = eventOrValue?.target
+    let value = eventOrValue?.target
       ? eventOrValue.target.value
       : eventOrValue;
     
+    if (field === "phone") {
+      const numbers = value.replace(/\D/g, "");
+      if (numbers.length === 0) value = "";
+      else if (numbers.length <= 2) value = `(${numbers}`;
+      else if (numbers.length <= 6) value = `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
+      else if (numbers.length <= 10) value = `(${numbers.slice(0, 2)}) ${numbers.slice(2, 6)}-${numbers.slice(6)}`;
+      else value = `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7, 11)}`;
+    }
+
+    if (field === "name" && value.length > 80) return;
+    if (field === "message" && value.length > 500) return;
+
     setForm((current) => ({ ...current, [field]: value }));
     
     if (errors[field]) {
