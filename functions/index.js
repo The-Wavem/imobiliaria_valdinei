@@ -247,6 +247,9 @@ exports.apiCanalPro = onRequest(async (req, res) => {
       const streetNumber = property.location?.numero || property.location?.number || property.numero || property.number || "";
       if (streetNumber) xmlString += `        <StreetNumber>${escapeXml(streetNumber)}</StreetNumber>\n`;
       
+      const complement = property.location?.complemento || property.location?.complement || property.complemento || property.complement || "";
+      if (complement) xmlString += `        <Complement>${escapeXml(complement)}</Complement>\n`;
+      
       let zip = property.location?.cep || property.location?.zipCode || property.cep || property.zipCode || "";
       if (zip) {
         zip = String(zip).replace(/\D/g, "");
