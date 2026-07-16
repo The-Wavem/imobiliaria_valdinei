@@ -5,6 +5,7 @@ import {
   doc,
   getDocs,
   increment,
+  limit,
   query,
   setDoc,
   updateDoc,
@@ -150,6 +151,22 @@ export async function getPublicProperties(categoryParam) {
     });
   } catch (error) {
     console.error("Erro ao buscar imóveis públicos:", error);
+    return [];
+  }
+}
+
+export async function getFeaturedProperties(limitCount = 3) {
+  try {
+    const propertiesQuery = query(
+      collection(db, PROPERTY_COLLECTION),
+      where("active", "==", true),
+      where("featured", "==", true),
+      limit(limitCount)
+    );
+    const snapshot = await getDocs(propertiesQuery);
+    return snapshot.docs.map(mapPropertyDocument);
+  } catch (error) {
+    console.error("Erro ao buscar imóveis em destaque:", error);
     return [];
   }
 }

@@ -1,4 +1,5 @@
 const { onRequest } = require("firebase-functions/v2/https");
+const { onDocumentWritten } = require("firebase-functions/v2/firestore");
 const admin = require("firebase-admin");
 
 admin.initializeApp();
@@ -70,13 +71,12 @@ const featureMapper = {
   'pet friendly': 'Pets Allowed'
 };
 
-exports.apiCanalPro = onRequest(async (req, res) => {
-  try {
-    const snapshot = await admin
-      .firestore()
-      .collection("properties")
-      .where("status", "==", "Disponível")
-      .get();
+async function buildCanalProXml() {
+  const snapshot = await admin
+    .firestore()
+    .collection("properties")
+    .where("status", "==", "Disponível")
+    .get();
 
     let xmlString = `<?xml version="1.0" encoding="UTF-8"?>\n`;
     xmlString += `<ListingDataFeed xmlns="http://www.vivareal.com/schemas/1.0/VRSync" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.vivareal.com/schemas/1.0/VRSync  http://xml.vivareal.com/vrsync.xsd">\n`;
@@ -280,10 +280,41 @@ exports.apiCanalPro = onRequest(async (req, res) => {
     xmlString += `  </Listings>\n`;
     xmlString += `</ListingDataFeed>\n`;
 
-    res.set("Content-Type", "application/xml; charset=utf-8");
-    res.status(200).send(xmlString);
+    return xmlString;
+}
+
+// Trigger que roda sempre que um imóvel é criado, editado ou excluído
+exports.generateCanalProXmlOnWrite = onDocumentWritten("properties/{docId}", async (event) => {
+  try {
+    const xmlString = await buildCanalProXml();
+    const file = admin.storage().bucket().file("feeds/canalpro.xml");
+    await file.save(xmlString, { contentType: "application/xml; charset=utf-8" });
+    console.log("Feed XML atualizado e salvo no Storage com sucesso.");
   } catch (error) {
-    console.error("Erro ao gerar XML Canal Pro (VRSync):", error);
-    res.status(500).send("Erro interno ao gerar o feed XML VRSync.");
+    console.error("Erro ao gerar/salvar XML no Storage:", error);
+  }
+});
+
+// A rota HTTP agora tem CUSTO ZERO de leitura no Firestore, apenas servindo o arquivo
+exports.apiCanalPro = onRequest(async (req, res) => {
+  try {
+    const file = admin.storage().bucket().file("feeds/canalpro.xml");
+    const [exists] = await file.exists();
+    
+    if (exists) {
+      res.set("Content-Type", "application/xml; charset=utf-8");
+      // Faz o stream do arquivo direto do Storage para o cliente
+      const readStream = file.createReadStream();
+      readStream.pipe(res);
+    } else {
+      // Se por acaso for o primeiro acesso e o arquivo ainda não existir, gera e salva
+      const xmlString = await buildCanalProXml();
+      await file.save(xmlString, { contentType: "application/xml; charset=utf-8" });
+      res.set("Content-Type", "application/xml; charset=utf-8");
+      res.status(200).send(xmlString);
+    }
+  } catch (error) {
+    console.error("Erro ao servir XML Canal Pro do Storage:", error);
+    res.status(500).send("Erro interno ao servir o feed XML.");
   }
 });
