@@ -65,6 +65,7 @@ const formatPropertyData = (data) => {
       description: data.description || data.content?.description || "",
     },
     featured: Boolean(data.featured),
+    syncWithPortal: data.syncWithPortal ?? true,
     views: Number(data.views) || 0,
     shares: Number(data.shares) || 0,
     updatedAt: new Date().toISOString(),
