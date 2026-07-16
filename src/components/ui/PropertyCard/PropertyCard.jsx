@@ -65,13 +65,20 @@ export default function PropertyCard({ property, onViewDetails }) {
           }}
         >
           {coverImage ? (
-            <img
-              src={coverImage}
-              alt={property.title}
-              className={styles.image}
-              referrerPolicy="no-referrer"
-              loading="lazy"
-            />
+              <img
+                src={coverImage}
+                alt={property.title || "Imóvel"}
+                className={styles.image}
+                referrerPolicy="no-referrer"
+                loading="lazy"
+                decoding="async"
+                style={{ 
+                  objectFit: "cover", 
+                  width: "100%", 
+                  height: "100%", 
+                  backgroundColor: "#f1f5f9" 
+                }}
+              />
           ) : (
             <div className={styles.imagePlaceholder}>
               <img

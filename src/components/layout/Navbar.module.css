@@ -27,8 +27,9 @@
 }
 
 .logo_navbar {
-  width: var(--navbar-logo-size);
+  width: auto;
   height: var(--navbar-logo-size);
+  object-fit: contain;
 }
 
 .brandMark {
@@ -190,8 +191,9 @@
 }
 
 .mobileLogo {
-  max-height: 50px;
+  height: 48px;
   width: auto;
+  object-fit: contain;
 }
 
 .closeButton {

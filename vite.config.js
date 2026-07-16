@@ -5,6 +5,25 @@ import { fileURLToPath, URL } from 'node:url'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  build: {
+    sourcemap: true,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            // Firebase é enorme, então vamos isolá-lo num chunk próprio.
+            if (id.includes('firebase') || id.includes('@firebase')) {
+              return 'firebase';
+            }
+            // O restante (React, Framer Motion, Lucide) fica no chunk vendor padrão.
+            // Isso previne erros de importação ("Cannot read properties of undefined (reading 'forwardRef')")
+            // pois o React 18 ainda usa CommonJS e dividir seus submódulos agressivamente quebra o Rollup.
+            return 'vendor';
+          }
+        }
+      }
+    }
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),

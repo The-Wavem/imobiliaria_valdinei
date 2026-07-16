@@ -8,6 +8,7 @@ import inputStyles from "@components/ui/Input/Input.module.css";
 import styles from "./VisitModal.module.css";
 import { addLead } from "../../services/leadService";
 import { validateName, validateEmail, validatePhone, validateMessage, sanitizeFormData } from "../../utils/validation";
+import { useRateLimit } from "../../hooks/useRateLimit";
 
 const initialFormState = {
   name: "",
@@ -29,6 +30,7 @@ export default function VisitModal({ isOpen, onClose, property }) {
   const [form, setForm] = useState(initialFormState);
   const [status, setStatus] = useState("idle"); // 'idle' | 'submitting' | 'success' | 'error'
   const [errors, setErrors] = useState({});
+  const { isRateLimited, timeLeft, registerSubmit } = useRateLimit('visit_modal_last_submit', 15);
 
   useEffect(() => {
     if (!isOpen) {
@@ -70,6 +72,11 @@ export default function VisitModal({ isOpen, onClose, property }) {
 
     if (status === "submitting") return;
     
+    if (isRateLimited) {
+      setErrors({ submit: `Aguarde ${timeLeft} segundos antes de enviar outro agendamento.` });
+      return;
+    }
+
     // Custom Validation 
     const nextErrors = {};
     const nameError = validateName(form.name);
@@ -118,7 +125,8 @@ export default function VisitModal({ isOpen, onClose, property }) {
         status: "Novo",
         createdAt: new Date().toISOString()
       });
-
+      
+      registerSubmit();
       setStatus("success");
       
       setTimeout(() => {
@@ -251,22 +259,30 @@ export default function VisitModal({ isOpen, onClose, property }) {
                     Ocorreu um erro ao enviar. Tente novamente mais tarde.
                   </div>
                 )}
+                {errors.submit && <div className={styles.submitError}>{errors.submit}</div>}
 
-                <Button
-                  type="submit"
-                  variant="primary"
-                  className={styles.submitButton}
-                  disabled={isButtonDisabled}
-                >
-                  {status === "submitting" ? (
-                    <>
-                      <Loader2 size={18} className={styles.spinner} />
-                      Enviando...
-                    </>
-                  ) : (
-                    "Solicitar intenção de visita"
-                  )}
-                </Button>
+          <div className={styles.footer}>
+            <Button variant="outline" type="button" onClick={onClose} disabled={status === "submitting"}>
+              Cancelar
+            </Button>
+            <Button
+              variant="primary"
+              type="submit"
+              disabled={isButtonDisabled || isRateLimited}
+              className={styles.submitButton}
+            >
+              {status === "submitting" ? (
+                <>
+                  <Loader2 size={18} className={styles.spinner} />
+                  Enviando...
+                </>
+              ) : isRateLimited ? (
+                <>Aguarde {timeLeft}s...</>
+              ) : (
+                "Agendar Visita"
+              )}
+            </Button>
+          </div>
               </form>
             </div>
           </>

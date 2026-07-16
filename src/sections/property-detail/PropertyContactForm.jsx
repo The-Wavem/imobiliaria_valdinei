@@ -7,6 +7,7 @@ import { addLead } from "@services/leadService.js";
 import { incrementPropertyLead } from "@services/propertyService.js";
 import { logLeadSubmissionAnalytics } from "@/services/analyticsService.js";
 import { validateContactForm, sanitizeFormData } from "@utils/validation.js";
+import { useRateLimit } from "@hooks/useRateLimit.js";
 import styles from "./PropertyContactForm.module.css";
 
 export default function PropertyContactForm({ property }) {
@@ -23,6 +24,7 @@ export default function PropertyContactForm({ property }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [feedback, setFeedback] = useState("");
+  const { isRateLimited, timeLeft, registerSubmit } = useRateLimit('property_contact_last_submit', 15);
 
   useEffect(() => {
     setMessage(defaultMessage);
@@ -41,6 +43,11 @@ export default function PropertyContactForm({ property }) {
     e.preventDefault();
     setFeedback("");
     
+    if (isRateLimited) {
+      setErrors({ form: `Aguarde ${timeLeft} segundos antes de enviar outra mensagem.` });
+      return;
+    }
+
     // Validate fields using validation.js
     const formErrors = validateContactForm({
       name,
@@ -93,6 +100,7 @@ export default function PropertyContactForm({ property }) {
       setEmail("");
       setPhone("");
       setMessage(defaultMessage);
+      registerSubmit();
       
       setTimeout(() => {
         setIsSuccess(false);
@@ -201,18 +209,23 @@ export default function PropertyContactForm({ property }) {
             </div>
 
             <div className={styles.actions}>
-              <Button 
-                variant="primary" 
-                className={styles.submitButton} 
-                disabled={isButtonDisabled}
+              {errors.form && <div className={styles.errorFeedback}>{errors.form}</div>}
+
+              <Button
+                type="submit"
+                variant="primary"
+                className={styles.submitButton}
+                disabled={isButtonDisabled || isRateLimited}
               >
                 {isSubmitting ? (
                   <>
                     <Loader2 size={20} className={styles.spinner} />
                     <span>Enviando...</span>
                   </>
+                ) : isRateLimited ? (
+                  <span>Aguarde {timeLeft}s...</span>
                 ) : (
-                  <span>Enviar</span>
+                  <span>Enviar Mensagem</span>
                 )}
               </Button>
             </div>

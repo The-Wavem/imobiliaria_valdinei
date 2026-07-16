@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import styles from "./HomeAbout.module.css";
-import valdineiHomeImg from "../../assets/images/valdinei home.jpeg";
+import valdineiHomeImg from "../../assets/images/valdinei-home.webp";
 import logoImg from "../../assets/images/logo.png";
 
 const staggerContainer = {
@@ -37,8 +37,12 @@ export default function HomeAbout() {
         <motion.div className={styles.imageWrapper} variants={slideRightItem}>
           <img 
             src={valdineiHomeImg}
+            srcSet={`${valdineiHomeImg} 600w, ${valdineiHomeImg} 1200w`}
+            sizes="(max-width: 768px) 100vw, 600px"
             alt="Corretor Valdinei" 
-            className={styles.image} 
+            className={styles.image}
+            loading="lazy"
+            decoding="async"
             onError={(e) => {
               e.currentTarget.src = logoImg;
             }}

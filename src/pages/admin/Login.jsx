@@ -31,8 +31,12 @@ export default function AdminLogin() {
     try {
       await signInWithEmailAndPassword(auth, email.trim(), password);
       navigate("/admin/dashboard", { replace: true });
-    } catch {
-      setError("E-mail ou senha incorretos.");
+    } catch (err) {
+      if (err.code === "auth/too-many-requests") {
+        setError("Acesso bloqueado temporariamente por muitas tentativas falhas. Tente novamente mais tarde.");
+      } else {
+        setError("E-mail ou senha incorretos.");
+      }
     } finally {
       setIsLoading(false);
     }

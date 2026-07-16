@@ -20,6 +20,7 @@ import {
   sanitizeFormData,
   FIELD_LIMITS,
 } from "@utils/validation.js";
+import { useRateLimit } from "@hooks/useRateLimit.js";
 import styles from "./Contato.module.css";
 
 const initialFormState = {
@@ -55,6 +56,7 @@ export default function ContatoSection() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const { isRateLimited, timeLeft, registerSubmit } = useRateLimit('contato_form_last_submit', 15);
 
   // Marca o campo como "tocado" ao sair dele (onBlur) e valida imediatamente
   const handleBlur = (field) => () => {
@@ -92,6 +94,11 @@ export default function ContatoSection() {
     event.preventDefault();
     setErrorMsg("");
 
+    if (isRateLimited) {
+      setErrorMsg(`Aguarde ${timeLeft} segundos antes de enviar outra mensagem.`);
+      return;
+    }
+
     // Marca todos os campos como tocados e valida de uma vez
     const allTouched = Object.fromEntries(Object.keys(formData).map((k) => [k, true]));
     setTouched(allTouched);
@@ -120,6 +127,9 @@ export default function ContatoSection() {
       setFormData(initialFormState);
       setFieldErrors({});
       setTouched({});
+      // Registra o submit para iniciar a trava contra bots (Rate Limit)
+      registerSubmit();
+
       setIsSuccess(true);
 
       setTimeout(() => setIsSuccess(false), 6000);
@@ -345,17 +355,23 @@ export default function ContatoSection() {
               </div>
 
               <Button
-                variant="primary"
                 type="submit"
-                className={styles.submitButton}
-                disabled={isLoading}
+                variant="primary"
+                disabled={isLoading || isRateLimited}
+                className={styles.submitBtn}
               >
                 {isLoading ? (
-                  <Loader2 size={18} className={styles.spinner} />
+                  <>
+                    <Loader2 size={20} className={styles.spinner} />
+                    Enviando...
+                  </>
+                ) : isRateLimited ? (
+                  <>Aguarde {timeLeft}s...</>
                 ) : (
-                  <Send size={18} />
+                  <>
+                    Enviar Mensagem <Send size={20} />
+                  </>
                 )}
-                {isLoading ? "Enviando..." : "Enviar Mensagem"}
               </Button>
             </form>
           </motion.div>

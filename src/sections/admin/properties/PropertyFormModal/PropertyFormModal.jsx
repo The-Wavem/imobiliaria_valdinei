@@ -30,6 +30,7 @@ import Loader from "@components/ui/Loader/Loader.jsx";
 import styles from "./PropertyFormModal.module.css";
 import { checkCodeExists } from "../../../../services/propertyService.js";
 import { uploadPropertyImage } from "../../../../services/storageService.js";
+import { compressImage } from "../../../../utils/imageUtils.js";
 
 const formatCurrencyDisplay = (value) => {
   if (value === null || value === undefined || value === "") return "";
@@ -77,7 +78,8 @@ const defaultForm = {
   displayAddress: "All",
   caracteristicas_imovel: [], caracteristicas_condominio: [], photos: [], videos: [], description: "",
   status: "Disponível",
-  featured: false
+  featured: false,
+  syncWithPortal: true
 };
 
 const quillModules = {
@@ -110,20 +112,43 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
   const [isGeneratingCode, setIsGeneratingCode] = useState(false);
   const [showTips, setShowTips] = useState(false);
   const [isUploadingMedia, setIsUploadingMedia] = useState(false);
+  const [oversizedPhotosUrls, setOversizedPhotosUrls] = useState([]);
+  const [draggedPhotoIndex, setDraggedPhotoIndex] = useState(null);
+  const [dragOverIndex, setDragOverIndex] = useState(null);
 
   const handleFileUpload = async (event) => {
     const files = Array.from(event.target.files);
     if (!files.length) return;
 
+    // Constantes de Validação
+    const MAX_SIZE_MB = 7;
+    const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
+    const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+
+    for (const file of files) {
+      if (!ALLOWED_TYPES.includes(file.type)) {
+        alert(`O formato do arquivo "${file.name}" não é permitido. Use JPG, PNG ou WEBP.`);
+        return;
+      }
+      // Sem bloqueio de tamanho: apenas marcará como oversized depois
+    }
+
     setIsUploadingMedia(true);
     try {
       const code = formData.code || 'novo';
       for (const file of files) {
-        const url = await uploadPropertyImage(file, code);
+        const isOversized = file.size > MAX_SIZE_BYTES;
+        const compressedFile = await compressImage(file, 1920, 0.8);
+        const url = await uploadPropertyImage(compressedFile, code);
         addPhoto(url);
+        
+        if (isOversized) {
+          setOversizedPhotosUrls((prev) => [...prev, url]);
+        }
       }
     } catch (error) {
       console.error("Erro no upload de arquivos:", error);
+      alert("Houve um erro ao processar ou enviar a imagem. Tente novamente.");
     } finally {
       setIsUploadingMedia(false);
       // Reset input value so same files can be selected again
@@ -186,7 +211,8 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
         videos: property.videos || [],
         description: property.content?.description || property.description || "",
         status: property.status || "Disponível",
-        featured: property.featured || false
+        featured: property.featured || false,
+        syncWithPortal: property.syncWithPortal ?? true
       });
 
       if (property.type) {
@@ -589,13 +615,8 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
 
       const payload = { ...formData };
       
-      // Reordenar fotos para garantir que a capa (coverPhotoIndex) seja a primeira
-      if (payload.photos.length > 1 && coverPhotoIndex > 0 && coverPhotoIndex < payload.photos.length) {
-        const photosCopy = [...payload.photos];
-        const [coverPhoto] = photosCopy.splice(coverPhotoIndex, 1);
-        photosCopy.unshift(coverPhoto);
-        payload.photos = photosCopy;
-      }
+      // Filtra URLs inválidas
+      payload.photos = payload.photos.filter(Boolean);
       
       const parts = [];
       if (payload.logradouro) parts.push(payload.logradouro);
@@ -756,21 +777,36 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
               <X size={20} />
             </button>
           </div>
-          <nav
-            className={styles.tabs}
-            aria-label="Navegação das abas do formulário"
-          >
-            {tabOptions.map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                className={`${styles.tabButton} ${activeTab === tab.id ? styles.tabButtonActive : ""}`.trim()}
-                onClick={() => setActiveTab(tab.id)}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </nav>
+          <div className={styles.tabsHeaderContainer}>
+            <nav
+              className={styles.tabs}
+              aria-label="Navegação das abas do formulário"
+            >
+              {tabOptions.map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  className={`${styles.tabButton} ${activeTab === tab.id ? styles.tabButtonActive : ""}`.trim()}
+                  onClick={() => setActiveTab(tab.id)}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </nav>
+
+            <label className={styles.syncToggleLabel} title="Enviar este imóvel para integração com o Canal Pro">
+              <span className={styles.syncToggleText}>Sincronizar com Canal Pro</span>
+              <div className={`${styles.syncToggleTrack} ${formData.syncWithPortal ? styles.syncToggleTrackActive : ''}`}>
+                <input 
+                  type="checkbox" 
+                  className={styles.syncToggleInput} 
+                  checked={formData.syncWithPortal} 
+                  onChange={(e) => setFormData(prev => ({ ...prev, syncWithPortal: e.target.checked }))} 
+                />
+                <div className={styles.syncToggleThumb} />
+              </div>
+            </label>
+          </div>
         </header>
 
         <div className={styles.modalBodyLayout}>
@@ -1263,6 +1299,10 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                       <strong>Clique aqui para fazer upload de fotos reais</strong>
                       <span>
                         Selecione as imagens diretamente do seu computador. Ou você pode inserir URLs na opção abaixo.
+                        <br />
+                        <span style={{ fontSize: '0.85em', color: 'var(--color-primary, #D4AF37)', display: 'block', marginTop: '6px' }}>
+                          Formatos aceitos: JPG, PNG e WEBP. Tamanho máximo por foto: 7MB.
+                        </span>
                       </span>
                     </div>
                   </>
@@ -1305,21 +1345,65 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
             <div className={styles.galleryShell}>
               <div className={styles.galleryGrid}>
                 {formData.photos.filter(Boolean).map((photoUrl, index) => {
-                  const isCover = index === coverPhotoIndex;
+                  const isCover = index === 0;
+                  const isOversized = oversizedPhotosUrls.includes(photoUrl);
+                  const isDragging = draggedPhotoIndex === index;
+                  const isDragOver = dragOverIndex === index;
+                  
                   return (
                     <div
                       key={`${photoUrl}-${index}`}
-                      className={`${styles.thumbnailCard} ${isCover ? styles.thumbnailCardCover : ""}`}
+                      draggable
+                      onDragStart={() => setDraggedPhotoIndex(index)}
+                      onDragOver={(e) => { e.preventDefault(); setDragOverIndex(index); }}
+                      onDragLeave={() => setDragOverIndex(null)}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        if (draggedPhotoIndex === null || draggedPhotoIndex === index) {
+                          setDragOverIndex(null);
+                          return;
+                        }
+                        setFormData((prev) => {
+                          const newPhotos = [...prev.photos];
+                          const temp = newPhotos[draggedPhotoIndex];
+                          newPhotos[draggedPhotoIndex] = newPhotos[index];
+                          newPhotos[index] = temp;
+                          return { ...prev, photos: newPhotos };
+                        });
+                        setDraggedPhotoIndex(null);
+                        setDragOverIndex(null);
+                      }}
+                      onDragEnd={() => {
+                        setDraggedPhotoIndex(null);
+                        setDragOverIndex(null);
+                      }}
+                      className={`${styles.thumbnailCard} ${isCover ? styles.thumbnailCardCover : ""} ${isDragging ? styles.thumbnailCardDragging : ""} ${isDragOver ? styles.thumbnailCardDragOver : ""}`}
                     >
                       <img
                         src={photoUrl || undefined}
                         alt={`Mídia ${index + 1} do imóvel`}
                       />
 
+                      {isOversized && (
+                        <div className={styles.oversizedBadge} title="Foto acima de 7MB - Não será enviada ao Canal Pro">
+                          ! &gt; 7MB (Não sincroniza)
+                        </div>
+                      )}
+
                       <button
                         type="button"
                         className={`${styles.coverStarButton} ${isCover ? styles.coverStarButtonActive : styles.coverStarButtonInactive}`}
-                        onClick={() => setCoverPhotoIndex(index)}
+                        onClick={() => {
+                          if (index !== 0) {
+                            setFormData((prev) => {
+                              const newPhotos = [...prev.photos];
+                              const temp = newPhotos[index];
+                              newPhotos[index] = newPhotos[0];
+                              newPhotos[0] = temp;
+                              return { ...prev, photos: newPhotos };
+                            });
+                          }
+                        }}
                         aria-label={isCover ? "Capa atual" : "Definir como capa"}
                         title="Definir como capa"
                       >
@@ -1333,7 +1417,13 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                       <button
                         type="button"
                         className={styles.removePhotoButton}
-                        onClick={() => removePhoto(index)}
+                        onClick={() => {
+                           setFormData(prev => {
+                             const newPhotos = [...prev.photos];
+                             newPhotos.splice(index, 1);
+                             return { ...prev, photos: newPhotos };
+                           });
+                        }}
                         aria-label={`Remover mídia ${index + 1}`}
                       >
                         <X size={14} />
@@ -1411,13 +1501,27 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                     Gerar Descrição Automática
                   </Button>
                 </div>
-                <ReactQuill
-                  theme="snow"
-                  value={formData.description}
-                  onChange={(content) => setFormData((prev) => ({ ...prev, description: content }))}
-                  modules={quillModules}
-                  placeholder="Descreva o imóvel com detalhes, diferenciais, posicionamento solar, acabamentos e contexto de uso."
-                />
+                <div className={`${styles.quillContainer} ${(formData.description || '').length > 3000 ? styles.quillWarning : (formData.description || '').length >= 2900 ? styles.quillWarning : ''}`}>
+                  <ReactQuill
+                    theme="snow"
+                    value={formData.description}
+                    onChange={(content) => setFormData((prev) => ({ ...prev, description: content }))}
+                    modules={quillModules}
+                    maxLength={3000}
+                    placeholder="Descreva o imóvel com detalhes, diferenciais, posicionamento solar, acabamentos e contexto de uso."
+                  />
+                </div>
+                <div className={styles.charCounterWrap}>
+                  <span className={`${styles.charCounter} ${(formData.description || '').length > 3000 ? styles.charCounterWarning : ''}`}>
+                    {(formData.description || '').length} / 3000
+                  </span>
+                </div>
+                
+                {(formData.description || '').length > 3000 && (
+                  <div className={styles.descriptionWarningAlert}>
+                    <strong>Atenção:</strong> A descrição ultrapassa 3000 caracteres. Este imóvel ficará visível no seu site, mas não será sincronizado com o Canal Pro.
+                  </div>
+                )}
               </div>
             </div>
           </section>

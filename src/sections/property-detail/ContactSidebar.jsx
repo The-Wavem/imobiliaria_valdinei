@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 import { addLead } from "@services/leadService";
 import { logWhatsAppClickAnalytics } from "@services/analyticsService.js";
 import { validateName, validatePhone, sanitizeFormData } from "@utils/validation.js";
+import { useRateLimit } from "@hooks/useRateLimit.js";
 import styles from "./ContactSidebar.module.css";
 import logoImg from "../../assets/images/valdinei entre em contato.png"; 
 
@@ -43,6 +44,7 @@ export default function ContactSidebar({
   const [saveError, setSaveError] = useState(false);
   const [form, setForm] = useState({ name: "", phone: "", message: "" });
   const [errors, setErrors] = useState({});
+  const { isRateLimited, timeLeft, registerSubmit } = useRateLimit('sidebar_whatsapp_last_submit', 15);
 
   const openModal = () => {
     setForm({ name: "", phone: "", message: "" });
@@ -84,6 +86,11 @@ export default function ContactSidebar({
   const isButtonDisabled = isSaving || isFormEmpty;
 
   const handleConfirm = async () => {
+    if (isRateLimited) {
+      setErrors({ phone: `Aguarde ${timeLeft} segundos antes de enviar outra mensagem.` });
+      return;
+    }
+
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
@@ -106,16 +113,19 @@ export default function ContactSidebar({
         propertyTitle: propertyTitle || "",
         propertyCode: code,
         status: "Novo",
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       });
 
+      registerSubmit();
+      
+      const propertyLink = window.location.href;
       const messageText = buildWhatsAppMessage({
         propertyTitle: propertyTitle || "Imóvel",
         propertyCode: code,
         propertyPrice: price,
         clientName: cleanData.name,
         clientMessage: cleanData.message,
-        propertyLink: `https://valdineiimoveis.com.br/imoveis/${propertyId || ''}`,
+        propertyLink: propertyLink,
       });
 
       logWhatsAppClickAnalytics(propertyTitle || "Imóvel", "sidebar_imovel");
@@ -375,19 +385,21 @@ export default function ContactSidebar({
 
                 <div className={styles.modalActions}>
                   <button
-                    className={`${styles.whatsappBtn} ${isButtonDisabled ? styles.whatsappBtnDisabled : ""}`}
+                    className={styles.modalConfirmBtn}
                     onClick={handleConfirm}
-                    disabled={isButtonDisabled}
+                    disabled={isButtonDisabled || isRateLimited}
                   >
                     {isSaving ? (
                       <>
-                        <Loader2 size={18} className={styles.spinIcon} />
-                        <span>Registrando...</span>
+                        <Loader2 size={20} className={styles.spinner} />
+                        Conectando...
                       </>
+                    ) : isRateLimited ? (
+                      <>Aguarde {timeLeft}s...</>
                     ) : (
                       <>
-                        <MessageCircle size={18} />
-                        <span>Falar com o Valdinei agora</span>
+                        <MessageCircle size={20} />
+                        Iniciar Conversa
                       </>
                     )}
                   </button>

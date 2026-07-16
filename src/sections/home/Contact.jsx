@@ -4,6 +4,7 @@ import Button from "@components/ui/Button/Button.jsx";
 import Input from "@components/ui/Input/Input.jsx";
 import { addLead } from "@services/leadService.js";
 import { validateContactForm, sanitizeFormData } from "@utils/validation.js";
+import { useRateLimit } from "@hooks/useRateLimit.js";
 import styles from "./Contact.module.css";
 
 
@@ -19,6 +20,7 @@ export default function Contact() {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const { isRateLimited, timeLeft, registerSubmit } = useRateLimit('home_contact_last_submit', 15);
 
   const handleFieldChange = (field) => (event) => {
     let value = typeof event === "string" ? event : event?.target?.value;
@@ -45,6 +47,11 @@ export default function Contact() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+
+    if (isRateLimited) {
+      setErrors({ form: `Aguarde ${timeLeft} segundos antes de enviar outra mensagem.` });
+      return;
+    }
 
     // Prepare data for validation
     const formErrors = validateContactForm({
@@ -80,6 +87,7 @@ export default function Contact() {
 
       setIsSuccess(true);
       setFormData(initialFormState);
+      registerSubmit();
 
       // Dismiss the success message after 5 seconds
       setTimeout(() => {
@@ -190,17 +198,18 @@ export default function Contact() {
 
               {errors.form && <div className={styles.formError}>{errors.form}</div>}
 
-              <Button
-                variant="primary"
-                type="submit"
-                className={styles.submitButton}
-                disabled={isLoading}
+              <Button 
+                type="submit" 
+                className={styles.submitBtn} 
+                disabled={isLoading || isRateLimited}
               >
                 {isLoading ? (
-                  <>
+                  <span style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                     <Loader2 size={18} className={styles.spinner} />
                     Enviando...
-                  </>
+                  </span>
+                ) : isRateLimited ? (
+                  <>Aguarde {timeLeft}s...</>
                 ) : (
                   "Enviar Mensagem"
                 )}

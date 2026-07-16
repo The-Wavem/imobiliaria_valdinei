@@ -14,7 +14,7 @@
 /* Variação Primária (Dourado) */
 .primary {
   background-color: var(--color-primary);
-  color: #FFFFFF;
+  color: #14143C;
 }
 
 .primary:hover {

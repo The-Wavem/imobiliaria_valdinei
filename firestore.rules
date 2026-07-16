@@ -15,29 +15,9 @@ service cloud.firestore {
       // Criação e exclusão totais restritas ao Admin
       allow create, delete: if isAdmin();
 
-      // Atualização: Admin pode tudo.
-      // Visitantes comuns podem apenas interagir com métricas específicas (visualizações, compartilhamentos, favoritos e leads).
-      allow update: if isAdmin() 
-        || (
-          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['views', 'score']) 
-          && request.resource.data.views == resource.data.views + 1
-          && request.resource.data.score == resource.data.score + 1
-        )
-        || (
-          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['shares', 'score']) 
-          && request.resource.data.shares == resource.data.shares + 1
-          && request.resource.data.score == resource.data.score + 100
-        )
-        || (
-          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['favoriteCount', 'score']) 
-          && (request.resource.data.favoriteCount == resource.data.favoriteCount + 1 || request.resource.data.favoriteCount == resource.data.favoriteCount - 1)
-          && (request.resource.data.score == resource.data.score + 50 || request.resource.data.score == resource.data.score - 50)
-        )
-        || (
-          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['leadCount', 'score']) 
-          && request.resource.data.leadCount == resource.data.leadCount + 1
-          && request.resource.data.score == resource.data.score + 500
-        );
+      // Atualização: Escrita totalmente restrita ao Admin.
+      // Funcionalidades de incremento público foram removidas para prevenir abuso de bots.
+      allow update: if isAdmin();
     }
 
     // Regras para a coleção de leads (contatos)
