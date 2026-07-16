@@ -11,15 +11,13 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (id.includes('node_modules')) {
-            if (id.includes('react-router') || id.includes('react-dom') || id.includes('react')) {
-              return 'react-core';
-            }
-            if (id.includes('@firebase') || id.includes('firebase')) {
+            // Firebase é enorme, então vamos isolá-lo num chunk próprio.
+            if (id.includes('firebase') || id.includes('@firebase')) {
               return 'firebase';
             }
-            if (id.includes('framer-motion') || id.includes('lucide-react')) {
-              return 'ui-libs';
-            }
+            // O restante (React, Framer Motion, Lucide) fica no chunk vendor padrão.
+            // Isso previne erros de importação ("Cannot read properties of undefined (reading 'forwardRef')")
+            // pois o React 18 ainda usa CommonJS e dividir seus submódulos agressivamente quebra o Rollup.
             return 'vendor';
           }
         }

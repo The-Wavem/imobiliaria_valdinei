@@ -82,7 +82,7 @@ async function buildCanalProXml() {
     xmlString += `<ListingDataFeed xmlns="http://www.vivareal.com/schemas/1.0/VRSync" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.vivareal.com/schemas/1.0/VRSync  http://xml.vivareal.com/vrsync.xsd">\n`;
     xmlString += `  <Header>\n`;
     xmlString += `    <Provider>The Wavem</Provider>\n`;
-    xmlString += `    <Email>contato@thewavem.com</Email>\n`;
+    xmlString += `    <Email>contato.thewavem@gmail.com</Email>\n`;
     xmlString += `    <PublishDate>${new Date().toISOString()}</PublishDate>\n`;
     xmlString += `  </Header>\n`;
     xmlString += `  <Listings>\n`;
