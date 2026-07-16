@@ -67,10 +67,13 @@ export default function PropertyCard({ property, onViewDetails }) {
           {coverImage ? (
             <img
               src={coverImage}
+              srcSet={`${coverImage} 400w, ${coverImage} 800w, ${coverImage} 1200w`}
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 400px"
               alt={property.title}
               className={styles.image}
               referrerPolicy="no-referrer"
               loading="lazy"
+              decoding="async"
             />
           ) : (
             <div className={styles.imagePlaceholder}>

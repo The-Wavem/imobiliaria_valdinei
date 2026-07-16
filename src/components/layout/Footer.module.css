@@ -1,6 +1,7 @@
 .footer {
   background: #14143C;
   color: rgba(255, 255, 255, 0.84);
+  min-height: 380px;
 }
 
 .container {
@@ -17,12 +18,13 @@
   max-width: 360px;
   line-height: 1.7;
   color: rgba(255, 255, 255, 0.72);
+  min-height: 80px;
 }
 
 .brandMark {
-  width: 86px;
+  width: auto;
   height: 86px;
-  border-radius: 20px;
+  object-fit: contain;
   display: grid;
   place-items: center;
   font-weight: 900;

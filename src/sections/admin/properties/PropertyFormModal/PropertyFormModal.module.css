@@ -1020,3 +1020,43 @@
 .mediaDropzoneClickable:hover {
   background-color: rgba(20, 20, 60, 0.02);
 }
+
+.quillContainer {
+  transition: all 0.2s ease;
+  border-radius: var(--radius-md);
+}
+
+.quillContainer :global(.ql-container) {
+  transition: all 0.2s ease;
+}
+
+.quillWarning :global(.ql-container) {
+  border-color: #f59e0b !important;
+}
+
+.quillError :global(.ql-container) {
+  border-color: #ef4444 !important;
+}
+
+.charCounterWrap {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
+}
+
+.charCounter {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  transition: color 0.2s ease;
+}
+
+.charCounterWarning {
+  color: #f59e0b;
+  font-weight: 600;
+}
+
+.charCounterError {
+  color: #ef4444;
+  font-weight: 700;
+}

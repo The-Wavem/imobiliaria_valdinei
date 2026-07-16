@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import styles from "./HomeAbout.module.css";
-import valdineiHomeImg from "../../assets/images/valdinei home.jpeg";
+import valdineiHomeImg from "../../assets/images/valdinei-home.webp";
 import logoImg from "../../assets/images/logo.png";
 
 const staggerContainer = {

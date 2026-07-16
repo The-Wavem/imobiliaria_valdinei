@@ -587,6 +587,13 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
         return;
       }
 
+      if ((formData.description || '').length > 3000) {
+        alert("A descrição excede o limite máximo de 3000 caracteres. Por favor, reduza o tamanho do texto para evitar erros nos portais externos.");
+        setActiveTab("description");
+        setIsSaving(false);
+        return;
+      }
+
       const payload = { ...formData };
       
       // Reordenar fotos para garantir que a capa (coverPhotoIndex) seja a primeira
@@ -1411,13 +1418,21 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                     Gerar Descrição Automática
                   </Button>
                 </div>
-                <ReactQuill
-                  theme="snow"
-                  value={formData.description}
-                  onChange={(content) => setFormData((prev) => ({ ...prev, description: content }))}
-                  modules={quillModules}
-                  placeholder="Descreva o imóvel com detalhes, diferenciais, posicionamento solar, acabamentos e contexto de uso."
-                />
+                <div className={`${styles.quillContainer} ${(formData.description || '').length > 3000 ? styles.quillError : (formData.description || '').length >= 2900 ? styles.quillWarning : ''}`}>
+                  <ReactQuill
+                    theme="snow"
+                    value={formData.description}
+                    onChange={(content) => setFormData((prev) => ({ ...prev, description: content }))}
+                    modules={quillModules}
+                    maxLength={3000}
+                    placeholder="Descreva o imóvel com detalhes, diferenciais, posicionamento solar, acabamentos e contexto de uso."
+                  />
+                </div>
+                <div className={styles.charCounterWrap}>
+                  <span className={`${styles.charCounter} ${(formData.description || '').length > 3000 ? styles.charCounterError : (formData.description || '').length >= 2900 ? styles.charCounterWarning : ''}`}>
+                    {(formData.description || '').length} / 3000
+                  </span>
+                </div>
               </div>
             </div>
           </section>
