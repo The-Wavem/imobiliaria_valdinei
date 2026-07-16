@@ -1085,3 +1085,89 @@
   font-size: 0.9rem;
   border-radius: 4px;
 }
+
+.tabsHeaderContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.syncToggleLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+}
+
+.syncToggleLabel:hover {
+  background-color: rgba(0,0,0,0.03);
+}
+
+.syncToggleText {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.syncToggleTrack {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  background-color: #cbd5e1;
+  border-radius: 999px;
+  transition: background-color 0.3s ease;
+}
+
+.syncToggleTrackActive {
+  background-color: var(--color-primary, #10b981); /* Green if not defined */
+}
+
+.syncToggleInput {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.syncToggleThumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  background-color: white;
+  border-radius: 50%;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+.syncToggleTrackActive .syncToggleThumb {
+  transform: translateX(16px);
+}
+
+.thumbnailCard {
+  cursor: grab;
+  transition: transform 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease;
+}
+
+.thumbnailCard:active {
+  cursor: grabbing;
+}
+
+.thumbnailCardDragging {
+  opacity: 0.4;
+  transform: scale(0.95);
+  box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+  z-index: 10;
+}
+
+.thumbnailCardDragOver {
+  border: 2px dashed var(--color-primary, #D4AF37) !important;
+  transform: scale(1.02);
+  opacity: 0.8;
+}

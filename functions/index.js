@@ -90,6 +90,11 @@ exports.apiCanalPro = onRequest(async (req, res) => {
     snapshot.forEach((doc) => {
       const property = doc.data();
 
+      // Verifica se a sincronização foi desativada manualmente pelo painel
+      if (property.syncWithPortal === false) {
+        return; 
+      }
+
       // Validação Rígida: Requisitos Mínimos para Integração
       const rawTipo = property.type || property.tipoImovel || property.tipo || "";
       const mapped = mapPropertyType(rawTipo);

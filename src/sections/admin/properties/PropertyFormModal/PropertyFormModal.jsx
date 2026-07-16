@@ -78,7 +78,8 @@ const defaultForm = {
   displayAddress: "All",
   caracteristicas_imovel: [], caracteristicas_condominio: [], photos: [], videos: [], description: "",
   status: "Disponível",
-  featured: false
+  featured: false,
+  syncWithPortal: true
 };
 
 const quillModules = {
@@ -112,6 +113,8 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
   const [showTips, setShowTips] = useState(false);
   const [isUploadingMedia, setIsUploadingMedia] = useState(false);
   const [oversizedPhotosUrls, setOversizedPhotosUrls] = useState([]);
+  const [draggedPhotoIndex, setDraggedPhotoIndex] = useState(null);
+  const [dragOverIndex, setDragOverIndex] = useState(null);
 
   const handleFileUpload = async (event) => {
     const files = Array.from(event.target.files);
@@ -208,7 +211,8 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
         videos: property.videos || [],
         description: property.content?.description || property.description || "",
         status: property.status || "Disponível",
-        featured: property.featured || false
+        featured: property.featured || false,
+        syncWithPortal: property.syncWithPortal ?? true
       });
 
       if (property.type) {
@@ -611,13 +615,8 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
 
       const payload = { ...formData };
       
-      // Reordenar fotos para garantir que a capa (coverPhotoIndex) seja a primeira
-      if (payload.photos.length > 1 && coverPhotoIndex > 0 && coverPhotoIndex < payload.photos.length) {
-        const photosCopy = [...payload.photos];
-        const [coverPhoto] = photosCopy.splice(coverPhotoIndex, 1);
-        photosCopy.unshift(coverPhoto);
-        payload.photos = photosCopy;
-      }
+      // Filtra URLs inválidas
+      payload.photos = payload.photos.filter(Boolean);
       
       const parts = [];
       if (payload.logradouro) parts.push(payload.logradouro);
@@ -778,21 +777,36 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
               <X size={20} />
             </button>
           </div>
-          <nav
-            className={styles.tabs}
-            aria-label="Navegação das abas do formulário"
-          >
-            {tabOptions.map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                className={`${styles.tabButton} ${activeTab === tab.id ? styles.tabButtonActive : ""}`.trim()}
-                onClick={() => setActiveTab(tab.id)}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </nav>
+          <div className={styles.tabsHeaderContainer}>
+            <nav
+              className={styles.tabs}
+              aria-label="Navegação das abas do formulário"
+            >
+              {tabOptions.map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  className={`${styles.tabButton} ${activeTab === tab.id ? styles.tabButtonActive : ""}`.trim()}
+                  onClick={() => setActiveTab(tab.id)}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </nav>
+
+            <label className={styles.syncToggleLabel} title="Enviar este imóvel para integração com o Canal Pro">
+              <span className={styles.syncToggleText}>Sincronizar com Canal Pro</span>
+              <div className={`${styles.syncToggleTrack} ${formData.syncWithPortal ? styles.syncToggleTrackActive : ''}`}>
+                <input 
+                  type="checkbox" 
+                  className={styles.syncToggleInput} 
+                  checked={formData.syncWithPortal} 
+                  onChange={(e) => setFormData(prev => ({ ...prev, syncWithPortal: e.target.checked }))} 
+                />
+                <div className={styles.syncToggleThumb} />
+              </div>
+            </label>
+          </div>
         </header>
 
         <div className={styles.modalBodyLayout}>
@@ -1331,13 +1345,39 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
             <div className={styles.galleryShell}>
               <div className={styles.galleryGrid}>
                 {formData.photos.filter(Boolean).map((photoUrl, index) => {
-                  const isCover = index === coverPhotoIndex;
+                  const isCover = index === 0;
                   const isOversized = oversizedPhotosUrls.includes(photoUrl);
+                  const isDragging = draggedPhotoIndex === index;
+                  const isDragOver = dragOverIndex === index;
                   
                   return (
                     <div
                       key={`${photoUrl}-${index}`}
-                      className={`${styles.thumbnailCard} ${isCover ? styles.thumbnailCardCover : ""}`}
+                      draggable
+                      onDragStart={() => setDraggedPhotoIndex(index)}
+                      onDragOver={(e) => { e.preventDefault(); setDragOverIndex(index); }}
+                      onDragLeave={() => setDragOverIndex(null)}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        if (draggedPhotoIndex === null || draggedPhotoIndex === index) {
+                          setDragOverIndex(null);
+                          return;
+                        }
+                        setFormData((prev) => {
+                          const newPhotos = [...prev.photos];
+                          const temp = newPhotos[draggedPhotoIndex];
+                          newPhotos[draggedPhotoIndex] = newPhotos[index];
+                          newPhotos[index] = temp;
+                          return { ...prev, photos: newPhotos };
+                        });
+                        setDraggedPhotoIndex(null);
+                        setDragOverIndex(null);
+                      }}
+                      onDragEnd={() => {
+                        setDraggedPhotoIndex(null);
+                        setDragOverIndex(null);
+                      }}
+                      className={`${styles.thumbnailCard} ${isCover ? styles.thumbnailCardCover : ""} ${isDragging ? styles.thumbnailCardDragging : ""} ${isDragOver ? styles.thumbnailCardDragOver : ""}`}
                     >
                       <img
                         src={photoUrl || undefined}
@@ -1353,7 +1393,17 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                       <button
                         type="button"
                         className={`${styles.coverStarButton} ${isCover ? styles.coverStarButtonActive : styles.coverStarButtonInactive}`}
-                        onClick={() => setCoverPhotoIndex(index)}
+                        onClick={() => {
+                          if (index !== 0) {
+                            setFormData((prev) => {
+                              const newPhotos = [...prev.photos];
+                              const temp = newPhotos[index];
+                              newPhotos[index] = newPhotos[0];
+                              newPhotos[0] = temp;
+                              return { ...prev, photos: newPhotos };
+                            });
+                          }
+                        }}
                         aria-label={isCover ? "Capa atual" : "Definir como capa"}
                         title="Definir como capa"
                       >
@@ -1367,7 +1417,13 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                       <button
                         type="button"
                         className={styles.removePhotoButton}
-                        onClick={() => removePhoto(index)}
+                        onClick={() => {
+                           setFormData(prev => {
+                             const newPhotos = [...prev.photos];
+                             newPhotos.splice(index, 1);
+                             return { ...prev, photos: newPhotos };
+                           });
+                        }}
                         aria-label={`Remover mídia ${index + 1}`}
                       >
                         <X size={14} />
