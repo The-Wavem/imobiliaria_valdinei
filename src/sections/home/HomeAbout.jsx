@@ -37,8 +37,12 @@ export default function HomeAbout() {
         <motion.div className={styles.imageWrapper} variants={slideRightItem}>
           <img 
             src={valdineiHomeImg}
+            srcSet={`${valdineiHomeImg} 600w, ${valdineiHomeImg} 1200w`}
+            sizes="(max-width: 768px) 100vw, 600px"
             alt="Corretor Valdinei" 
-            className={styles.image} 
+            className={styles.image}
+            loading="lazy"
+            decoding="async"
             onError={(e) => {
               e.currentTarget.src = logoImg;
             }}

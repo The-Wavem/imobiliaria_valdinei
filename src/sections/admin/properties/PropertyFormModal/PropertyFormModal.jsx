@@ -30,6 +30,7 @@ import Loader from "@components/ui/Loader/Loader.jsx";
 import styles from "./PropertyFormModal.module.css";
 import { checkCodeExists } from "../../../../services/propertyService.js";
 import { uploadPropertyImage } from "../../../../services/storageService.js";
+import { compressImage } from "../../../../utils/imageUtils.js";
 
 const formatCurrencyDisplay = (value) => {
   if (value === null || value === undefined || value === "") return "";
@@ -110,20 +111,41 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
   const [isGeneratingCode, setIsGeneratingCode] = useState(false);
   const [showTips, setShowTips] = useState(false);
   const [isUploadingMedia, setIsUploadingMedia] = useState(false);
+  const [oversizedPhotosUrls, setOversizedPhotosUrls] = useState([]);
 
   const handleFileUpload = async (event) => {
     const files = Array.from(event.target.files);
     if (!files.length) return;
 
+    // Constantes de Validação
+    const MAX_SIZE_MB = 7;
+    const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
+    const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+
+    for (const file of files) {
+      if (!ALLOWED_TYPES.includes(file.type)) {
+        alert(`O formato do arquivo "${file.name}" não é permitido. Use JPG, PNG ou WEBP.`);
+        return;
+      }
+      // Sem bloqueio de tamanho: apenas marcará como oversized depois
+    }
+
     setIsUploadingMedia(true);
     try {
       const code = formData.code || 'novo';
       for (const file of files) {
-        const url = await uploadPropertyImage(file, code);
+        const isOversized = file.size > MAX_SIZE_BYTES;
+        const compressedFile = await compressImage(file, 1920, 0.8);
+        const url = await uploadPropertyImage(compressedFile, code);
         addPhoto(url);
+        
+        if (isOversized) {
+          setOversizedPhotosUrls((prev) => [...prev, url]);
+        }
       }
     } catch (error) {
       console.error("Erro no upload de arquivos:", error);
+      alert("Houve um erro ao processar ou enviar a imagem. Tente novamente.");
     } finally {
       setIsUploadingMedia(false);
       // Reset input value so same files can be selected again
@@ -583,13 +605,6 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
       if (!formData.photos || formData.photos.length === 0) {
         alert("É obrigatório enviar pelo menos uma foto do imóvel para integração com os portais.");
         setActiveTab("media");
-        setIsSaving(false);
-        return;
-      }
-
-      if ((formData.description || '').length > 3000) {
-        alert("A descrição excede o limite máximo de 3000 caracteres. Por favor, reduza o tamanho do texto para evitar erros nos portais externos.");
-        setActiveTab("description");
         setIsSaving(false);
         return;
       }
@@ -1270,6 +1285,10 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                       <strong>Clique aqui para fazer upload de fotos reais</strong>
                       <span>
                         Selecione as imagens diretamente do seu computador. Ou você pode inserir URLs na opção abaixo.
+                        <br />
+                        <span style={{ fontSize: '0.85em', color: 'var(--color-primary, #D4AF37)', display: 'block', marginTop: '6px' }}>
+                          Formatos aceitos: JPG, PNG e WEBP. Tamanho máximo por foto: 7MB.
+                        </span>
                       </span>
                     </div>
                   </>
@@ -1313,6 +1332,8 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
               <div className={styles.galleryGrid}>
                 {formData.photos.filter(Boolean).map((photoUrl, index) => {
                   const isCover = index === coverPhotoIndex;
+                  const isOversized = oversizedPhotosUrls.includes(photoUrl);
+                  
                   return (
                     <div
                       key={`${photoUrl}-${index}`}
@@ -1322,6 +1343,12 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                         src={photoUrl || undefined}
                         alt={`Mídia ${index + 1} do imóvel`}
                       />
+
+                      {isOversized && (
+                        <div className={styles.oversizedBadge} title="Foto acima de 7MB - Não será enviada ao Canal Pro">
+                          ! &gt; 7MB (Não sincroniza)
+                        </div>
+                      )}
 
                       <button
                         type="button"
@@ -1418,7 +1445,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                     Gerar Descrição Automática
                   </Button>
                 </div>
-                <div className={`${styles.quillContainer} ${(formData.description || '').length > 3000 ? styles.quillError : (formData.description || '').length >= 2900 ? styles.quillWarning : ''}`}>
+                <div className={`${styles.quillContainer} ${(formData.description || '').length > 3000 ? styles.quillWarning : (formData.description || '').length >= 2900 ? styles.quillWarning : ''}`}>
                   <ReactQuill
                     theme="snow"
                     value={formData.description}
@@ -1429,10 +1456,16 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                   />
                 </div>
                 <div className={styles.charCounterWrap}>
-                  <span className={`${styles.charCounter} ${(formData.description || '').length > 3000 ? styles.charCounterError : (formData.description || '').length >= 2900 ? styles.charCounterWarning : ''}`}>
+                  <span className={`${styles.charCounter} ${(formData.description || '').length > 3000 ? styles.charCounterWarning : ''}`}>
                     {(formData.description || '').length} / 3000
                   </span>
                 </div>
+                
+                {(formData.description || '').length > 3000 && (
+                  <div className={styles.descriptionWarningAlert}>
+                    <strong>Atenção:</strong> A descrição ultrapassa 3000 caracteres. Este imóvel ficará visível no seu site, mas não será sincronizado com o Canal Pro.
+                  </div>
+                )}
               </div>
             </div>
           </section>

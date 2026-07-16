@@ -110,8 +110,18 @@ export default function PropertyDetail() {
   if (isLoading) {
     return (
       <div className={styles.page}>
+        <div style={{ height: '24px', width: '30%', background: '#e2e8f0', borderRadius: '4px', marginBottom: '2rem' }} />
+        <div style={{ height: '500px', width: '100%', background: '#e2e8f0', borderRadius: '16px' }} />
         <div className={styles.container}>
-          <p>Carregando imóvel...</p>
+          <div className={styles.left}>
+            <div style={{ height: '40px', width: '70%', background: '#e2e8f0', borderRadius: '8px', marginBottom: '1rem' }} />
+            <div style={{ height: '24px', width: '40%', background: '#e2e8f0', borderRadius: '4px', marginBottom: '3rem' }} />
+            <div style={{ height: '120px', width: '100%', background: '#e2e8f0', borderRadius: '8px', marginBottom: '2rem' }} />
+            <div style={{ height: '200px', width: '100%', background: '#e2e8f0', borderRadius: '8px' }} />
+          </div>
+          <div className={styles.sidebar}>
+            <div style={{ height: '420px', width: '100%', background: '#e2e8f0', borderRadius: '16px' }} />
+          </div>
         </div>
       </div>
     );

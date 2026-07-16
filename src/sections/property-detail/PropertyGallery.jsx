@@ -68,6 +68,9 @@ export default function PropertyGallery({
                 src={item.thumbnail || item.url}
                 alt={`${title} - ${item.type === 'video' ? 'Vídeo ' : ''}${idx + 1}`}
                 className={styles.image}
+                loading={idx === 0 ? "eager" : "lazy"}
+                fetchPriority={idx === 0 ? "high" : "auto"}
+                decoding="async"
               />
               <div className={styles.hoverOverlay}>
                 <Maximize size={40} color="white" />

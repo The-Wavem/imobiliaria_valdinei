@@ -11,6 +11,15 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (id.includes('node_modules')) {
+            if (id.includes('react-router') || id.includes('react-dom') || id.includes('react')) {
+              return 'react-core';
+            }
+            if (id.includes('@firebase') || id.includes('firebase')) {
+              return 'firebase';
+            }
+            if (id.includes('framer-motion') || id.includes('lucide-react')) {
+              return 'ui-libs';
+            }
             return 'vendor';
           }
         }

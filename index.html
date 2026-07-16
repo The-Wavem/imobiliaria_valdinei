@@ -31,7 +31,15 @@
     <link rel="preconnect" href="https://imobiliaria-valdinei.firebaseapp.com" />
     <link rel="preconnect" href="https://firebase.googleapis.com" />
     
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <!-- Preload do LCP (Hero Background) -->
+    <link rel="preload" as="image" href="/backgroundHero.png" />
+
+    <!-- Google Fonts Assíncronas -->
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" media="print" onload="this.media='all'" />
+    <noscript>
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" />
+    </noscript>
 
     <style>
       :root {
