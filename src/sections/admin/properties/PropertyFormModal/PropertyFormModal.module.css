@@ -1171,3 +1171,64 @@
   transform: scale(1.02);
   opacity: 0.8;
 }
+
+.totalAreaContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.totalAreaHelp {
+  display: flex;
+  align-items: center;
+  margin-top: 0.1rem;
+}
+
+.autoCalcBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.65rem;
+  background: rgba(199, 156, 49, 0.08);
+  border: 1px solid rgba(199, 156, 49, 0.22);
+  border-radius: var(--radius-sm, 6px);
+  color: var(--color-primary, #C79C31);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.resetTotalBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  background: rgba(37, 99, 235, 0.08);
+  border: 1px solid rgba(37, 99, 235, 0.25);
+  border-radius: var(--radius-sm, 6px);
+  color: #2563eb;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.resetTotalBtn svg {
+  transition: transform 0.3s ease;
+}
+
+.resetTotalBtn:hover {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(37, 99, 235, 0.3);
+}
+
+.resetTotalBtn:hover svg {
+  transform: rotate(-180deg);
+}
+
+.resetTotalBtn:active {
+  transform: translateY(0);
+}

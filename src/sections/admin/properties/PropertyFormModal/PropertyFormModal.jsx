@@ -19,6 +19,7 @@ import {
   CarFront,
   PlaySquare,
   Wand2,
+  RotateCcw,
 } from "lucide-react";
 import Button from "@components/ui/Button/Button.jsx";
 import Modal from "@components/ui/Modal/Modal.jsx";
@@ -74,7 +75,7 @@ const baseCondoFeatures = [
 const defaultForm = {
   title: "", code: "", price: "", rentPrice: "", condo: "", iptu: "",
   category: "", type: "", cep: "", logradouro: "", numero: "", complemento: "", bairro: "", cidade: "", estado: "",
-  area: "", landArea: "", bedrooms: "", bathrooms: "", parkingSpaces: "", suites: "", unitFloor: "", floors: "", buildings: "", yearBuilt: "", unitsPerFloor: "",
+  area: "", landArea: "", totalArea: "", bedrooms: "", bathrooms: "", parkingSpaces: "", suites: "", unitFloor: "", floors: "", buildings: "", yearBuilt: "", unitsPerFloor: "",
   displayAddress: "All",
   caracteristicas_imovel: [], caracteristicas_condominio: [], photos: [], videos: [], description: "",
   status: "Disponível",
@@ -115,6 +116,33 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
   const [oversizedPhotosUrls, setOversizedPhotosUrls] = useState([]);
   const [draggedPhotoIndex, setDraggedPhotoIndex] = useState(null);
   const [dragOverIndex, setDragOverIndex] = useState(null);
+  const [isTotalAreaCustom, setIsTotalAreaCustom] = useState(false);
+
+  const handleAreaFieldChange = (field, value) => {
+    setFormData((prev) => {
+      const next = { ...prev, [field]: value };
+      if (!isTotalAreaCustom) {
+        const constr = Number(field === "area" ? value : prev.area) || 0;
+        const land = Number(field === "landArea" ? value : prev.landArea) || 0;
+        const sum = constr + land;
+        next.totalArea = sum > 0 ? String(sum) : "";
+      }
+      return next;
+    });
+  };
+
+  const handleTotalAreaChange = (value) => {
+    setIsTotalAreaCustom(true);
+    setFormData((prev) => ({ ...prev, totalArea: value }));
+  };
+
+  const handleResetTotalAreaAuto = () => {
+    setIsTotalAreaCustom(false);
+    const constr = Number(formData.area) || 0;
+    const land = Number(formData.landArea) || 0;
+    const sum = constr + land;
+    setFormData((prev) => ({ ...prev, totalArea: sum > 0 ? String(sum) : "" }));
+  };
 
   const handleFileUpload = async (event) => {
     const files = Array.from(event.target.files);
@@ -177,6 +205,25 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
     setIsGeneratingCode(false);
 
     if (property) {
+      const areaVal = property.area || property.location?.area || "";
+      const landAreaVal = property.landArea || property.location?.landArea || "";
+      const storedTotalArea = property.totalArea || property.location?.totalArea || "";
+
+      const calcSum = (Number(areaVal) || 0) + (Number(landAreaVal) || 0);
+      const autoTotalStr = calcSum > 0 ? String(calcSum) : "";
+
+      let finalTotalArea = storedTotalArea;
+      let isCustom = false;
+
+      if (!storedTotalArea && autoTotalStr) {
+        finalTotalArea = autoTotalStr;
+        isCustom = false;
+      } else if (storedTotalArea && String(storedTotalArea) !== autoTotalStr) {
+        isCustom = true;
+      }
+
+      setIsTotalAreaCustom(isCustom);
+
       setFormData({
         title: property.title || property.content?.summary || "",
         code: property.code || "",
@@ -193,8 +240,9 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
         bairro: property.location?.bairro || property.location?.neighborhood || property.neighborhood || "",
         cidade: property.location?.cidade || property.location?.city || property.city || "",
         estado: property.location?.estado || property.location?.state || property.state || "",
-        area: property.area || property.location?.area || "",
-        landArea: property.landArea || property.location?.landArea || "",
+        area: areaVal,
+        landArea: landAreaVal,
+        totalArea: finalTotalArea,
         bedrooms: property.bedrooms || property.location?.bedrooms || "",
         bathrooms: property.bathrooms || property.location?.bathrooms || "",
         parkingSpaces: property.parkingSpaces || property.location?.parkingSpaces || "",
@@ -249,6 +297,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
         });
       }
     } else {
+      setIsTotalAreaCustom(false);
       setFormData(defaultForm);
     }
   }, [isOpen, property]);
@@ -997,7 +1046,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                 type="number"
                 placeholder="Ex: 150"
                 value={formData.area}
-                onChange={(event) => updateField("area", event.target.value)}
+                onChange={(event) => handleAreaFieldChange("area", event.target.value)}
               />
               <Input
                 label="Área do Terreno (m²)"
@@ -1005,8 +1054,34 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                 type="number"
                 placeholder="Ex: 300 (opcional)"
                 value={formData.landArea}
-                onChange={(event) => updateField("landArea", event.target.value)}
+                onChange={(event) => handleAreaFieldChange("landArea", event.target.value)}
               />
+              <div className={styles.totalAreaContainer}>
+                <Input
+                  label="Área Total (m²)"
+                  icon={Ruler}
+                  type="number"
+                  placeholder="Ex: 450 (Cálculo automático)"
+                  value={formData.totalArea}
+                  onChange={(event) => handleTotalAreaChange(event.target.value)}
+                />
+                <div className={styles.totalAreaHelp}>
+                  {isTotalAreaCustom ? (
+                    <button
+                      type="button"
+                      className={styles.resetTotalBtn}
+                      onClick={handleResetTotalAreaAuto}
+                      title="Clique para voltar ao cálculo automático da soma"
+                    >
+                      <RotateCcw size={13} /> Recalcular soma automática
+                    </button>
+                  ) : (
+                    <span className={styles.autoCalcBadge}>
+                      ✨ Soma automática (Construída + Terreno)
+                    </span>
+                  )}
+                </div>
+              </div>
               <Input
                 label="Quartos"
                 icon={BedDouble}

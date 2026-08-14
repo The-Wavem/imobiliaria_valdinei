@@ -198,6 +198,7 @@ export default function PropertyDetail() {
               baths={property.baths}
               area={property.area}
               landArea={property.landArea}
+              totalArea={property.totalArea}
               parking={property.parking}
             />
           </MotionDiv>

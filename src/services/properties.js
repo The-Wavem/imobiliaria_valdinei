@@ -92,6 +92,7 @@ export function mapPropertyDocument(snapshot) {
     parking: toNumber(location.parkingSpaces || data.parkingSpaces),
     area: toNumber(location.area || data.area),
     landArea: toNumber(location.landArea || data.landArea),
+    totalArea: toNumber(location.totalArea || data.totalArea),
     amenities: Array.isArray(data.features) ? data.features : [],
     image: data.imageUrl || media.coverImage || photosArray[0] || "",
     images: photosArray,

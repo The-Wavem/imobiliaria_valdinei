@@ -46,6 +46,7 @@ const formatPropertyData = (data) => {
     },
     area: Number(data.area || loc.area || 0),
     landArea: Number(data.landArea || loc.landArea || 0),
+    totalArea: Number(data.totalArea || loc.totalArea || 0),
     bedrooms: Number(data.bedrooms || loc.bedrooms || 0),
     suites: Number(data.suites || loc.suites || 0),
     bathrooms: Number(data.bathrooms || loc.bathrooms || 0),
