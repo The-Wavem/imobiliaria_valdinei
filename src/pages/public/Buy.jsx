@@ -11,11 +11,11 @@ import { parsePrice } from "@utils/validation.js";
 import { sortPropertiesByRelevance } from "@utils/rankingEngine.js";
 
 // Assets Premium para o Hero
-import buyVideo from "../../assets/videos/buy-bg.mp4";
-import buyThumb from "../../assets/images/buy-thumb.jpg";
+import vendaVideo from "../../assets/videos/buy-bg.mp4";
+import vendaThumb from "../../assets/images/buy-thumb.jpg";
 import { useDocumentTitle } from "@hooks/useDocumentTitle.js";
 
-export default function Buy() {
+export default function Venda() {
   useDocumentTitle('Imóveis à Venda');
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -55,7 +55,7 @@ export default function Buy() {
     const loadProperties = async () => {
       try {
         // Buscando a string EXATA que está no seu banco de dados
-        const items = await getPublicProperties("Comprar");
+        const items = await getPublicProperties("Venda");
         if (isMounted) setProperties(items);
       } finally {
         if (isMounted) setIsLoading(false);
@@ -166,9 +166,9 @@ export default function Buy() {
       animate="show"
     >
       <CategoryHero 
-        title="Imóveis para Comprar" 
-        bgImage={buyThumb} 
-        videoSrc={buyVideo} 
+        title="Imóveis à Venda" 
+        bgImage={vendaThumb} 
+        videoSrc={vendaVideo} 
       />
       <motion.div variants={fadeUpItem} style={{ position: "relative", zIndex: 10 }}>
         <FilterBar
@@ -181,7 +181,7 @@ export default function Buy() {
       <motion.div variants={fadeUpItem}>
         <PropertyGrid
           properties={prioritizedProperties}
-          title="Imóveis para Comprar"
+          title="Imóveis à Venda"
           onPropertyClick={handlePropertyClick}
           isLoading={isLoading}
         />

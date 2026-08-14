@@ -66,7 +66,7 @@ export default function Sobre() {
             </span>
             <span className={styles.paragraph}>
               Nossa missão é ser a ponte entre você e o seu novo lar,
-              proporcionando uma experiência de compra ou aluguel sem
+              proporcionando uma experiência de venda ou aluguel sem
               complicações, pautada na confiança e na acessibilidade.
             </span>
           </p>

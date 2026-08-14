@@ -40,6 +40,17 @@ const normalizeMediaList = (values = []) => {
   return [...new Set(urls.filter(Boolean))];
 };
 
+const normalizeCategoryLabel = (category) => {
+  const value = String(category || "").trim().toLowerCase();
+
+  if (!value) return "Imóvel";
+  if (value === "comprar" || value === "buy" || value === "venda") return "Venda";
+  if (value === "alugar" || value === "rent") return "Alugar";
+  if (value === "ambos" || value === "venda e aluguel") return "Venda e Aluguel";
+
+  return String(category).trim();
+};
+
 export function mapPropertyDocument(snapshot) {
   const data = snapshot.data() || {};
   const pricing = data.pricing || {};
@@ -68,7 +79,7 @@ export function mapPropertyDocument(snapshot) {
     firestoreId: snapshot.id,
     code: data.code || snapshot.id,
     title: data.title || "Imóvel",
-    category: data.category || "Imóvel",
+    category: normalizeCategoryLabel(data.category),
     type: data.type || "Imóvel",
     location: [location.neighborhood, location.address].filter(Boolean).join(" - ") || location.address || location.neighborhood || data.address || data.neighborhood || "",
     price: parsePrice(pricing.price || data.price),

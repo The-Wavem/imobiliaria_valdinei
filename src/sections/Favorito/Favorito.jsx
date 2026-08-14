@@ -39,7 +39,7 @@ export default function FavoritoSection() {
             <p>
               Explore nossa seleção de imóveis e salve os que mais combinam com você.
             </p>
-            <Link to="/comprar" className={styles.exploreButton}>
+            <Link to="/venda" className={styles.exploreButton}>
               Explorar Imóveis
             </Link>
           </div>

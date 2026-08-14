@@ -5,8 +5,8 @@ function getTransactionFromProperty(property) {
   const category = property?.category?.toLowerCase?.() || "";
   const id = property?.id?.toLowerCase?.() || "";
 
-  if (category.includes("compr" ) || id.startsWith("buy")) {
-    return { label: "Comprar", path: "/comprar" };
+  if (category.includes("vend") || id.startsWith("buy")) {
+    return { label: "Venda", path: "/venda" };
   }
 
   if (category.includes("alug") || id.startsWith("rent")) {

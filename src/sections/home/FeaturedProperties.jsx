@@ -80,7 +80,7 @@ export default function FeaturedProperties({ onPropertyClick }) {
             <p>As melhores oportunidades selecionadas para você hoje.</p>
           </div>
 
-          <button type="button" className={styles.viewAllButton} onClick={() => navigate("/comprar")}>
+          <button type="button" className={styles.viewAllButton} onClick={() => navigate("/venda")}>
             Ver todos os imóveis
             <Search size={16} />
           </button>

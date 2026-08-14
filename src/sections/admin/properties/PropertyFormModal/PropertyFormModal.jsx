@@ -57,7 +57,7 @@ const tabOptions = [
 const categoryOptions = [
   { label: "Selecione", value: "" },
   { label: "Alugar", value: "Alugar" },
-  { label: "Comprar", value: "Comprar" },
+  { label: "Venda", value: "Venda" },
   { label: "Venda e Aluguel", value: "Venda e Aluguel" },
 ];
 
@@ -860,7 +860,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                 />
               </div>
 
-              {(formData.category === "Comprar" || formData.category === "Venda e Aluguel") && (
+              {(formData.category === "Venda" || formData.category === "Venda e Aluguel") && (
                 <Input
                   label="Preço de Venda"
                   type="text"

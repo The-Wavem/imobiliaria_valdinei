@@ -8,7 +8,7 @@ export default function Services() {
       <main>
         <div className={styles.hero}>
           <h1>Nossos <span>Serviços</span></h1>
-          <p>Soluções completas para quem quer comprar, vender ou alugar com segurança e agilidade em Curitiba.</p>
+          <p>Soluções completas para quem quer vender, alugar ou investir com segurança e agilidade em Curitiba.</p>
         </div>
         <div className={styles.services}>
           <section>
@@ -72,7 +72,7 @@ export default function Services() {
                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-key" aria-hidden="true"><path d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4"></path><path d="m21 2-9.6 9.6"></path><circle cx="7.5" cy="15.5" r="5.5"></circle></svg>
               </div>
               <h1>Assessoria Completa</h1>
-              <p>Suporte em todas as etapas burocráticas, garantindo que você compre ou alugue com total segurança.</p>
+              <p>Suporte em todas as etapas burocráticas, garantindo que você venda ou alugue com total segurança.</p>
               <div className={styles.invisibleDiv}>
                 <span>
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-circle-check" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="m9 12 2 2 4-4"></path></svg>
