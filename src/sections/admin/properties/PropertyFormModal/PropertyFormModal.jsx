@@ -32,6 +32,7 @@ import styles from "./PropertyFormModal.module.css";
 import { checkCodeExists } from "../../../../services/propertyService.js";
 import { uploadPropertyImage } from "../../../../services/storageService.js";
 import { compressImage } from "../../../../utils/imageUtils.js";
+import { cleanAndFixDescription } from "../../../property-detail/PropertyDescription.jsx";
 
 const formatCurrencyDisplay = (value) => {
   if (value === null || value === undefined || value === "") return "";
@@ -664,6 +665,11 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
 
       const payload = { ...formData };
       
+      // Sanitiza descrição reunindo palavras divididas por quebras de linha e limpando hífens macios
+      if (payload.description) {
+        payload.description = cleanAndFixDescription(payload.description);
+      }
+
       // Filtra URLs inválidas
       payload.photos = payload.photos.filter(Boolean);
       

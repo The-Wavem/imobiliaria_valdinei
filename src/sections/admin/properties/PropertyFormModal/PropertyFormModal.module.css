@@ -687,8 +687,17 @@
   gap: 0.45rem;
 }
 
+.textareaField :global(.ql-editor) {
+  word-break: normal !important;
+  overflow-wrap: anywhere !important;
+  hyphens: none !important;
+}
+
 .textareaField :global(.ql-editor) p {
   margin-bottom: 0.5rem;
+  word-break: normal !important;
+  overflow-wrap: anywhere !important;
+  hyphens: none !important;
 }
 
 .textareaField :global(.ql-editor) p:last-child {

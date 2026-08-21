@@ -19,27 +19,56 @@ export default function PropertyHeader({
     const url = window.location.href;
     const shareData = {
       title: `Imóvel: ${title}`,
-      text: `Confira este imóvel: ${title} em ${location}`,
+      text: `Confira este imóvel: ${title}${location ? ` em ${location}` : ''}`,
       url: url,
     };
 
     try {
       let shared = false;
-      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+
+      // 1. Tenta Web Share API nativa (dispositivos móveis e navegadores suportados)
+      let canUseNativeShare = false;
+      if (typeof navigator.share === "function") {
+        if (typeof navigator.canShare === "function") {
+          try {
+            canUseNativeShare = navigator.canShare(shareData);
+          } catch {
+            canUseNativeShare = true;
+          }
+        } else {
+          canUseNativeShare = true;
+        }
+      }
+
+      if (canUseNativeShare) {
         await navigator.share(shareData);
         shared = true;
       } else {
-        await navigator.clipboard.writeText(url);
+        // 2. Fallback: Copiar para área de transferência (Desktop e WebViews)
+        if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+          await navigator.clipboard.writeText(url);
+        } else {
+          // Fallback universal (navegadores antigos ou HTTP/Webviews)
+          const textArea = document.createElement("textarea");
+          textArea.value = url;
+          textArea.style.position = "fixed";
+          textArea.style.opacity = "0";
+          document.body.appendChild(textArea);
+          textArea.focus();
+          textArea.select();
+          document.execCommand("copy");
+          document.body.removeChild(textArea);
+        }
         setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+        setTimeout(() => setCopied(false), 2500);
         shared = true;
       }
-      
+
       if (shared && propertyId) {
         await incrementPropertyShares(propertyId);
       }
     } catch (err) {
-      if (err.name !== "AbortError") {
+      if (err.name !== "AbortError" && err.name !== "NotAllowedError") {
         console.error("Erro ao compartilhar:", err);
       }
     }
