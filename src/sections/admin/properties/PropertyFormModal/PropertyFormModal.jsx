@@ -1440,9 +1440,8 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                         }
                         setFormData((prev) => {
                           const newPhotos = [...prev.photos];
-                          const temp = newPhotos[draggedPhotoIndex];
-                          newPhotos[draggedPhotoIndex] = newPhotos[index];
-                          newPhotos[index] = temp;
+                          const [draggedItem] = newPhotos.splice(draggedPhotoIndex, 1);
+                          newPhotos.splice(index, 0, draggedItem);
                           return { ...prev, photos: newPhotos };
                         });
                         setDraggedPhotoIndex(null);
