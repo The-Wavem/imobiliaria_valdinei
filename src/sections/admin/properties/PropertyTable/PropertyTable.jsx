@@ -2,6 +2,7 @@ import { Pencil, ToggleLeft, ToggleRight, Trash2, Eye, Star, Share2 } from "luci
 import Button from "@components/ui/Button/Button.jsx";
 import Select from "@components/ui/Select/Select.jsx";
 import { calculateTotalScore } from "@utils/rankingEngine.js";
+import { parsePrice } from "@utils/validation.js";
 import styles from "./PropertyTable.module.css";
 
 function formatCurrency(value) {
@@ -86,7 +87,7 @@ export default function PropertyTable({
                 <th>Imóvel</th>
                 <th>Tipo / Categoria</th>
                 <th>Nota</th>
-                <th>Status</th>
+                <th>Status / Preço</th>
                 <th>Wavem Rank</th>
                 <th>Métricas</th>
                 <th>Ações</th>
@@ -101,9 +102,8 @@ export default function PropertyTable({
                   const code = property.code || "S/N";
                   const type = property.type || "-";
                   const category = property.category || "-";
-                  const price = Number(
-                    property.price || property.pricing?.price || 0,
-                  );
+                  const salePrice = parsePrice(property.price || property.pricing?.price);
+                  const rentPrice = parsePrice(property.rentPrice || property.pricing?.rentPrice);
                   const getRowStatusClass = (status) => {
                     switch(status) {
                       case 'Disponível': return styles.rowStatusDisponivel;
@@ -216,9 +216,48 @@ export default function PropertyTable({
                               compact={true}
                             />
                           </div>
-                          <span className={styles.propertyPrice}>
-                            {formatCurrency(price)}
-                          </span>
+                          <div className={styles.propertyPriceWrap} style={{ marginTop: '0.25rem' }}>
+                            {(() => {
+                              const isBoth = category === "Venda e Aluguel" || category === "Ambos";
+                              const isRent = category === "Alugar";
+
+                              if (isBoth) {
+                                return (
+                                  <>
+                                    {salePrice > 0 && (
+                                      <span className={styles.propertyPrice} style={{ display: "block" }}>
+                                        Venda: {formatCurrency(salePrice)}
+                                      </span>
+                                    )}
+                                    {rentPrice > 0 && (
+                                      <span className={styles.propertyRentPrice} style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "600", display: "block" }}>
+                                        Aluguel: {formatCurrency(rentPrice)}/mês
+                                      </span>
+                                    )}
+                                    {salePrice === 0 && rentPrice === 0 && (
+                                      <span className={styles.propertyPrice}>Sob consulta</span>
+                                    )}
+                                  </>
+                                );
+                              }
+
+                              if (isRent) {
+                                const activeRent = rentPrice || salePrice;
+                                return (
+                                  <span className={styles.propertyPrice}>
+                                    {activeRent > 0 ? `${formatCurrency(activeRent)}/mês` : "Sob consulta"}
+                                  </span>
+                                );
+                              }
+
+                              const activeSale = salePrice || rentPrice;
+                              return (
+                                <span className={styles.propertyPrice}>
+                                  {activeSale > 0 ? formatCurrency(activeSale) : "Sob consulta"}
+                                </span>
+                              );
+                            })()}
+                          </div>
                         </div>
                       </td>
 
