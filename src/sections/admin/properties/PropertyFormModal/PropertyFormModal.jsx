@@ -117,6 +117,21 @@ export const isResidentialOrOfficeType = (type) => {
 const validateForm = (data) => {
   const errors = {};
 
+  // Se a sincronização com o Canal Pro estiver DESATIVADA:
+  // As validações rígidas dos portais não são aplicadas.
+  // Apenas o título do imóvel é necessário para identificar o cadastro no CRM/site.
+  if (data.syncWithPortal === false) {
+    if (!data.title || !data.title.trim()) {
+      errors.title = {
+        tab: "basic",
+        tabLabel: "Básico",
+        label: "Título do Imóvel",
+        message: "O título do imóvel é obrigatório.",
+      };
+    }
+    return errors;
+  }
+
   // 1. Aba Básico
   if (!data.code || !data.code.trim()) {
     errors.code = {
@@ -843,13 +858,14 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
   }, [hasAttemptedSubmit, formValidationErrors]);
 
   const tabWarnings = useMemo(() => {
+    if (!formData.syncWithPortal) return {};
     const warnings = {};
     const descLength = (formData.description || "").length;
     if (descLength > 3000) {
       warnings.description = "A descrição ultrapassa 3000 caracteres (não será sincronizada com o Canal Pro)";
     }
     return warnings;
-  }, [formData.description]);
+  }, [formData.description, formData.syncWithPortal]);
 
   const handleSave = async () => {
     setHasAttemptedSubmit(true);
@@ -1159,7 +1175,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
               </div>
               <div className={styles.codeGroupContainer}>
                 <Input
-                  label="Código do Imóvel *"
+                  label={formData.syncWithPortal ? "Código do Imóvel *" : "Código do Imóvel"}
                   placeholder="Ex: VLD-1204"
                   value={formData.code}
                   onChange={(event) => updateField("code", event.target.value)}
@@ -1179,7 +1195,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
               </div>
               <div className={styles.selectRow}>
                 <Select
-                  label="Categoria *"
+                  label={formData.syncWithPortal ? "Categoria *" : "Categoria"}
                   value={formData.category}
                   onChange={(value) => updateField("category", value)}
                   options={categoryOptions}
@@ -1189,7 +1205,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
 
               {(formData.category === "Venda" || formData.category === "Venda e Aluguel") && (
                 <Input
-                  label="Preço de Venda *"
+                  label={formData.syncWithPortal ? "Preço de Venda *" : "Preço de Venda"}
                   type="text"
                   placeholder="R$ 0"
                   value={formatCurrencyDisplay(formData.price)}
@@ -1200,7 +1216,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
 
               {(formData.category === "Alugar" || formData.category === "Venda e Aluguel") && (
                 <Input
-                  label="Preço de Aluguel *"
+                  label={formData.syncWithPortal ? "Preço de Aluguel *" : "Preço de Aluguel"}
                   type="text"
                   placeholder="R$ 0"
                   value={formatCurrencyDisplay(formData.rentPrice)}
@@ -1314,7 +1330,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                   ) : (
                     <div className={styles.selectRow}>
                       <Select
-                        label="Tipo de Imóvel *"
+                        label={formData.syncWithPortal ? "Tipo de Imóvel *" : "Tipo de Imóvel"}
                         options={typeOptions}
                         value={formData.type}
                         onChange={(value) => updateField("type", value)}
@@ -1341,7 +1357,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
           <section className={styles.tabPanel}>
             <div className={styles.formGrid}>
               <Input
-                label="Área Construída / Útil (m²) *"
+                label={formData.syncWithPortal ? "Área Construída / Útil (m²) *" : "Área Construída / Útil (m²)"}
                 icon={Ruler}
                 type="number"
                 placeholder="Ex: 150"
@@ -1394,7 +1410,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                 </div>
               </div>
               <Input
-                label={isResidentialOrOfficeType(formData.type) ? "Quartos *" : "Quartos"}
+                label={formData.syncWithPortal && isResidentialOrOfficeType(formData.type) ? "Quartos *" : "Quartos"}
                 icon={BedDouble}
                 type="number"
                 min="0"
@@ -1404,8 +1420,8 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                   updateField("bedrooms", event.target.value)
                 }
                 error={hasAttemptedSubmit && formValidationErrors.bedrooms ? formValidationErrors.bedrooms.message : undefined}
-                warning={!isResidentialOrOfficeType(formData.type) && (!formData.bedrooms || Number(formData.bedrooms) === 0)}
-                warningText={!isResidentialOrOfficeType(formData.type) && (!formData.bedrooms || Number(formData.bedrooms) === 0) ? "ℹ️ 0 quartos (imóvel isento - será enviado 0)" : undefined}
+                warning={formData.syncWithPortal && !isResidentialOrOfficeType(formData.type) && (!formData.bedrooms || Number(formData.bedrooms) === 0)}
+                warningText={formData.syncWithPortal && !isResidentialOrOfficeType(formData.type) && (!formData.bedrooms || Number(formData.bedrooms) === 0) ? "ℹ️ 0 quartos (imóvel isento - será enviado 0)" : undefined}
                 success={Number(formData.bedrooms) > 0}
               />
               <Input
@@ -1418,12 +1434,12 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                 onChange={(event) =>
                   updateField("suites", event.target.value)
                 }
-                warning={!formData.suites || Number(formData.suites) === 0}
-                warningText={(!formData.suites || Number(formData.suites) === 0) ? "ℹ️ 0 suítes (será enviado 0 para a API/Canal Pro)" : undefined}
+                warning={formData.syncWithPortal && (!formData.suites || Number(formData.suites) === 0)}
+                warningText={formData.syncWithPortal && (!formData.suites || Number(formData.suites) === 0) ? "ℹ️ 0 suítes (será enviado 0 para a API/Canal Pro)" : undefined}
                 success={Number(formData.suites) > 0}
               />
               <Input
-                label={isResidentialOrOfficeType(formData.type) ? "Banheiros *" : "Banheiros"}
+                label={formData.syncWithPortal && isResidentialOrOfficeType(formData.type) ? "Banheiros *" : "Banheiros"}
                 icon={Bath}
                 type="number"
                 min="0"
@@ -1433,8 +1449,8 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                   updateField("bathrooms", event.target.value)
                 }
                 error={hasAttemptedSubmit && formValidationErrors.bathrooms ? formValidationErrors.bathrooms.message : undefined}
-                warning={!isResidentialOrOfficeType(formData.type) && (!formData.bathrooms || Number(formData.bathrooms) === 0)}
-                warningText={!isResidentialOrOfficeType(formData.type) && (!formData.bathrooms || Number(formData.bathrooms) === 0) ? "ℹ️ 0 banheiros (imóvel isento - será enviado 0)" : undefined}
+                warning={formData.syncWithPortal && !isResidentialOrOfficeType(formData.type) && (!formData.bathrooms || Number(formData.bathrooms) === 0)}
+                warningText={formData.syncWithPortal && !isResidentialOrOfficeType(formData.type) && (!formData.bathrooms || Number(formData.bathrooms) === 0) ? "ℹ️ 0 banheiros (imóvel isento - será enviado 0)" : undefined}
                 success={Number(formData.bathrooms) > 0}
               />
               <Input
@@ -1447,8 +1463,8 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                 onChange={(event) =>
                   updateField("parkingSpaces", event.target.value)
                 }
-                warning={!formData.parkingSpaces || Number(formData.parkingSpaces) === 0}
-                warningText={(!formData.parkingSpaces || Number(formData.parkingSpaces) === 0) ? "ℹ️ 0 vagas (será enviado 0 para a API/Canal Pro)" : undefined}
+                warning={formData.syncWithPortal && (!formData.parkingSpaces || Number(formData.parkingSpaces) === 0)}
+                warningText={formData.syncWithPortal && (!formData.parkingSpaces || Number(formData.parkingSpaces) === 0) ? "ℹ️ 0 vagas (será enviado 0 para a API/Canal Pro)" : undefined}
                 success={Number(formData.parkingSpaces) > 0}
               />
               <Input
@@ -1524,7 +1540,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                 onChange={(value) => updateField("displayAddress", value)}
               />
               <Input
-                label="CEP *"
+                label={formData.syncWithPortal ? "CEP *" : "CEP"}
                 placeholder="Apenas números (8 dígitos)"
                 value={formData.cep}
                 onChange={handleCepChange}
@@ -1552,7 +1568,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                 onChange={(event) => updateField("complemento", event.target.value)}
               />
               <Input
-                label="Bairro *"
+                label={formData.syncWithPortal ? "Bairro *" : "Bairro"}
                 placeholder="Nome do bairro"
                 value={formData.bairro}
                 onChange={(event) =>
@@ -1561,14 +1577,14 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                 error={hasAttemptedSubmit && formValidationErrors.bairro ? formValidationErrors.bairro.message : undefined}
               />
               <Input
-                label="Cidade *"
+                label={formData.syncWithPortal ? "Cidade *" : "Cidade"}
                 placeholder="Sua cidade"
                 value={formData.cidade}
                 onChange={(event) => updateField("cidade", event.target.value)}
                 error={hasAttemptedSubmit && formValidationErrors.cidade ? formValidationErrors.cidade.message : undefined}
               />
               <Input
-                label="Estado (UF) *"
+                label={formData.syncWithPortal ? "Estado (UF) *" : "Estado (UF)"}
                 placeholder="Ex: SP"
                 value={formData.estado}
                 onChange={(event) => updateField("estado", event.target.value)}
@@ -1914,7 +1930,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                   </Button>
                 </div>
 
-                {(formData.description || '').length > 3000 && (
+                {(formData.syncWithPortal && (formData.description || '').length > 3000) && (
                   <div className={styles.descriptionWarningAlert}>
                     <AlertTriangle size={18} style={{ flexShrink: 0 }} />
                     <span>
@@ -1923,7 +1939,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                   </div>
                 )}
 
-                <div className={`${styles.quillContainer} ${(formData.description || '').length > 3000 ? styles.quillWarning : (formData.description || '').length >= 2900 ? styles.quillWarning : ''}`}>
+                <div className={`${styles.quillContainer} ${formData.syncWithPortal && (formData.description || '').length > 3000 ? styles.quillWarning : formData.syncWithPortal && (formData.description || '').length >= 2900 ? styles.quillWarning : ''}`}>
                   <ReactQuill
                     theme="snow"
                     value={formData.description}
@@ -1933,7 +1949,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                   />
                 </div>
                 <div className={styles.charCounterWrap}>
-                  <span className={`${styles.charCounter} ${(formData.description || '').length > 3000 ? styles.charCounterWarning : ''}`}>
+                  <span className={`${styles.charCounter} ${formData.syncWithPortal && (formData.description || '').length > 3000 ? styles.charCounterWarning : ''}`}>
                     {(formData.description || '').length} / 3000
                   </span>
                 </div>

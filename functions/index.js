@@ -22,14 +22,17 @@ const escapeXml = (unsafe) => {
   });
 };
 
-const formatDescriptionForCanalPro = (text) => {
-  if (!text) return "";
-  return String(text)
-    .replace(/<br\s*[\/]?>/gi, "\n")
-    .replace(/<\/p>/gi, "\n\n")
-    .replace(/<[^>]+>/g, "")
-    .replace(/\r\n/g, "\n")
-    .replace(/\n{3,}/g, "\n\n")
+const sanitizeDescriptionForCanalPro = (html) => {
+  if (!html) return "";
+  return String(html)
+    .replace(/&nbsp;/gi, " ")              // Converte entidades &nbsp; em espaço comum
+    .replace(/<br\s*[\/]?>/gi, "\n")       // Transforma <br> em quebra de linha
+    .replace(/<\/li>/gi, "\n")             // Fecha cada item de lista com quebra de linha
+    .replace(/<li>/gi, "• ")               // Adiciona marcador para itens de lista
+    .replace(/<\/p>/gi, "\n\n")            // Fecha parágrafos com quebra dupla
+    .replace(/<[^>]+>/g, "")               // Remove todas as outras tags HTML (<strong>, <p>, <ul>, etc.)
+    .replace(/\r\n/g, "\n")                // Normaliza quebras de linha
+    .replace(/\n{3,}/g, "\n\n")            // Evita excesso de linhas vazias
     .trim();
 };
 
@@ -170,7 +173,7 @@ async function buildCanalProXml() {
       xmlString += `        <PropertyType>${mapped.type}</PropertyType>\n`;
       
       const obs = property.content?.description || property.description || property.observacoes || "";
-      const formattedObs = formatDescriptionForCanalPro(obs);
+      const formattedObs = sanitizeDescriptionForCanalPro(obs);
       if (formattedObs) {
         xmlString += `        <Description><![CDATA[${formattedObs}]]></Description>\n`;
       }
