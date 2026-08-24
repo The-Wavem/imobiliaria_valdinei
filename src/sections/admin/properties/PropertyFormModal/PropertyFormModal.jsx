@@ -22,7 +22,9 @@ import {
   RotateCcw,
   Unlock,
   AlertTriangle,
+  ArrowLeft,
   ArrowRight,
+  Keyboard,
 } from "lucide-react";
 import Button from "@components/ui/Button/Button.jsx";
 import Modal from "@components/ui/Modal/Modal.jsx";
@@ -317,6 +319,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
   const [oversizedPhotosUrls, setOversizedPhotosUrls] = useState([]);
   const [draggedPhotoIndex, setDraggedPhotoIndex] = useState(null);
   const [dragOverIndex, setDragOverIndex] = useState(null);
+  const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(null);
   const [isTotalAreaCustom, setIsTotalAreaCustom] = useState(false);
 
   const handleAreaFieldChange = (field, value) => {
@@ -400,6 +403,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
     setNewPhotoUrl("");
     setNewVideoUrl("");
     setCoverPhotoIndex(0);
+    setSelectedPhotoIndex(null);
     setIsSaving(false);
     setCepError("");
     setCepSuccess(false);
@@ -690,6 +694,61 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
       setCoverPhotoIndex((prev) => prev - 1);
     }
   };
+
+  const movePhoto = (fromIndex, toIndex) => {
+    const validPhotos = formData.photos.filter(Boolean);
+    if (toIndex < 0 || toIndex >= validPhotos.length || fromIndex === toIndex) return;
+
+    setFormData((prev) => {
+      const newPhotos = [...prev.photos];
+      const [movedItem] = newPhotos.splice(fromIndex, 1);
+      newPhotos.splice(toIndex, 0, movedItem);
+      return {
+        ...prev,
+        photos: newPhotos,
+        imageUrl: newPhotos[0] || "",
+      };
+    });
+    setSelectedPhotoIndex(toIndex);
+  };
+
+  useEffect(() => {
+    if (activeTab !== "media" || selectedPhotoIndex === null) return;
+
+    const handleGlobalKeyDown = (e) => {
+      const target = e.target;
+      const tag = target?.tagName?.toLowerCase();
+      if (tag === "input" || tag === "textarea" || target?.isContentEditable) {
+        return;
+      }
+
+      const totalPhotos = formData.photos.filter(Boolean).length;
+      if (totalPhotos <= 1) return;
+
+      if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+        e.preventDefault();
+        if (selectedPhotoIndex > 0) {
+          movePhoto(selectedPhotoIndex, selectedPhotoIndex - 1);
+        }
+      } else if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+        e.preventDefault();
+        if (selectedPhotoIndex < totalPhotos - 1) {
+          movePhoto(selectedPhotoIndex, selectedPhotoIndex + 1);
+        }
+      } else if (e.key === "Home") {
+        e.preventDefault();
+        movePhoto(selectedPhotoIndex, 0);
+      } else if (e.key === "End") {
+        e.preventDefault();
+        movePhoto(selectedPhotoIndex, totalPhotos - 1);
+      } else if (e.key === "Escape") {
+        setSelectedPhotoIndex(null);
+      }
+    };
+
+    window.addEventListener("keydown", handleGlobalKeyDown);
+    return () => window.removeEventListener("keydown", handleGlobalKeyDown);
+  }, [activeTab, selectedPhotoIndex, formData.photos]);
 
   const addVideo = (urlValue) => {
     const value = urlValue.trim();
@@ -1772,17 +1831,42 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
             </div>
 
             <div className={styles.galleryShell}>
-              <div className={styles.galleryGrid}>
+              {formData.photos.filter(Boolean).length > 1 && (
+                <div className={styles.keyboardTipBanner}>
+                  <Keyboard size={18} className={styles.keyboardTipIcon} />
+                  <div className={styles.keyboardTipContent}>
+                    <span>
+                      <strong>Controle por Teclado:</strong> Clique em uma foto e use as setas <strong>←</strong> e <strong>→</strong> do teclado para mudar sua posição rapidamente (ou <strong>Home</strong> para definir como Capa).
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              <div className={styles.galleryGrid} onClick={() => setSelectedPhotoIndex(null)}>
                 {formData.photos.filter(Boolean).map((photoUrl, index) => {
                   const isCover = index === 0;
+                  const isSelected = selectedPhotoIndex === index;
                   const isOversized = oversizedPhotosUrls.includes(photoUrl);
                   const isDragging = draggedPhotoIndex === index;
                   const isDragOver = dragOverIndex === index;
+                  const totalPhotos = formData.photos.filter(Boolean).length;
                   
                   return (
                     <div
                       key={`${photoUrl}-${index}`}
+                      id={`photo-card-${index}`}
+                      tabIndex={0}
                       draggable
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedPhotoIndex(isSelected ? null : index);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          setSelectedPhotoIndex(isSelected ? null : index);
+                        }
+                      }}
                       onDragStart={() => setDraggedPhotoIndex(index)}
                       onDragOver={(e) => { e.preventDefault(); setDragOverIndex(index); }}
                       onDragLeave={() => setDragOverIndex(null)}
@@ -1792,12 +1876,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                           setDragOverIndex(null);
                           return;
                         }
-                        setFormData((prev) => {
-                          const newPhotos = [...prev.photos];
-                          const [draggedItem] = newPhotos.splice(draggedPhotoIndex, 1);
-                          newPhotos.splice(index, 0, draggedItem);
-                          return { ...prev, photos: newPhotos };
-                        });
+                        movePhoto(draggedPhotoIndex, index);
                         setDraggedPhotoIndex(null);
                         setDragOverIndex(null);
                       }}
@@ -1805,12 +1884,52 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                         setDraggedPhotoIndex(null);
                         setDragOverIndex(null);
                       }}
-                      className={`${styles.thumbnailCard} ${isCover ? styles.thumbnailCardCover : ""} ${isDragging ? styles.thumbnailCardDragging : ""} ${isDragOver ? styles.thumbnailCardDragOver : ""}`}
+                      className={`${styles.thumbnailCard} ${isCover ? styles.thumbnailCardCover : ""} ${isSelected ? styles.thumbnailCardSelected : ""} ${isDragging ? styles.thumbnailCardDragging : ""} ${isDragOver ? styles.thumbnailCardDragOver : ""}`}
                     >
                       <img
                         src={photoUrl || undefined}
                         alt={`Mídia ${index + 1} do imóvel`}
                       />
+
+                      <span className={`${styles.photoOrderBadge} ${isSelected ? styles.photoOrderBadgeSelected : ""}`}>
+                        #{index + 1}
+                      </span>
+
+                      {isSelected && (
+                        <div className={styles.selectedOverlay}>
+                          <span className={styles.selectedBadge}>
+                            <Keyboard size={11} /> Ativa
+                          </span>
+                          <div className={styles.navControls}>
+                            <button
+                              type="button"
+                              className={styles.navArrowBtn}
+                              disabled={index === 0}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                movePhoto(index, index - 1);
+                              }}
+                              title="Mover para esquerda (←)"
+                              aria-label="Mover foto para esquerda"
+                            >
+                              <ArrowLeft size={13} />
+                            </button>
+                            <button
+                              type="button"
+                              className={styles.navArrowBtn}
+                              disabled={index === totalPhotos - 1}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                movePhoto(index, index + 1);
+                              }}
+                              title="Mover para direita (→)"
+                              aria-label="Mover foto para direita"
+                            >
+                              <ArrowRight size={13} />
+                            </button>
+                          </div>
+                        </div>
+                      )}
 
                       {isOversized && (
                         <div className={styles.oversizedBadge} title="Foto acima de 7MB - Não será enviada ao Canal Pro">
@@ -1821,15 +1940,10 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                       <button
                         type="button"
                         className={`${styles.coverStarButton} ${isCover ? styles.coverStarButtonActive : styles.coverStarButtonInactive}`}
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           if (index !== 0) {
-                            setFormData((prev) => {
-                              const newPhotos = [...prev.photos];
-                              const temp = newPhotos[index];
-                              newPhotos[index] = newPhotos[0];
-                              newPhotos[0] = temp;
-                              return { ...prev, photos: newPhotos };
-                            });
+                            movePhoto(index, 0);
                           }
                         }}
                         aria-label={isCover ? "Capa atual" : "Definir como capa"}
@@ -1845,12 +1959,14 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                       <button
                         type="button"
                         className={styles.removePhotoButton}
-                        onClick={() => {
-                           setFormData(prev => {
-                             const newPhotos = [...prev.photos];
-                             newPhotos.splice(index, 1);
-                             return { ...prev, photos: newPhotos };
-                           });
+                        onClick={(e) => {
+                           e.stopPropagation();
+                           if (selectedPhotoIndex === index) {
+                             setSelectedPhotoIndex(null);
+                           } else if (selectedPhotoIndex !== null && selectedPhotoIndex > index) {
+                             setSelectedPhotoIndex(selectedPhotoIndex - 1);
+                           }
+                           removePhoto(index);
                         }}
                         aria-label={`Remover mídia ${index + 1}`}
                       >
