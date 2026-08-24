@@ -16,25 +16,30 @@
 .desc p {
   color: var(--text-color);
   line-height: 1.6;
+  white-space: normal !important;
   word-break: normal !important;
   overflow-wrap: break-word !important;
   hyphens: none !important;
+  -webkit-hyphens: none !important;
 }
 
 .propertyDescription {
-  white-space: pre-line;
-  overflow-wrap: break-word;
-  word-break: break-word;
+  white-space: normal !important;
+  overflow-wrap: break-word !important;
+  word-break: normal !important;
+  hyphens: none !important;
+  -webkit-hyphens: none !important;
 }
 
 .richTextContainer {
   margin-top: 1rem;
   width: 100%;
   max-width: 100%;
-  white-space: pre-line;
-  overflow-wrap: break-word;
-  word-break: break-word;
+  white-space: normal !important;
+  overflow-wrap: break-word !important;
+  word-break: normal !important;
   hyphens: none !important;
+  -webkit-hyphens: none !important;
 }
 
 .richTextContainer p,
@@ -45,9 +50,11 @@
 .richTextContainer em,
 .richTextContainer b,
 .richTextContainer i {
+  white-space: normal;
   word-break: normal !important;
   overflow-wrap: break-word !important;
   hyphens: none !important;
+  -webkit-hyphens: none !important;
 }
 
 .richTextContainer p {
