@@ -22,6 +22,20 @@ const escapeXml = (unsafe) => {
   });
 };
 
+const sanitizeDescriptionForCanalPro = (html) => {
+  if (!html) return "";
+  return String(html)
+    .replace(/&nbsp;/gi, " ")              // Converte entidades &nbsp; em espaço comum
+    .replace(/<br\s*[\/]?>/gi, "\n")       // Transforma <br> em quebra de linha
+    .replace(/<\/li>/gi, "\n")             // Fecha cada item de lista com quebra de linha
+    .replace(/<li>/gi, "• ")               // Adiciona marcador para itens de lista
+    .replace(/<\/p>/gi, "\n\n")            // Fecha parágrafos com quebra dupla
+    .replace(/<[^>]+>/g, "")               // Remove todas as outras tags HTML (<strong>, <p>, <ul>, etc.)
+    .replace(/\r\n/g, "\n")                // Normaliza quebras de linha
+    .replace(/\n{3,}/g, "\n\n")            // Evita excesso de linhas vazias
+    .trim();
+};
+
 const mapPropertyType = (rawType) => {
   if (!rawType) return null;
   const typeStr = String(rawType).toLowerCase().trim();
@@ -159,8 +173,9 @@ async function buildCanalProXml() {
       xmlString += `        <PropertyType>${mapped.type}</PropertyType>\n`;
       
       const obs = property.content?.description || property.description || property.observacoes || "";
-      if (obs) {
-        xmlString += `        <Description><![CDATA[${obs}]]></Description>\n`;
+      const formattedObs = sanitizeDescriptionForCanalPro(obs);
+      if (formattedObs) {
+        xmlString += `        <Description><![CDATA[${formattedObs}]]></Description>\n`;
       }
       
       if (price > 0) {
@@ -182,17 +197,17 @@ async function buildCanalProXml() {
       
       xmlString += `        <LivingArea unit="square metres">${area}</LivingArea>\n`;
       
-      const quartos = property.bedrooms || property.quartos || "";
-      if (quartos !== "") xmlString += `        <Bedrooms>${escapeXml(quartos)}</Bedrooms>\n`;
+      const quartos = Number(property.bedrooms ?? property.quartos ?? 0);
+      xmlString += `        <Bedrooms>${quartos}</Bedrooms>\n`;
       
-      const suites = property.suites || property.location?.suites || "";
-      if (suites !== "") xmlString += `        <Suites>${escapeXml(suites)}</Suites>\n`;
+      const suites = Number(property.suites ?? property.location?.suites ?? 0);
+      xmlString += `        <Suites>${suites}</Suites>\n`;
       
-      const banheiros = property.bathrooms || property.banheiros || "";
-      if (banheiros !== "") xmlString += `        <Bathrooms>${escapeXml(banheiros)}</Bathrooms>\n`;
+      const banheiros = Number(property.bathrooms ?? property.banheiros ?? 0);
+      xmlString += `        <Bathrooms>${banheiros}</Bathrooms>\n`;
       
-      const vagas = property.parkingSpaces || property.vagas || "";
-      if (vagas !== "") xmlString += `        <Garage>${escapeXml(vagas)}</Garage>\n`;
+      const vagas = Number(property.parkingSpaces ?? property.vagas ?? 0);
+      xmlString += `        <Garage>${vagas}</Garage>\n`;
 
       const unitFloor = property.unitFloor || "";
       if (unitFloor !== "") xmlString += `        <UnitFloor>${escapeXml(unitFloor)}</UnitFloor>\n`;

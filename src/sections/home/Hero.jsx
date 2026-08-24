@@ -62,7 +62,7 @@ export default function Hero() {
     };
     loadProperties();
     
-    // Clear location filter when switching tabs so user doesn't search for a neighborhood that only has rentals on the buy tab
+    // Clear location filter when switching tabs so user doesn't search for a neighborhood that only has rentals on the venda tab
     setFilters(prev => ({ ...prev, location: "" }));
     
     return () => { isMounted = false; };
@@ -98,7 +98,7 @@ export default function Hero() {
       params.append('propertyType', filters.propertyType);
     }
     
-    const basePath = searchTab === "Alugar" ? "/alugar" : "/comprar";
+    const basePath = searchTab === "Alugar" ? "/alugar" : "/venda";
     navigate(`${basePath}?${params.toString()}`);
   };
 
@@ -126,7 +126,7 @@ export default function Hero() {
                   transition={{ duration: 0.35, ease: [0.25, 1, 0.5, 1] }}
                   className={styles.textContent}
                 >
-                  <h1>{searchTab === "Alugar" ? "Alugue o lar ideal" : "Compre o lar ideal"}</h1>
+                  <h1>{searchTab === "Alugar" ? "Alugue o lar ideal" : "Veja imóveis à venda"}</h1>
                   <p>
                     {searchTab === "Alugar"
                       ? "Explore opções de locação com facilidade e segurança. Encontre o espaço perfeito para o seu próximo capítulo."
@@ -139,7 +139,7 @@ export default function Hero() {
           </div>
 
           <div className={styles.tabs} aria-label="Tipo de transação">
-            {['Alugar', 'Comprar'].map((tab) => {
+            {['Alugar', 'Venda'].map((tab) => {
               const isActive = searchTab === tab;
               return (
                 <button

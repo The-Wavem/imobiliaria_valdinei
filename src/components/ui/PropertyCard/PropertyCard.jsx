@@ -181,20 +181,28 @@ export default function PropertyCard({ property, onViewDetails }) {
             <>
               <p className={styles.price} style={{ fontSize: '1.1rem', margin: 0 }}>
                 <span style={{ fontSize: '0.85rem', fontWeight: 'normal', color: 'var(--color-text-muted)', marginRight: '4px' }}>Venda:</span> 
-                {Number(property.price || property.pricing?.price || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                {!property.sobConsulta && Number(property.price || property.pricing?.price || 0) > 0
+                  ? Number(property.price || property.pricing?.price || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
+                  : "Sob consulta"}
               </p>
               <p className={styles.price} style={{ fontSize: '1.1rem', margin: 0 }}>
                 <span style={{ fontSize: '0.85rem', fontWeight: 'normal', color: 'var(--color-text-muted)', marginRight: '4px' }}>Aluguel:</span> 
-                {Number(property.rentPrice || property.pricing?.rentPrice || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                {!property.sobConsulta && Number(property.rentPrice || property.pricing?.rentPrice || 0) > 0
+                  ? `${Number(property.rentPrice || property.pricing?.rentPrice || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}/mês`
+                  : "Sob consulta"}
               </p>
             </>
           ) : property.category === "Alugar" ? (
             <p className={styles.price} style={{ margin: 0 }}>
-              {Number(property.rentPrice || property.pricing?.rentPrice || property.price || property.pricing?.price || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+              {!property.sobConsulta && Number(property.rentPrice || property.pricing?.rentPrice || property.price || property.pricing?.price || 0) > 0
+                ? Number(property.rentPrice || property.pricing?.rentPrice || property.price || property.pricing?.price || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
+                : "Sob consulta"}
             </p>
           ) : (
             <p className={styles.price} style={{ margin: 0 }}>
-              {Number(property.price || property.pricing?.price || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+              {!property.sobConsulta && Number(property.price || property.pricing?.price || 0) > 0
+                ? Number(property.price || property.pricing?.price || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
+                : "Sob consulta"}
             </p>
           )}
         </div>

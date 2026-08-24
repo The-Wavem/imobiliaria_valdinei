@@ -41,7 +41,7 @@ class ChunkErrorBoundary extends Component {
 
 const Home = lazy(() => import("@/pages/public/Home.jsx"));
 const Rent = lazy(() => import("@/pages/public/Rent.jsx"));
-const Buy = lazy(() => import("@/pages/public/Buy.jsx"));
+const Venda = lazy(() => import("@/pages/public/Buy.jsx"));
 const PropertyDetail = lazy(() => import("@/pages/public/PropertyDetail.jsx"));
 const NotFound = lazy(() => import("@pages/public/NotFound.jsx"));
 const Dashboard = lazy(() => import("@pages/admin/Dashboard.jsx"));
@@ -79,8 +79,10 @@ export default function Router() {
           <Route path="servicos" element={<Servicos />} />
           <Route path="favorito" element={<Favorito />} />
           <Route path="/alugar" element={<Rent />} />
-          <Route path="/comprar" element={<Buy />} />
+          <Route path="/venda" element={<Venda />} />
+          <Route path="/comprar" element={<Navigate to="/venda" replace />} />
           <Route path="/sobre" element={<Sobre />} />
+          <Route path="/sobre-nos" element={<Navigate to="/sobre" replace />} />
           <Route path="/imovel/:id" element={<PropertyDetail />} />
           <Route path="*" element={<NotFound />} />
         </Route>

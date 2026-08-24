@@ -9,7 +9,7 @@ import styles from "./Navbar.module.css";
 const navigationItems = [
   { label: "Início", to: "/" },
   { label: "Alugar", to: "/alugar" },
-  { label: "Comprar", to: "/comprar" },
+  { label: "Venda", to: "/venda" },
   { label: "Sobre Nós", to: "/sobre" },
   { label: "Serviços", to: "/servicos" },
   { label: "Contato", to: "/contato" },

@@ -17,12 +17,24 @@ import { calculateBaseScore } from "../utils/rankingEngine.js";
 
 const PROPERTY_COLLECTION = "properties";
 
+const normalizeCategoryLabel = (category) => {
+  const value = String(category || "").trim().toLowerCase();
+
+  if (!value) return "";
+  if (value === "comprar" || value === "buy" || value === "venda") return "Venda";
+  if (value === "alugar" || value === "rent") return "Alugar";
+  if (value === "ambos") return "Venda e Aluguel";
+  if (value === "venda e aluguel") return "Venda e Aluguel";
+
+  return String(category).trim();
+};
+
 const formatPropertyData = (data) => {
   const loc = data.location || {};
   const formatted = {
     title: data.title || "",
     code: data.code || "",
-    category: data.category || "",
+    category: normalizeCategoryLabel(data.category),
     type: data.type || "",
     status: data.status || "Disponível",
     active: data.status ? data.status !== "Inativo" : true,
@@ -34,6 +46,7 @@ const formatPropertyData = (data) => {
     },
     area: Number(data.area || loc.area || 0),
     landArea: Number(data.landArea || loc.landArea || 0),
+    totalArea: Number(data.totalArea || loc.totalArea || 0),
     bedrooms: Number(data.bedrooms || loc.bedrooms || 0),
     suites: Number(data.suites || loc.suites || 0),
     bathrooms: Number(data.bathrooms || loc.bathrooms || 0),
@@ -65,6 +78,9 @@ const formatPropertyData = (data) => {
       description: data.description || data.content?.description || "",
     },
     featured: Boolean(data.featured),
+    sobConsulta: Boolean(data.sobConsulta),
+    price: Number(data.price || data.pricing?.price || 0),
+    rentPrice: Number(data.rentPrice || data.pricing?.rentPrice || 0),
     syncWithPortal: data.syncWithPortal ?? true,
     views: Number(data.views) || 0,
     shares: Number(data.shares) || 0,
@@ -140,13 +156,12 @@ export async function getPublicProperties(categoryParam) {
     return snapshot.docs.map(mapPropertyDocument).filter((property) => {
       if (!categoryParam) return property.active;
       
-      const propCategory = property.category?.toLowerCase() || "";
-      const targetCategory = categoryParam.toLowerCase();
+      const propCategory = normalizeCategoryLabel(property.category).toLowerCase();
+      const targetCategory = normalizeCategoryLabel(categoryParam).toLowerCase();
       
       const matchesCategory =
         propCategory === targetCategory || 
-        propCategory === "venda e aluguel" || 
-        propCategory === "ambos";
+        propCategory === "venda e aluguel";
         
       return property.active && matchesCategory;
     });
@@ -230,6 +245,7 @@ export const getAllProperties = async () => {
     const properties = snapshot.docs.map((documentSnapshot) => ({
       firestoreId: documentSnapshot.id,
       ...documentSnapshot.data(),
+      category: normalizeCategoryLabel(documentSnapshot.data()?.category),
     }));
 
     return properties.sort((a, b) => {

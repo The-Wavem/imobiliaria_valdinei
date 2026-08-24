@@ -18,7 +18,7 @@ const typeOptions = [
   { value: "terreno", label: "Terreno" },
 ];
 
-export default function FilterBar({ mode = "buy", filters = {}, onChange, onSearch, properties = [] }) {
+export default function FilterBar({ mode = "venda", filters = {}, onChange, onSearch, properties = [] }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [isStuck, setIsStuck] = useState(false);

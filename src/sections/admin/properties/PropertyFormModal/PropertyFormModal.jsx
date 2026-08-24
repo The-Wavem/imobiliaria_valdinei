@@ -19,6 +19,12 @@ import {
   CarFront,
   PlaySquare,
   Wand2,
+  RotateCcw,
+  Unlock,
+  AlertTriangle,
+  ArrowLeft,
+  ArrowRight,
+  Keyboard,
 } from "lucide-react";
 import Button from "@components/ui/Button/Button.jsx";
 import Modal from "@components/ui/Modal/Modal.jsx";
@@ -31,6 +37,7 @@ import styles from "./PropertyFormModal.module.css";
 import { checkCodeExists } from "../../../../services/propertyService.js";
 import { uploadPropertyImage } from "../../../../services/storageService.js";
 import { compressImage } from "../../../../utils/imageUtils.js";
+import { cleanAndFixDescription } from "../../../property-detail/PropertyDescription.jsx";
 
 const formatCurrencyDisplay = (value) => {
   if (value === null || value === undefined || value === "") return "";
@@ -57,7 +64,7 @@ const tabOptions = [
 const categoryOptions = [
   { label: "Selecione", value: "" },
   { label: "Alugar", value: "Alugar" },
-  { label: "Comprar", value: "Comprar" },
+  { label: "Venda", value: "Venda" },
   { label: "Venda e Aluguel", value: "Venda e Aluguel" },
 ];
 
@@ -73,13 +80,209 @@ const baseCondoFeatures = [
 
 const defaultForm = {
   title: "", code: "", price: "", rentPrice: "", condo: "", iptu: "",
+  sobConsulta: false,
   category: "", type: "", cep: "", logradouro: "", numero: "", complemento: "", bairro: "", cidade: "", estado: "",
-  area: "", landArea: "", bedrooms: "", bathrooms: "", parkingSpaces: "", suites: "", unitFloor: "", floors: "", buildings: "", yearBuilt: "", unitsPerFloor: "",
+  area: "", landArea: "", totalArea: "", bedrooms: "", bathrooms: "", parkingSpaces: "", suites: "", unitFloor: "", floors: "", buildings: "", yearBuilt: "", unitsPerFloor: "",
   displayAddress: "All",
   caracteristicas_imovel: [], caracteristicas_condominio: [], photos: [], videos: [], description: "",
   status: "Disponível",
   featured: false,
   syncWithPortal: true
+};
+
+export const isResidentialOrOfficeType = (type) => {
+  if (!type) return true;
+  const clean = String(type).toLowerCase().trim();
+  const exemptList = [
+    "terreno",
+    "lote",
+    "loteamento",
+    "galpão",
+    "galpao",
+    "depósito",
+    "deposito",
+    "armazém",
+    "armazem",
+    "chácara",
+    "chacara",
+    "sítio",
+    "sitio",
+    "fazenda",
+    "área",
+    "area",
+    "garagem",
+    "box",
+  ];
+  return !exemptList.some((exempt) => clean.includes(exempt));
+};
+
+const validateForm = (data) => {
+  const errors = {};
+
+  // Se a sincronização com o Canal Pro estiver DESATIVADA:
+  // As validações rígidas dos portais não são aplicadas.
+  // Apenas o título do imóvel é necessário para identificar o cadastro no CRM/site.
+  if (data.syncWithPortal === false) {
+    if (!data.title || !data.title.trim()) {
+      errors.title = {
+        tab: "basic",
+        tabLabel: "Básico",
+        label: "Título do Imóvel",
+        message: "O título do imóvel é obrigatório.",
+      };
+    }
+    return errors;
+  }
+
+  // 1. Aba Básico
+  if (!data.code || !data.code.trim()) {
+    errors.code = {
+      tab: "basic",
+      tabLabel: "Básico",
+      label: "Código do Imóvel",
+      message: "Código do imóvel é obrigatório para identificação no CRM e Canal Pro.",
+    };
+  }
+
+  if (!data.title || !data.title.trim()) {
+    errors.title = {
+      tab: "basic",
+      tabLabel: "Básico",
+      label: "Título do Imóvel",
+      message: "O título do imóvel é obrigatório.",
+    };
+  }
+
+  if (!data.category) {
+    errors.category = {
+      tab: "basic",
+      tabLabel: "Básico",
+      label: "Transação (Categoria)",
+      message: "Selecione a transação do imóvel (Venda, Alugar ou Ambos).",
+    };
+  }
+
+  if (!data.type || !data.type.trim()) {
+    errors.type = {
+      tab: "basic",
+      tabLabel: "Básico",
+      label: "Tipo de Imóvel",
+      message: "Selecione o tipo do imóvel (ex: Apartamento, Casa, etc.).",
+    };
+  }
+
+  if (!data.sobConsulta || data.syncWithPortal) {
+    if (data.category === "Venda" && (!data.price || Number(data.price) <= 0)) {
+      errors.price = {
+        tab: "basic",
+        tabLabel: "Básico",
+        label: "Preço de Venda",
+        message: "Informe o valor de venda (obrigatório para integração com Canal Pro).",
+      };
+    } else if (data.category === "Alugar" && (!data.rentPrice || Number(data.rentPrice) <= 0)) {
+      errors.rentPrice = {
+        tab: "basic",
+        tabLabel: "Básico",
+        label: "Preço de Aluguel",
+        message: "Informe o valor de aluguel (obrigatório para integração com Canal Pro).",
+      };
+    } else if (data.category === "Venda e Aluguel" && (!data.price || Number(data.price) <= 0) && (!data.rentPrice || Number(data.rentPrice) <= 0)) {
+      errors.price = {
+        tab: "basic",
+        tabLabel: "Básico",
+        label: "Preço (Venda ou Aluguel)",
+        message: "Informe pelo menos um valor de preço para o Canal Pro.",
+      };
+    }
+  }
+
+  // 2. Aba Estrutura
+  if (!data.area || Number(data.area) <= 0) {
+    errors.area = {
+      tab: "structure",
+      tabLabel: "Estrutura",
+      label: "Área Construída / Útil",
+      message: "A área construída / útil (m²) é obrigatória para o Canal Pro e portais.",
+    };
+  }
+
+  const needsBedroomsAndBaths = isResidentialOrOfficeType(data.type);
+  if (needsBedroomsAndBaths) {
+    if (!data.bedrooms || Number(data.bedrooms) < 1) {
+      errors.bedrooms = {
+        tab: "structure",
+        tabLabel: "Estrutura",
+        label: "Quartos",
+        message: "Para este tipo de imóvel (residencial/comercial), o portal ZAP/VivaReal exige pelo menos 1 quarto.",
+      };
+    }
+    if (!data.bathrooms || Number(data.bathrooms) < 1) {
+      errors.bathrooms = {
+        tab: "structure",
+        tabLabel: "Estrutura",
+        label: "Banheiros",
+        message: "Para este tipo de imóvel, o portal ZAP/VivaReal exige pelo menos 1 banheiro (entre 1 e 20).",
+      };
+    } else if (Number(data.bathrooms) > 20) {
+      errors.bathrooms = {
+        tab: "structure",
+        tabLabel: "Estrutura",
+        label: "Banheiros",
+        message: "O número máximo aceito pelo portal ZAP/VivaReal é de 20 banheiros.",
+      };
+    }
+  }
+
+  // 3. Aba Localização
+  const cleanCep = String(data.cep || "").replace(/\D/g, "");
+  if (!cleanCep || cleanCep.length < 8) {
+    errors.cep = {
+      tab: "location",
+      tabLabel: "Localização",
+      label: "CEP",
+      message: "CEP (PostalCode) é obrigatório em todos os envios para o Canal Pro (8 dígitos).",
+    };
+  }
+
+  if (!data.estado || !data.estado.trim()) {
+    errors.estado = {
+      tab: "location",
+      tabLabel: "Localização",
+      label: "Estado (UF)",
+      message: "Estado (UF) é obrigatório para localização no Canal Pro.",
+    };
+  }
+
+  if (!data.cidade || !data.cidade.trim()) {
+    errors.cidade = {
+      tab: "location",
+      tabLabel: "Localização",
+      label: "Cidade",
+      message: "A cidade é obrigatória para localização e Canal Pro.",
+    };
+  }
+
+  if (!data.bairro || !data.bairro.trim()) {
+    errors.bairro = {
+      tab: "location",
+      tabLabel: "Localização",
+      label: "Bairro",
+      message: "O bairro é obrigatório para localização e Canal Pro.",
+    };
+  }
+
+  // 4. Aba Mídias
+  const validPhotos = (data.photos || []).filter(Boolean);
+  if (validPhotos.length === 0) {
+    errors.photos = {
+      tab: "media",
+      tabLabel: "Mídias",
+      label: "Fotos do Imóvel",
+      message: "É obrigatório enviar pelo menos 1 foto do imóvel para o portal e Canal Pro.",
+    };
+  }
+
+  return errors;
 };
 
 const quillModules = {
@@ -94,6 +297,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
   const mode = property ? "edit" : "create";
   const [activeTab, setActiveTab] = useState("basic");
   const [formData, setFormData] = useState(defaultForm);
+  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
   const [availableTypes, setAvailableTypes] = useState(baseTypes);
   const [availablePropertyFeatures, setAvailablePropertyFeatures] = useState(basePropertyFeatures);
   const [availableCondoFeatures, setAvailableCondoFeatures] = useState(baseCondoFeatures);
@@ -115,6 +319,34 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
   const [oversizedPhotosUrls, setOversizedPhotosUrls] = useState([]);
   const [draggedPhotoIndex, setDraggedPhotoIndex] = useState(null);
   const [dragOverIndex, setDragOverIndex] = useState(null);
+  const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(null);
+  const [isTotalAreaCustom, setIsTotalAreaCustom] = useState(false);
+
+  const handleAreaFieldChange = (field, value) => {
+    setFormData((prev) => {
+      const next = { ...prev, [field]: value };
+      if (!isTotalAreaCustom) {
+        const constr = Number(field === "area" ? value : prev.area) || 0;
+        const land = Number(field === "landArea" ? value : prev.landArea) || 0;
+        const sum = constr + land;
+        next.totalArea = sum > 0 ? String(sum) : "";
+      }
+      return next;
+    });
+  };
+
+  const handleTotalAreaChange = (value) => {
+    setIsTotalAreaCustom(true);
+    setFormData((prev) => ({ ...prev, totalArea: value }));
+  };
+
+  const handleResetTotalAreaAuto = () => {
+    setIsTotalAreaCustom(false);
+    const constr = Number(formData.area) || 0;
+    const land = Number(formData.landArea) || 0;
+    const sum = constr + land;
+    setFormData((prev) => ({ ...prev, totalArea: sum > 0 ? String(sum) : "" }));
+  };
 
   const handleFileUpload = async (event) => {
     const files = Array.from(event.target.files);
@@ -163,6 +395,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
     setShowTips(false);
     setShowCancelConfirm(false);
     setActiveTab("basic");
+    setHasAttemptedSubmit(false);
     setIsAddingType(false);
     setNewType("");
     setNewPropertyFeature("");
@@ -170,6 +403,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
     setNewPhotoUrl("");
     setNewVideoUrl("");
     setCoverPhotoIndex(0);
+    setSelectedPhotoIndex(null);
     setIsSaving(false);
     setCepError("");
     setCepSuccess(false);
@@ -177,6 +411,25 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
     setIsGeneratingCode(false);
 
     if (property) {
+      const areaVal = property.area || property.location?.area || "";
+      const landAreaVal = property.landArea || property.location?.landArea || "";
+      const storedTotalArea = property.totalArea || property.location?.totalArea || "";
+
+      const calcSum = (Number(areaVal) || 0) + (Number(landAreaVal) || 0);
+      const autoTotalStr = calcSum > 0 ? String(calcSum) : "";
+
+      let finalTotalArea = storedTotalArea;
+      let isCustom = false;
+
+      if (!storedTotalArea && autoTotalStr) {
+        finalTotalArea = autoTotalStr;
+        isCustom = false;
+      } else if (storedTotalArea && String(storedTotalArea) !== autoTotalStr) {
+        isCustom = true;
+      }
+
+      setIsTotalAreaCustom(isCustom);
+
       setFormData({
         title: property.title || property.content?.summary || "",
         code: property.code || "",
@@ -184,6 +437,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
         rentPrice: property.pricing?.rentPrice || property.rentPrice || "",
         condo: property.pricing?.condo || property.condo || "",
         iptu: property.pricing?.iptu || property.iptu || "",
+        sobConsulta: Boolean(property.sobConsulta || (Number(property.pricing?.price || property.price || 0) === 0 && Number(property.pricing?.rentPrice || property.rentPrice || 0) === 0)),
         category: property.category || "",
         type: property.type || "",
         cep: property.location?.cep || property.cep || "",
@@ -193,8 +447,9 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
         bairro: property.location?.bairro || property.location?.neighborhood || property.neighborhood || "",
         cidade: property.location?.cidade || property.location?.city || property.city || "",
         estado: property.location?.estado || property.location?.state || property.state || "",
-        area: property.area || property.location?.area || "",
-        landArea: property.landArea || property.location?.landArea || "",
+        area: areaVal,
+        landArea: landAreaVal,
+        totalArea: finalTotalArea,
         bedrooms: property.bedrooms || property.location?.bedrooms || "",
         bathrooms: property.bathrooms || property.location?.bathrooms || "",
         parkingSpaces: property.parkingSpaces || property.location?.parkingSpaces || "",
@@ -249,6 +504,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
         });
       }
     } else {
+      setIsTotalAreaCustom(false);
       setFormData(defaultForm);
     }
   }, [isOpen, property]);
@@ -439,6 +695,61 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
     }
   };
 
+  const movePhoto = (fromIndex, toIndex) => {
+    const validPhotos = formData.photos.filter(Boolean);
+    if (toIndex < 0 || toIndex >= validPhotos.length || fromIndex === toIndex) return;
+
+    setFormData((prev) => {
+      const newPhotos = [...prev.photos];
+      const [movedItem] = newPhotos.splice(fromIndex, 1);
+      newPhotos.splice(toIndex, 0, movedItem);
+      return {
+        ...prev,
+        photos: newPhotos,
+        imageUrl: newPhotos[0] || "",
+      };
+    });
+    setSelectedPhotoIndex(toIndex);
+  };
+
+  useEffect(() => {
+    if (activeTab !== "media" || selectedPhotoIndex === null) return;
+
+    const handleGlobalKeyDown = (e) => {
+      const target = e.target;
+      const tag = target?.tagName?.toLowerCase();
+      if (tag === "input" || tag === "textarea" || target?.isContentEditable) {
+        return;
+      }
+
+      const totalPhotos = formData.photos.filter(Boolean).length;
+      if (totalPhotos <= 1) return;
+
+      if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+        e.preventDefault();
+        if (selectedPhotoIndex > 0) {
+          movePhoto(selectedPhotoIndex, selectedPhotoIndex - 1);
+        }
+      } else if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+        e.preventDefault();
+        if (selectedPhotoIndex < totalPhotos - 1) {
+          movePhoto(selectedPhotoIndex, selectedPhotoIndex + 1);
+        }
+      } else if (e.key === "Home") {
+        e.preventDefault();
+        movePhoto(selectedPhotoIndex, 0);
+      } else if (e.key === "End") {
+        e.preventDefault();
+        movePhoto(selectedPhotoIndex, totalPhotos - 1);
+      } else if (e.key === "Escape") {
+        setSelectedPhotoIndex(null);
+      }
+    };
+
+    window.addEventListener("keydown", handleGlobalKeyDown);
+    return () => window.removeEventListener("keydown", handleGlobalKeyDown);
+  }, [activeTab, selectedPhotoIndex, formData.photos]);
+
   const addVideo = (urlValue) => {
     const value = urlValue.trim();
     if (!value) return;
@@ -592,7 +903,40 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
     onClose();
   };
 
+  const formValidationErrors = useMemo(() => {
+    return validateForm(formData);
+  }, [formData]);
+
+  const tabErrorCounts = useMemo(() => {
+    if (!hasAttemptedSubmit) return {};
+    const counts = {};
+    Object.values(formValidationErrors).forEach((err) => {
+      counts[err.tab] = (counts[err.tab] || 0) + 1;
+    });
+    return counts;
+  }, [hasAttemptedSubmit, formValidationErrors]);
+
+  const tabWarnings = useMemo(() => {
+    if (!formData.syncWithPortal) return {};
+    const warnings = {};
+    const descLength = (formData.description || "").length;
+    if (descLength > 3000) {
+      warnings.description = "A descrição ultrapassa 3000 caracteres (não será sincronizada com o Canal Pro)";
+    }
+    return warnings;
+  }, [formData.description, formData.syncWithPortal]);
+
   const handleSave = async () => {
+    setHasAttemptedSubmit(true);
+
+    const errors = validateForm(formData);
+    const errorKeys = Object.keys(errors);
+    if (errorKeys.length > 0) {
+      const firstError = errors[errorKeys[0]];
+      setActiveTab(firstError.tab);
+      return;
+    }
+
     setIsSaving(true);
 
     try {
@@ -606,15 +950,31 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
         }
       }
 
-      if (!formData.photos || formData.photos.length === 0) {
-        alert("É obrigatório enviar pelo menos uma foto do imóvel para integração com os portais.");
-        setActiveTab("media");
-        setIsSaving(false);
-        return;
+      const payload = {
+        ...formData,
+        price: Number(formData.price) || 0,
+        rentPrice: Number(formData.rentPrice) || 0,
+        condo: Number(formData.condo) || 0,
+        iptu: Number(formData.iptu) || 0,
+        area: Number(formData.area) || 0,
+        landArea: Number(formData.landArea) || 0,
+        totalArea: Number(formData.totalArea) || 0,
+        bedrooms: Number(formData.bedrooms) || 0,
+        suites: Number(formData.suites) || 0,
+        bathrooms: Number(formData.bathrooms) || 0,
+        parkingSpaces: Number(formData.parkingSpaces) || 0,
+        floors: Number(formData.floors) || 0,
+        unitsPerFloor: Number(formData.unitsPerFloor) || 0,
+        buildings: Number(formData.buildings) || 0,
+        yearBuilt: Number(formData.yearBuilt) || 0,
+        sobConsulta: Boolean(formData.sobConsulta),
+      };
+      
+      // Sanitiza descrição reunindo palavras divididas por quebras de linha e limpando hífens macios
+      if (payload.description) {
+        payload.description = cleanAndFixDescription(payload.description);
       }
 
-      const payload = { ...formData };
-      
       // Filtra URLs inválidas
       payload.photos = payload.photos.filter(Boolean);
       
@@ -782,16 +1142,29 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
               className={styles.tabs}
               aria-label="Navegação das abas do formulário"
             >
-              {tabOptions.map((tab) => (
-                <button
-                  key={tab.id}
-                  type="button"
-                  className={`${styles.tabButton} ${activeTab === tab.id ? styles.tabButtonActive : ""}`.trim()}
-                  onClick={() => setActiveTab(tab.id)}
-                >
-                  {tab.label}
-                </button>
-              ))}
+              {tabOptions.map((tab) => {
+                const errorCount = tabErrorCounts[tab.id];
+                const warningMsg = tabWarnings[tab.id];
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    className={`${styles.tabButton} ${activeTab === tab.id ? styles.tabButtonActive : ""} ${errorCount ? styles.tabButtonError : warningMsg ? styles.tabButtonWarning : ""}`.trim()}
+                    onClick={() => setActiveTab(tab.id)}
+                  >
+                    <span>{tab.label}</span>
+                    {errorCount > 0 ? (
+                      <span className={styles.tabErrorBadge} title={`${errorCount} campo(s) obrigatório(s) pendente(s)`}>
+                        {errorCount}
+                      </span>
+                    ) : warningMsg ? (
+                      <span className={styles.tabWarningBadge} title={warningMsg}>
+                        ⚠️
+                      </span>
+                    ) : null}
+                  </button>
+                );
+              })}
             </nav>
 
             <label className={styles.syncToggleLabel} title="Enviar este imóvel para integração com o Canal Pro">
@@ -811,15 +1184,43 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
 
         <div className={styles.modalBodyLayout}>
           <div className={styles.modalMainContent}>
+            {hasAttemptedSubmit && Object.keys(formValidationErrors).length > 0 && (
+              <div className={styles.validationAlertBanner}>
+                <div className={styles.validationAlertHeader}>
+                  <AlertTriangle className={styles.validationAlertIcon} size={22} />
+                  <div className={styles.validationAlertContent}>
+                    <strong>Atenção: Não é possível salvar o imóvel ainda.</strong>
+                    <p>Existem campos obrigatórios para o site e Canal Pro pendentes. Clique em um item abaixo para ir direto até a aba correspondente:</p>
+                  </div>
+                </div>
+                <div className={styles.validationErrorChips}>
+                  {Object.entries(formValidationErrors).map(([key, err]) => (
+                    <button
+                      key={key}
+                      type="button"
+                      className={styles.errorChip}
+                      onClick={() => setActiveTab(err.tab)}
+                      title={`Ir para aba ${err.tabLabel}`}
+                    >
+                      <span className={styles.errorChipTab}>{err.tabLabel}:</span>
+                      <span className={styles.errorChipLabel}>{err.label}</span>
+                      <ArrowRight size={13} />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
           {activeTab === "basic" ? (
             <section className={styles.tabPanel}>
             <div className={styles.formGrid}>
               <div className={styles.inputWithGenerate}>
                 <Input
-                  label="Título"
+                  label="Título *"
                   placeholder="Ex: Casa térrea com piscina"
                   value={formData.title}
                   onChange={(event) => updateField("title", event.target.value)}
+                  error={hasAttemptedSubmit && formValidationErrors.title ? formValidationErrors.title.message : undefined}
                 />
                 <Button 
                   type="button" 
@@ -833,12 +1234,12 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
               </div>
               <div className={styles.codeGroupContainer}>
                 <Input
-                  label="Código"
+                  label={formData.syncWithPortal ? "Código do Imóvel *" : "Código do Imóvel"}
                   placeholder="Ex: VLD-1204"
                   value={formData.code}
                   onChange={(event) => updateField("code", event.target.value)}
                   onBlur={handleCodeBlur}
-                  error={codeError}
+                  error={codeError || (hasAttemptedSubmit && formValidationErrors.code ? formValidationErrors.code.message : undefined)}
                   className={styles.codeInput}
                 />
                 <Button 
@@ -853,32 +1254,54 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
               </div>
               <div className={styles.selectRow}>
                 <Select
-                  label="Categoria"
+                  label={formData.syncWithPortal ? "Categoria *" : "Categoria"}
                   value={formData.category}
                   onChange={(value) => updateField("category", value)}
                   options={categoryOptions}
+                  error={hasAttemptedSubmit && formValidationErrors.category ? formValidationErrors.category.message : undefined}
                 />
               </div>
 
-              {(formData.category === "Comprar" || formData.category === "Venda e Aluguel") && (
+              {(formData.category === "Venda" || formData.category === "Venda e Aluguel") && (
                 <Input
-                  label="Preço de Venda"
+                  label={formData.syncWithPortal ? "Preço de Venda *" : "Preço de Venda"}
                   type="text"
                   placeholder="R$ 0"
                   value={formatCurrencyDisplay(formData.price)}
                   onChange={(event) => handleCurrencyChange("price", event)}
+                  error={hasAttemptedSubmit && formValidationErrors.price ? formValidationErrors.price.message : undefined}
                 />
               )}
 
               {(formData.category === "Alugar" || formData.category === "Venda e Aluguel") && (
                 <Input
-                  label="Preço de Aluguel"
+                  label={formData.syncWithPortal ? "Preço de Aluguel *" : "Preço de Aluguel"}
                   type="text"
                   placeholder="R$ 0"
                   value={formatCurrencyDisplay(formData.rentPrice)}
                   onChange={(event) => handleCurrencyChange("rentPrice", event)}
+                  error={hasAttemptedSubmit && formValidationErrors.rentPrice ? formValidationErrors.rentPrice.message : undefined}
                 />
               )}
+
+              <div className={`${styles.sobConsultaContainer} ${formData.sobConsulta ? styles.sobConsultaContainerActive : ''}`}>
+                <label className={styles.sobConsultaLabel} title="Marcar para exibir 'Sob consulta' no site">
+                  <input
+                    type="checkbox"
+                    checked={formData.sobConsulta}
+                    onChange={(e) => updateField("sobConsulta", e.target.checked)}
+                    className={styles.sobConsultaCheckbox}
+                  />
+                  <div className={styles.sobConsultaTextWrap}>
+                    <span className={styles.sobConsultaText}>
+                      Exibir valor como <strong>"Sob Consulta"</strong> no site
+                    </span>
+                    <span className={styles.sobConsultaHint}>
+                      O valor numérico preenchido acima continuará sendo sincronizado com o Canal Pro, mas no site aparecerá <em>"Sob consulta"</em>.
+                    </span>
+                  </div>
+                </label>
+              </div>
 
               <Input
                 label="Condomínio"
@@ -905,7 +1328,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                   />
                   <div className={styles.featuredToggleText}>
                     <Star size={16} className={formData.featured ? styles.starActive : ""} />
-                    <span>Destacar este imóvel na Home e no topo das buscas</span>
+                    <span>Destacar na página inicial</span>
                   </div>
                 </label>
               </div>
@@ -966,10 +1389,11 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                   ) : (
                     <div className={styles.selectRow}>
                       <Select
-                        label="Tipo"
+                        label={formData.syncWithPortal ? "Tipo de Imóvel *" : "Tipo de Imóvel"}
                         options={typeOptions}
                         value={formData.type}
                         onChange={(value) => updateField("type", value)}
+                        error={hasAttemptedSubmit && formValidationErrors.type ? formValidationErrors.type.message : undefined}
                       />
                       <Button
                         type="button"
@@ -992,12 +1416,13 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
           <section className={styles.tabPanel}>
             <div className={styles.formGrid}>
               <Input
-                label="Área Construída (m²)"
+                label={formData.syncWithPortal ? "Área Construída / Útil (m²) *" : "Área Construída / Útil (m²)"}
                 icon={Ruler}
                 type="number"
                 placeholder="Ex: 150"
                 value={formData.area}
-                onChange={(event) => updateField("area", event.target.value)}
+                onChange={(event) => handleAreaFieldChange("area", event.target.value)}
+                error={hasAttemptedSubmit && formValidationErrors.area ? formValidationErrors.area.message : undefined}
               />
               <Input
                 label="Área do Terreno (m²)"
@@ -1005,47 +1430,101 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                 type="number"
                 placeholder="Ex: 300 (opcional)"
                 value={formData.landArea}
-                onChange={(event) => updateField("landArea", event.target.value)}
+                onChange={(event) => handleAreaFieldChange("landArea", event.target.value)}
               />
+              <div className={styles.totalAreaContainer}>
+                <Input
+                  label="Área Total (m²)"
+                  icon={Ruler}
+                  type="number"
+                  placeholder="Ex: 450 (Cálculo automático)"
+                  value={formData.totalArea}
+                  onChange={(event) => handleTotalAreaChange(event.target.value)}
+                />
+                <div className={styles.totalAreaHelp}>
+                  {isTotalAreaCustom ? (
+                    <button
+                      type="button"
+                      className={styles.resetTotalBtn}
+                      onClick={handleResetTotalAreaAuto}
+                      title="Clique para voltar ao cálculo automático da soma"
+                    >
+                      <RotateCcw size={13} /> Recalcular soma automática
+                    </button>
+                  ) : (
+                    <div className={styles.autoCalcGroup}>
+                      <span className={styles.autoCalcBadge}>
+                        ✨ Soma automática (Construída + Terreno)
+                      </span>
+                      <button
+                        type="button"
+                        className={styles.unlockTotalBtn}
+                        onClick={() => setIsTotalAreaCustom(true)}
+                        title="Desbloquear para editar a área total manualmente"
+                      >
+                        <Unlock size={12} /> Editar manualmente
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
               <Input
-                label="Quartos"
+                label={formData.syncWithPortal && isResidentialOrOfficeType(formData.type) ? "Quartos *" : "Quartos"}
                 icon={BedDouble}
                 type="number"
+                min="0"
                 placeholder="0"
                 value={formData.bedrooms}
                 onChange={(event) =>
                   updateField("bedrooms", event.target.value)
                 }
+                error={hasAttemptedSubmit && formValidationErrors.bedrooms ? formValidationErrors.bedrooms.message : undefined}
+                warning={formData.syncWithPortal && !isResidentialOrOfficeType(formData.type) && (!formData.bedrooms || Number(formData.bedrooms) === 0)}
+                warningText={formData.syncWithPortal && !isResidentialOrOfficeType(formData.type) && (!formData.bedrooms || Number(formData.bedrooms) === 0) ? "ℹ️ 0 quartos (imóvel isento - será enviado 0)" : undefined}
+                success={Number(formData.bedrooms) > 0}
               />
               <Input
                 label="Suítes"
                 icon={BedDouble}
                 type="number"
+                min="0"
                 placeholder="0"
                 value={formData.suites}
                 onChange={(event) =>
                   updateField("suites", event.target.value)
                 }
+                warning={formData.syncWithPortal && (!formData.suites || Number(formData.suites) === 0)}
+                warningText={formData.syncWithPortal && (!formData.suites || Number(formData.suites) === 0) ? "ℹ️ 0 suítes (será enviado 0 para a API/Canal Pro)" : undefined}
+                success={Number(formData.suites) > 0}
               />
               <Input
-                label="Banheiros"
+                label={formData.syncWithPortal && isResidentialOrOfficeType(formData.type) ? "Banheiros *" : "Banheiros"}
                 icon={Bath}
                 type="number"
+                min="0"
                 placeholder="0"
                 value={formData.bathrooms}
                 onChange={(event) =>
                   updateField("bathrooms", event.target.value)
                 }
+                error={hasAttemptedSubmit && formValidationErrors.bathrooms ? formValidationErrors.bathrooms.message : undefined}
+                warning={formData.syncWithPortal && !isResidentialOrOfficeType(formData.type) && (!formData.bathrooms || Number(formData.bathrooms) === 0)}
+                warningText={formData.syncWithPortal && !isResidentialOrOfficeType(formData.type) && (!formData.bathrooms || Number(formData.bathrooms) === 0) ? "ℹ️ 0 banheiros (imóvel isento - será enviado 0)" : undefined}
+                success={Number(formData.bathrooms) > 0}
               />
               <Input
                 label="Vagas"
                 icon={CarFront}
                 type="number"
+                min="0"
                 placeholder="0"
                 value={formData.parkingSpaces}
                 onChange={(event) =>
                   updateField("parkingSpaces", event.target.value)
                 }
+                warning={formData.syncWithPortal && (!formData.parkingSpaces || Number(formData.parkingSpaces) === 0)}
+                warningText={formData.syncWithPortal && (!formData.parkingSpaces || Number(formData.parkingSpaces) === 0) ? "ℹ️ 0 vagas (será enviado 0 para a API/Canal Pro)" : undefined}
+                success={Number(formData.parkingSpaces) > 0}
               />
               <Input
                 label="Andar do imóvel"
@@ -1085,7 +1564,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                 }
               />
               <Input
-                label="Nº de Torres (Buildings)"
+                label="Nº de Torres / Edifícios"
                 type="number"
                 placeholder="Ex: 2"
                 value={formData.buildings}
@@ -1120,12 +1599,12 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                 onChange={(value) => updateField("displayAddress", value)}
               />
               <Input
-                label="CEP"
-                placeholder="Apenas números"
+                label={formData.syncWithPortal ? "CEP *" : "CEP"}
+                placeholder="Apenas números (8 dígitos)"
                 value={formData.cep}
                 onChange={handleCepChange}
                 maxLength={8}
-                error={cepError}
+                error={cepError || (hasAttemptedSubmit && formValidationErrors.cep ? formValidationErrors.cep.message : undefined)}
                 success={cepSuccess}
               />
               <Input
@@ -1148,24 +1627,27 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                 onChange={(event) => updateField("complemento", event.target.value)}
               />
               <Input
-                label="Bairro"
+                label={formData.syncWithPortal ? "Bairro *" : "Bairro"}
                 placeholder="Nome do bairro"
                 value={formData.bairro}
                 onChange={(event) =>
                   updateField("bairro", event.target.value)
                 }
+                error={hasAttemptedSubmit && formValidationErrors.bairro ? formValidationErrors.bairro.message : undefined}
               />
               <Input
-                label="Cidade"
+                label={formData.syncWithPortal ? "Cidade *" : "Cidade"}
                 placeholder="Sua cidade"
                 value={formData.cidade}
                 onChange={(event) => updateField("cidade", event.target.value)}
+                error={hasAttemptedSubmit && formValidationErrors.cidade ? formValidationErrors.cidade.message : undefined}
               />
               <Input
-                label="Estado (UF)"
+                label={formData.syncWithPortal ? "Estado (UF) *" : "Estado (UF)"}
                 placeholder="Ex: SP"
                 value={formData.estado}
                 onChange={(event) => updateField("estado", event.target.value)}
+                error={hasAttemptedSubmit && formValidationErrors.estado ? formValidationErrors.estado.message : undefined}
                 maxLength={2}
               />
             </div>
@@ -1272,6 +1754,12 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
 
         {activeTab === "media" ? (
           <section className={styles.tabPanel}>
+            {hasAttemptedSubmit && formValidationErrors.photos && (
+              <div className={styles.mediaErrorBanner}>
+                <AlertTriangle size={18} />
+                <span>{formValidationErrors.photos.message}</span>
+              </div>
+            )}
             <div className={styles.mediaDropzone}>
               <input
                 type="file"
@@ -1343,17 +1831,42 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
             </div>
 
             <div className={styles.galleryShell}>
-              <div className={styles.galleryGrid}>
+              {formData.photos.filter(Boolean).length > 1 && (
+                <div className={styles.keyboardTipBanner}>
+                  <Keyboard size={18} className={styles.keyboardTipIcon} />
+                  <div className={styles.keyboardTipContent}>
+                    <span>
+                      <strong>Controle por Teclado:</strong> Clique em uma foto e use as setas <strong>←</strong> e <strong>→</strong> do teclado para mudar sua posição rapidamente (ou <strong>Home</strong> para definir como Capa).
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              <div className={styles.galleryGrid} onClick={() => setSelectedPhotoIndex(null)}>
                 {formData.photos.filter(Boolean).map((photoUrl, index) => {
                   const isCover = index === 0;
+                  const isSelected = selectedPhotoIndex === index;
                   const isOversized = oversizedPhotosUrls.includes(photoUrl);
                   const isDragging = draggedPhotoIndex === index;
                   const isDragOver = dragOverIndex === index;
+                  const totalPhotos = formData.photos.filter(Boolean).length;
                   
                   return (
                     <div
                       key={`${photoUrl}-${index}`}
+                      id={`photo-card-${index}`}
+                      tabIndex={0}
                       draggable
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedPhotoIndex(isSelected ? null : index);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          setSelectedPhotoIndex(isSelected ? null : index);
+                        }
+                      }}
                       onDragStart={() => setDraggedPhotoIndex(index)}
                       onDragOver={(e) => { e.preventDefault(); setDragOverIndex(index); }}
                       onDragLeave={() => setDragOverIndex(null)}
@@ -1363,13 +1876,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                           setDragOverIndex(null);
                           return;
                         }
-                        setFormData((prev) => {
-                          const newPhotos = [...prev.photos];
-                          const temp = newPhotos[draggedPhotoIndex];
-                          newPhotos[draggedPhotoIndex] = newPhotos[index];
-                          newPhotos[index] = temp;
-                          return { ...prev, photos: newPhotos };
-                        });
+                        movePhoto(draggedPhotoIndex, index);
                         setDraggedPhotoIndex(null);
                         setDragOverIndex(null);
                       }}
@@ -1377,12 +1884,52 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                         setDraggedPhotoIndex(null);
                         setDragOverIndex(null);
                       }}
-                      className={`${styles.thumbnailCard} ${isCover ? styles.thumbnailCardCover : ""} ${isDragging ? styles.thumbnailCardDragging : ""} ${isDragOver ? styles.thumbnailCardDragOver : ""}`}
+                      className={`${styles.thumbnailCard} ${isCover ? styles.thumbnailCardCover : ""} ${isSelected ? styles.thumbnailCardSelected : ""} ${isDragging ? styles.thumbnailCardDragging : ""} ${isDragOver ? styles.thumbnailCardDragOver : ""}`}
                     >
                       <img
                         src={photoUrl || undefined}
                         alt={`Mídia ${index + 1} do imóvel`}
                       />
+
+                      <span className={`${styles.photoOrderBadge} ${isSelected ? styles.photoOrderBadgeSelected : ""}`}>
+                        #{index + 1}
+                      </span>
+
+                      {isSelected && (
+                        <div className={styles.selectedOverlay}>
+                          <span className={styles.selectedBadge}>
+                            <Keyboard size={11} /> Ativa
+                          </span>
+                          <div className={styles.navControls}>
+                            <button
+                              type="button"
+                              className={styles.navArrowBtn}
+                              disabled={index === 0}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                movePhoto(index, index - 1);
+                              }}
+                              title="Mover para esquerda (←)"
+                              aria-label="Mover foto para esquerda"
+                            >
+                              <ArrowLeft size={13} />
+                            </button>
+                            <button
+                              type="button"
+                              className={styles.navArrowBtn}
+                              disabled={index === totalPhotos - 1}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                movePhoto(index, index + 1);
+                              }}
+                              title="Mover para direita (→)"
+                              aria-label="Mover foto para direita"
+                            >
+                              <ArrowRight size={13} />
+                            </button>
+                          </div>
+                        </div>
+                      )}
 
                       {isOversized && (
                         <div className={styles.oversizedBadge} title="Foto acima de 7MB - Não será enviada ao Canal Pro">
@@ -1393,15 +1940,10 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                       <button
                         type="button"
                         className={`${styles.coverStarButton} ${isCover ? styles.coverStarButtonActive : styles.coverStarButtonInactive}`}
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           if (index !== 0) {
-                            setFormData((prev) => {
-                              const newPhotos = [...prev.photos];
-                              const temp = newPhotos[index];
-                              newPhotos[index] = newPhotos[0];
-                              newPhotos[0] = temp;
-                              return { ...prev, photos: newPhotos };
-                            });
+                            movePhoto(index, 0);
                           }
                         }}
                         aria-label={isCover ? "Capa atual" : "Definir como capa"}
@@ -1417,12 +1959,14 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                       <button
                         type="button"
                         className={styles.removePhotoButton}
-                        onClick={() => {
-                           setFormData(prev => {
-                             const newPhotos = [...prev.photos];
-                             newPhotos.splice(index, 1);
-                             return { ...prev, photos: newPhotos };
-                           });
+                        onClick={(e) => {
+                           e.stopPropagation();
+                           if (selectedPhotoIndex === index) {
+                             setSelectedPhotoIndex(null);
+                           } else if (selectedPhotoIndex !== null && selectedPhotoIndex > index) {
+                             setSelectedPhotoIndex(selectedPhotoIndex - 1);
+                           }
+                           removePhoto(index);
                         }}
                         aria-label={`Remover mídia ${index + 1}`}
                       >
@@ -1501,27 +2045,30 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                     Gerar Descrição Automática
                   </Button>
                 </div>
-                <div className={`${styles.quillContainer} ${(formData.description || '').length > 3000 ? styles.quillWarning : (formData.description || '').length >= 2900 ? styles.quillWarning : ''}`}>
+
+                {(formData.syncWithPortal && (formData.description || '').length > 3000) && (
+                  <div className={styles.descriptionWarningAlert}>
+                    <AlertTriangle size={18} style={{ flexShrink: 0 }} />
+                    <span>
+                      <strong>Atenção:</strong> A descrição ultrapassa 3000 caracteres (atual: <strong>{(formData.description || '').length}</strong>). Este imóvel ficará visível no seu site, mas não será sincronizado com o Canal Pro até que o texto seja encurtado.
+                    </span>
+                  </div>
+                )}
+
+                <div className={`${styles.quillContainer} ${formData.syncWithPortal && (formData.description || '').length > 3000 ? styles.quillWarning : formData.syncWithPortal && (formData.description || '').length >= 2900 ? styles.quillWarning : ''}`}>
                   <ReactQuill
                     theme="snow"
                     value={formData.description}
                     onChange={(content) => setFormData((prev) => ({ ...prev, description: content }))}
                     modules={quillModules}
-                    maxLength={3000}
                     placeholder="Descreva o imóvel com detalhes, diferenciais, posicionamento solar, acabamentos e contexto de uso."
                   />
                 </div>
                 <div className={styles.charCounterWrap}>
-                  <span className={`${styles.charCounter} ${(formData.description || '').length > 3000 ? styles.charCounterWarning : ''}`}>
+                  <span className={`${styles.charCounter} ${formData.syncWithPortal && (formData.description || '').length > 3000 ? styles.charCounterWarning : ''}`}>
                     {(formData.description || '').length} / 3000
                   </span>
                 </div>
-                
-                {(formData.description || '').length > 3000 && (
-                  <div className={styles.descriptionWarningAlert}>
-                    <strong>Atenção:</strong> A descrição ultrapassa 3000 caracteres. Este imóvel ficará visível no seu site, mas não será sincronizado com o Canal Pro.
-                  </div>
-                )}
               </div>
             </div>
           </section>

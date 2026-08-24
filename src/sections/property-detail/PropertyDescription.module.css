@@ -2,49 +2,59 @@
   padding: 0;
   border-bottom: 0;
 }
+
 .subtitle {
-	text-transform: uppercase;
-	font-weight: 700;
-	letter-spacing: 0.1em;
-	color: var(--color-primary);
-	margin-bottom: 1rem;
-	font-family: var(--font-display);
-	font-size: 0.8rem;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--color-primary);
+  margin-bottom: 1rem;
+  font-family: var(--font-display);
+  font-size: 0.8rem;
 }
+
 .desc p {
   color: var(--text-color);
   line-height: 1.6;
+  white-space: normal !important;
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
+  hyphens: none !important;
+  -webkit-hyphens: none !important;
 }
 
-.richTextContainer {
-  margin-top: 1rem;
-}
-
-.section {
-  padding: 0;
-  border-bottom: 0;
-}
-.subtitle {
-	text-transform: uppercase;
-	font-weight: 700;
-	letter-spacing: 0.1em;
-	color: var(--color-primary);
-	margin-bottom: 1rem;
-	font-family: var(--font-display);
-	font-size: 0.8rem;
-}
-.desc p {
-  color: var(--text-color);
-  line-height: 1.6;
+.propertyDescription {
+  white-space: normal !important;
+  overflow-wrap: break-word !important;
+  word-break: normal !important;
+  hyphens: none !important;
+  -webkit-hyphens: none !important;
 }
 
 .richTextContainer {
   margin-top: 1rem;
   width: 100%;
   max-width: 100%;
-  word-break: break-word;
-  overflow-wrap: break-word;
+  white-space: normal !important;
+  overflow-wrap: break-word !important;
+  word-break: normal !important;
+  hyphens: none !important;
+  -webkit-hyphens: none !important;
+}
+
+.richTextContainer p,
+.richTextContainer span,
+.richTextContainer div,
+.richTextContainer li,
+.richTextContainer strong,
+.richTextContainer em,
+.richTextContainer b,
+.richTextContainer i {
   white-space: normal;
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
+  hyphens: none !important;
+  -webkit-hyphens: none !important;
 }
 
 .richTextContainer p {
@@ -57,7 +67,8 @@
   margin-bottom: 0;
 }
 
-.richTextContainer strong {
+.richTextContainer strong,
+.richTextContainer b {
   font-weight: bold;
 }
 
@@ -94,14 +105,16 @@
   }
   
   .richTextContainer {
-    word-break: break-word;
-    overflow-wrap: break-word;
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+    hyphens: none !important;
     max-width: 100%;
     box-sizing: border-box;
   }
 
   .desc p, .richTextContainer p {
-    word-break: break-word;
-    overflow-wrap: break-word;
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+    hyphens: none !important;
   }
 }

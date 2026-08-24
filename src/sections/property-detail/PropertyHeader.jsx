@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { MapPin, Share2, Check } from "lucide-react";
+import { MapPin, Share2 } from "lucide-react";
 import styles from "./PropertyHeader.module.css";
-import { incrementPropertyShares } from "../../services/propertyService.js";
+import ShareModal from "./ShareModal.jsx";
 
 export default function PropertyHeader({ 
   title, 
@@ -11,39 +11,10 @@ export default function PropertyHeader({
   rentPrice,
   condo,
   iptu,
-  category 
+  category,
+  sobConsulta,
 }) {
-  const [copied, setCopied] = useState(false);
-
-  const handleShare = async () => {
-    const url = window.location.href;
-    const shareData = {
-      title: `Imóvel: ${title}`,
-      text: `Confira este imóvel: ${title} em ${location}`,
-      url: url,
-    };
-
-    try {
-      let shared = false;
-      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
-        await navigator.share(shareData);
-        shared = true;
-      } else {
-        await navigator.clipboard.writeText(url);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-        shared = true;
-      }
-      
-      if (shared && propertyId) {
-        await incrementPropertyShares(propertyId);
-      }
-    } catch (err) {
-      if (err.name !== "AbortError") {
-        console.error("Erro ao compartilhar:", err);
-      }
-    }
-  };
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   return (
     <div className={styles.header}>
@@ -55,37 +26,25 @@ export default function PropertyHeader({
         <div className={styles.mobilePriceCard}>
           {(category === "Venda e Aluguel" || category === "Ambos") ? (
             <>
-              {price > 0 && (
-                <div className={styles.priceRow}>
-                  <span className={styles.priceLabel}>Venda</span>
-                  <span className={styles.priceValue}>R$ {price.toLocaleString("pt-BR")}</span>
-                </div>
-              )}
-              {rentPrice > 0 && (
-                <div className={styles.priceRow}>
-                  <span className={styles.priceLabel}>Aluguel</span>
-                  <span className={styles.priceValue}>R$ {rentPrice.toLocaleString("pt-BR")}/mês</span>
-                </div>
-              )}
+              <div className={styles.priceRow}>
+                <span className={styles.priceLabel}>Venda</span>
+                <span className={styles.priceValue}>{!sobConsulta && price > 0 ? `R$ ${price.toLocaleString("pt-BR")}` : "Sob consulta"}</span>
+              </div>
+              <div className={styles.priceRow}>
+                <span className={styles.priceLabel}>Aluguel</span>
+                <span className={styles.priceValue}>{!sobConsulta && rentPrice > 0 ? `R$ ${rentPrice.toLocaleString("pt-BR")}/mês` : "Sob consulta"}</span>
+              </div>
             </>
           ) : category === "Alugar" ? (
-            <>
-              {(rentPrice > 0 || price > 0) && (
-                <div className={styles.priceRow}>
-                  <span className={styles.priceLabel}>Aluguel</span>
-                  <span className={styles.priceValue}>R$ {(rentPrice || price).toLocaleString("pt-BR")}/mês</span>
-                </div>
-              )}
-            </>
+            <div className={styles.priceRow}>
+              <span className={styles.priceLabel}>Aluguel</span>
+              <span className={styles.priceValue}>{!sobConsulta && (rentPrice > 0 || price > 0) ? `R$ ${(rentPrice || price).toLocaleString("pt-BR")}/mês` : "Sob consulta"}</span>
+            </div>
           ) : (
-            <>
-              {price > 0 && (
-                <div className={styles.priceRow}>
-                  <span className={styles.priceLabel}>Venda</span>
-                  <span className={styles.priceValue}>R$ {price.toLocaleString("pt-BR")}</span>
-                </div>
-              )}
-            </>
+            <div className={styles.priceRow}>
+              <span className={styles.priceLabel}>Venda</span>
+              <span className={styles.priceValue}>{!sobConsulta && price > 0 ? `R$ ${price.toLocaleString("pt-BR")}` : "Sob consulta"}</span>
+            </div>
           )}
 
           {(condo > 0 || iptu > 0) && (
@@ -98,11 +57,24 @@ export default function PropertyHeader({
         </div>
       </div>
       <div>
-        <button className={styles.shareButton} onClick={handleShare}>
-          {copied ? <Check size={16} /> : <Share2 size={16} />}
-          <span>{copied ? "Link Copiado" : "Compartilhar"}</span>
+        <button
+          type="button"
+          className={styles.shareButton} 
+          onClick={() => setIsShareModalOpen(true)}
+          aria-label="Abrir opções de compartilhamento"
+        >
+          <Share2 size={16} />
+          <span>Compartilhar</span>
         </button>
       </div>
+
+      <ShareModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        title={title}
+        location={location}
+        propertyId={propertyId}
+      />
     </div>
   );
 }
