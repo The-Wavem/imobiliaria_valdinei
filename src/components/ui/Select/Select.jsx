@@ -13,6 +13,7 @@ export default function Select({
   compact = false,
   contentClassName = "",
   statusColor = "",
+  error,
 }) {
   const selectableOptions = options;
   const [open, setOpen] = useState(false);
@@ -27,55 +28,58 @@ export default function Select({
 
   const selectedOption = options.find((option) => option.value === value);
   const displayValue = selectedOption ? selectedOption.label : "Selecione...";
-  const containerClassName = `${styles.container} ${compact ? styles.compact : ""} ${className}`.trim();
+  const containerClassName = `${styles.container} ${compact ? styles.compact : ""} ${error ? styles.containerError : ""} ${className}`.trim();
   const statusColorDataAttr = statusColor || undefined;
 
   return (
-    <Popover.Root open={open} onOpenChange={setOpen} modal={false}>
-      <Popover.Trigger type="button" className={containerClassName} data-status-color={statusColorDataAttr}>
-        <div className={styles.visualLayout}>
-          {Icon ? <Icon className={styles.icon} size={20} /> : null}
+    <div className={styles.wrapper}>
+      <Popover.Root open={open} onOpenChange={setOpen} modal={false}>
+        <Popover.Trigger type="button" className={containerClassName} data-status-color={statusColorDataAttr}>
+          <div className={styles.visualLayout}>
+            {Icon ? <Icon className={styles.icon} size={20} /> : null}
 
-          <div className={styles.textStack}>
-            <span className={styles.label}>{label}</span>
-            <span className={styles.value}>{displayValue}</span>
+            <div className={styles.textStack}>
+              <span className={styles.label}>{label}</span>
+              <span className={styles.value}>{displayValue}</span>
+            </div>
+
+            <span aria-hidden="true">
+              <ChevronDown className={styles.arrow} size={20} />
+            </span>
           </div>
+        </Popover.Trigger>
 
-          <span aria-hidden="true">
-            <ChevronDown className={styles.arrow} size={20} />
-          </span>
-        </div>
-      </Popover.Trigger>
-
-      <Popover.Portal>
-        <Popover.Content
-          className={`${styles.content} ${contentClassName}`.trim()}
-          data-status-color={statusColorDataAttr}
-          sideOffset={10}
-          align="start"
-        >
-          <div className={styles.viewport}>
-            {selectableOptions.map((option) => {
-              const isSelected = option.value === value;
-              return (
-                <button
-                  type="button"
-                  key={option.value}
-                  className={`${styles.item} ${isSelected ? styles.itemSelected : ""}`.trim()}
-                  onClick={() => handleOptionSelect(option.value)}
-                >
-                  {isSelected && (
-                    <span className={styles.itemIndicator} aria-hidden="true">
-                      <Check size={16} />
-                    </span>
-                  )}
-                  <span>{option.label}</span>
-                </button>
-              );
-            })}
-          </div>
-        </Popover.Content>
-      </Popover.Portal>
-    </Popover.Root>
+        <Popover.Portal>
+          <Popover.Content
+            className={`${styles.content} ${contentClassName}`.trim()}
+            data-status-color={statusColorDataAttr}
+            sideOffset={10}
+            align="start"
+          >
+            <div className={styles.viewport}>
+              {selectableOptions.map((option) => {
+                const isSelected = option.value === value;
+                return (
+                  <button
+                    type="button"
+                    key={option.value}
+                    className={`${styles.item} ${isSelected ? styles.itemSelected : ""}`.trim()}
+                    onClick={() => handleOptionSelect(option.value)}
+                  >
+                    {isSelected && (
+                      <span className={styles.itemIndicator} aria-hidden="true">
+                        <Check size={16} />
+                      </span>
+                    )}
+                    <span>{option.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </Popover.Content>
+        </Popover.Portal>
+      </Popover.Root>
+      {error && <span className={styles.errorText}>{error}</span>}
+    </div>
   );
 }

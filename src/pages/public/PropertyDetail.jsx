@@ -190,6 +190,7 @@ export default function PropertyDetail() {
               condo={property.pricing?.condo || property.pricing?.condominio || property.condo || 0}
               iptu={property.pricing?.iptu || property.iptu || 0}
               category={property.category}
+              sobConsulta={property.sobConsulta}
             />
           </MotionDiv>
           <MotionDiv variants={itemVariants}>
@@ -225,6 +226,7 @@ export default function PropertyDetail() {
               category={property.category}
               condo={property.pricing?.condo || property.pricing?.condominio || property.condo || 0}
               iptu={property.pricing?.iptu || property.iptu || 0}
+              sobConsulta={property.sobConsulta}
               propertyTitle={property.title}
               propertyId={property.id}
               status={property.status}

@@ -20,6 +20,9 @@ import {
   PlaySquare,
   Wand2,
   RotateCcw,
+  Unlock,
+  AlertTriangle,
+  ArrowRight,
 } from "lucide-react";
 import Button from "@components/ui/Button/Button.jsx";
 import Modal from "@components/ui/Modal/Modal.jsx";
@@ -75,6 +78,7 @@ const baseCondoFeatures = [
 
 const defaultForm = {
   title: "", code: "", price: "", rentPrice: "", condo: "", iptu: "",
+  sobConsulta: false,
   category: "", type: "", cep: "", logradouro: "", numero: "", complemento: "", bairro: "", cidade: "", estado: "",
   area: "", landArea: "", totalArea: "", bedrooms: "", bathrooms: "", parkingSpaces: "", suites: "", unitFloor: "", floors: "", buildings: "", yearBuilt: "", unitsPerFloor: "",
   displayAddress: "All",
@@ -82,6 +86,186 @@ const defaultForm = {
   status: "Disponível",
   featured: false,
   syncWithPortal: true
+};
+
+export const isResidentialOrOfficeType = (type) => {
+  if (!type) return true;
+  const clean = String(type).toLowerCase().trim();
+  const exemptList = [
+    "terreno",
+    "lote",
+    "loteamento",
+    "galpão",
+    "galpao",
+    "depósito",
+    "deposito",
+    "armazém",
+    "armazem",
+    "chácara",
+    "chacara",
+    "sítio",
+    "sitio",
+    "fazenda",
+    "área",
+    "area",
+    "garagem",
+    "box",
+  ];
+  return !exemptList.some((exempt) => clean.includes(exempt));
+};
+
+const validateForm = (data) => {
+  const errors = {};
+
+  // 1. Aba Básico
+  if (!data.code || !data.code.trim()) {
+    errors.code = {
+      tab: "basic",
+      tabLabel: "Básico",
+      label: "Código do Imóvel",
+      message: "Código do imóvel é obrigatório para identificação no CRM e Canal Pro.",
+    };
+  }
+
+  if (!data.title || !data.title.trim()) {
+    errors.title = {
+      tab: "basic",
+      tabLabel: "Básico",
+      label: "Título do Imóvel",
+      message: "O título do imóvel é obrigatório.",
+    };
+  }
+
+  if (!data.category) {
+    errors.category = {
+      tab: "basic",
+      tabLabel: "Básico",
+      label: "Transação (Categoria)",
+      message: "Selecione a transação do imóvel (Venda, Alugar ou Ambos).",
+    };
+  }
+
+  if (!data.type || !data.type.trim()) {
+    errors.type = {
+      tab: "basic",
+      tabLabel: "Básico",
+      label: "Tipo de Imóvel",
+      message: "Selecione o tipo do imóvel (ex: Apartamento, Casa, etc.).",
+    };
+  }
+
+  if (!data.sobConsulta || data.syncWithPortal) {
+    if (data.category === "Venda" && (!data.price || Number(data.price) <= 0)) {
+      errors.price = {
+        tab: "basic",
+        tabLabel: "Básico",
+        label: "Preço de Venda",
+        message: "Informe o valor de venda (obrigatório para integração com Canal Pro).",
+      };
+    } else if (data.category === "Alugar" && (!data.rentPrice || Number(data.rentPrice) <= 0)) {
+      errors.rentPrice = {
+        tab: "basic",
+        tabLabel: "Básico",
+        label: "Preço de Aluguel",
+        message: "Informe o valor de aluguel (obrigatório para integração com Canal Pro).",
+      };
+    } else if (data.category === "Venda e Aluguel" && (!data.price || Number(data.price) <= 0) && (!data.rentPrice || Number(data.rentPrice) <= 0)) {
+      errors.price = {
+        tab: "basic",
+        tabLabel: "Básico",
+        label: "Preço (Venda ou Aluguel)",
+        message: "Informe pelo menos um valor de preço para o Canal Pro.",
+      };
+    }
+  }
+
+  // 2. Aba Estrutura
+  if (!data.area || Number(data.area) <= 0) {
+    errors.area = {
+      tab: "structure",
+      tabLabel: "Estrutura",
+      label: "Área Construída / Útil",
+      message: "A área construída / útil (m²) é obrigatória para o Canal Pro e portais.",
+    };
+  }
+
+  const needsBedroomsAndBaths = isResidentialOrOfficeType(data.type);
+  if (needsBedroomsAndBaths) {
+    if (!data.bedrooms || Number(data.bedrooms) < 1) {
+      errors.bedrooms = {
+        tab: "structure",
+        tabLabel: "Estrutura",
+        label: "Quartos",
+        message: "Para este tipo de imóvel (residencial/comercial), o portal ZAP/VivaReal exige pelo menos 1 quarto.",
+      };
+    }
+    if (!data.bathrooms || Number(data.bathrooms) < 1) {
+      errors.bathrooms = {
+        tab: "structure",
+        tabLabel: "Estrutura",
+        label: "Banheiros",
+        message: "Para este tipo de imóvel, o portal ZAP/VivaReal exige pelo menos 1 banheiro (entre 1 e 20).",
+      };
+    } else if (Number(data.bathrooms) > 20) {
+      errors.bathrooms = {
+        tab: "structure",
+        tabLabel: "Estrutura",
+        label: "Banheiros",
+        message: "O número máximo aceito pelo portal ZAP/VivaReal é de 20 banheiros.",
+      };
+    }
+  }
+
+  // 3. Aba Localização
+  const cleanCep = String(data.cep || "").replace(/\D/g, "");
+  if (!cleanCep || cleanCep.length < 8) {
+    errors.cep = {
+      tab: "location",
+      tabLabel: "Localização",
+      label: "CEP",
+      message: "CEP (PostalCode) é obrigatório em todos os envios para o Canal Pro (8 dígitos).",
+    };
+  }
+
+  if (!data.estado || !data.estado.trim()) {
+    errors.estado = {
+      tab: "location",
+      tabLabel: "Localização",
+      label: "Estado (UF)",
+      message: "Estado (UF) é obrigatório para localização no Canal Pro.",
+    };
+  }
+
+  if (!data.cidade || !data.cidade.trim()) {
+    errors.cidade = {
+      tab: "location",
+      tabLabel: "Localização",
+      label: "Cidade",
+      message: "A cidade é obrigatória para localização e Canal Pro.",
+    };
+  }
+
+  if (!data.bairro || !data.bairro.trim()) {
+    errors.bairro = {
+      tab: "location",
+      tabLabel: "Localização",
+      label: "Bairro",
+      message: "O bairro é obrigatório para localização e Canal Pro.",
+    };
+  }
+
+  // 4. Aba Mídias
+  const validPhotos = (data.photos || []).filter(Boolean);
+  if (validPhotos.length === 0) {
+    errors.photos = {
+      tab: "media",
+      tabLabel: "Mídias",
+      label: "Fotos do Imóvel",
+      message: "É obrigatório enviar pelo menos 1 foto do imóvel para o portal e Canal Pro.",
+    };
+  }
+
+  return errors;
 };
 
 const quillModules = {
@@ -96,6 +280,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
   const mode = property ? "edit" : "create";
   const [activeTab, setActiveTab] = useState("basic");
   const [formData, setFormData] = useState(defaultForm);
+  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
   const [availableTypes, setAvailableTypes] = useState(baseTypes);
   const [availablePropertyFeatures, setAvailablePropertyFeatures] = useState(basePropertyFeatures);
   const [availableCondoFeatures, setAvailableCondoFeatures] = useState(baseCondoFeatures);
@@ -192,6 +377,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
     setShowTips(false);
     setShowCancelConfirm(false);
     setActiveTab("basic");
+    setHasAttemptedSubmit(false);
     setIsAddingType(false);
     setNewType("");
     setNewPropertyFeature("");
@@ -232,6 +418,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
         rentPrice: property.pricing?.rentPrice || property.rentPrice || "",
         condo: property.pricing?.condo || property.condo || "",
         iptu: property.pricing?.iptu || property.iptu || "",
+        sobConsulta: Boolean(property.sobConsulta || (Number(property.pricing?.price || property.price || 0) === 0 && Number(property.pricing?.rentPrice || property.rentPrice || 0) === 0)),
         category: property.category || "",
         type: property.type || "",
         cep: property.location?.cep || property.cep || "",
@@ -642,7 +829,39 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
     onClose();
   };
 
+  const formValidationErrors = useMemo(() => {
+    return validateForm(formData);
+  }, [formData]);
+
+  const tabErrorCounts = useMemo(() => {
+    if (!hasAttemptedSubmit) return {};
+    const counts = {};
+    Object.values(formValidationErrors).forEach((err) => {
+      counts[err.tab] = (counts[err.tab] || 0) + 1;
+    });
+    return counts;
+  }, [hasAttemptedSubmit, formValidationErrors]);
+
+  const tabWarnings = useMemo(() => {
+    const warnings = {};
+    const descLength = (formData.description || "").length;
+    if (descLength > 3000) {
+      warnings.description = "A descrição ultrapassa 3000 caracteres (não será sincronizada com o Canal Pro)";
+    }
+    return warnings;
+  }, [formData.description]);
+
   const handleSave = async () => {
+    setHasAttemptedSubmit(true);
+
+    const errors = validateForm(formData);
+    const errorKeys = Object.keys(errors);
+    if (errorKeys.length > 0) {
+      const firstError = errors[errorKeys[0]];
+      setActiveTab(firstError.tab);
+      return;
+    }
+
     setIsSaving(true);
 
     try {
@@ -656,14 +875,25 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
         }
       }
 
-      if (!formData.photos || formData.photos.length === 0) {
-        alert("É obrigatório enviar pelo menos uma foto do imóvel para integração com os portais.");
-        setActiveTab("media");
-        setIsSaving(false);
-        return;
-      }
-
-      const payload = { ...formData };
+      const payload = {
+        ...formData,
+        price: Number(formData.price) || 0,
+        rentPrice: Number(formData.rentPrice) || 0,
+        condo: Number(formData.condo) || 0,
+        iptu: Number(formData.iptu) || 0,
+        area: Number(formData.area) || 0,
+        landArea: Number(formData.landArea) || 0,
+        totalArea: Number(formData.totalArea) || 0,
+        bedrooms: Number(formData.bedrooms) || 0,
+        suites: Number(formData.suites) || 0,
+        bathrooms: Number(formData.bathrooms) || 0,
+        parkingSpaces: Number(formData.parkingSpaces) || 0,
+        floors: Number(formData.floors) || 0,
+        unitsPerFloor: Number(formData.unitsPerFloor) || 0,
+        buildings: Number(formData.buildings) || 0,
+        yearBuilt: Number(formData.yearBuilt) || 0,
+        sobConsulta: Boolean(formData.sobConsulta),
+      };
       
       // Sanitiza descrição reunindo palavras divididas por quebras de linha e limpando hífens macios
       if (payload.description) {
@@ -837,16 +1067,29 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
               className={styles.tabs}
               aria-label="Navegação das abas do formulário"
             >
-              {tabOptions.map((tab) => (
-                <button
-                  key={tab.id}
-                  type="button"
-                  className={`${styles.tabButton} ${activeTab === tab.id ? styles.tabButtonActive : ""}`.trim()}
-                  onClick={() => setActiveTab(tab.id)}
-                >
-                  {tab.label}
-                </button>
-              ))}
+              {tabOptions.map((tab) => {
+                const errorCount = tabErrorCounts[tab.id];
+                const warningMsg = tabWarnings[tab.id];
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    className={`${styles.tabButton} ${activeTab === tab.id ? styles.tabButtonActive : ""} ${errorCount ? styles.tabButtonError : warningMsg ? styles.tabButtonWarning : ""}`.trim()}
+                    onClick={() => setActiveTab(tab.id)}
+                  >
+                    <span>{tab.label}</span>
+                    {errorCount > 0 ? (
+                      <span className={styles.tabErrorBadge} title={`${errorCount} campo(s) obrigatório(s) pendente(s)`}>
+                        {errorCount}
+                      </span>
+                    ) : warningMsg ? (
+                      <span className={styles.tabWarningBadge} title={warningMsg}>
+                        ⚠️
+                      </span>
+                    ) : null}
+                  </button>
+                );
+              })}
             </nav>
 
             <label className={styles.syncToggleLabel} title="Enviar este imóvel para integração com o Canal Pro">
@@ -866,15 +1109,43 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
 
         <div className={styles.modalBodyLayout}>
           <div className={styles.modalMainContent}>
+            {hasAttemptedSubmit && Object.keys(formValidationErrors).length > 0 && (
+              <div className={styles.validationAlertBanner}>
+                <div className={styles.validationAlertHeader}>
+                  <AlertTriangle className={styles.validationAlertIcon} size={22} />
+                  <div className={styles.validationAlertContent}>
+                    <strong>Atenção: Não é possível salvar o imóvel ainda.</strong>
+                    <p>Existem campos obrigatórios para o site e Canal Pro pendentes. Clique em um item abaixo para ir direto até a aba correspondente:</p>
+                  </div>
+                </div>
+                <div className={styles.validationErrorChips}>
+                  {Object.entries(formValidationErrors).map(([key, err]) => (
+                    <button
+                      key={key}
+                      type="button"
+                      className={styles.errorChip}
+                      onClick={() => setActiveTab(err.tab)}
+                      title={`Ir para aba ${err.tabLabel}`}
+                    >
+                      <span className={styles.errorChipTab}>{err.tabLabel}:</span>
+                      <span className={styles.errorChipLabel}>{err.label}</span>
+                      <ArrowRight size={13} />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
           {activeTab === "basic" ? (
             <section className={styles.tabPanel}>
             <div className={styles.formGrid}>
               <div className={styles.inputWithGenerate}>
                 <Input
-                  label="Título"
+                  label="Título *"
                   placeholder="Ex: Casa térrea com piscina"
                   value={formData.title}
                   onChange={(event) => updateField("title", event.target.value)}
+                  error={hasAttemptedSubmit && formValidationErrors.title ? formValidationErrors.title.message : undefined}
                 />
                 <Button 
                   type="button" 
@@ -888,12 +1159,12 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
               </div>
               <div className={styles.codeGroupContainer}>
                 <Input
-                  label="Código"
+                  label="Código do Imóvel *"
                   placeholder="Ex: VLD-1204"
                   value={formData.code}
                   onChange={(event) => updateField("code", event.target.value)}
                   onBlur={handleCodeBlur}
-                  error={codeError}
+                  error={codeError || (hasAttemptedSubmit && formValidationErrors.code ? formValidationErrors.code.message : undefined)}
                   className={styles.codeInput}
                 />
                 <Button 
@@ -908,32 +1179,54 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
               </div>
               <div className={styles.selectRow}>
                 <Select
-                  label="Categoria"
+                  label="Categoria *"
                   value={formData.category}
                   onChange={(value) => updateField("category", value)}
                   options={categoryOptions}
+                  error={hasAttemptedSubmit && formValidationErrors.category ? formValidationErrors.category.message : undefined}
                 />
               </div>
 
               {(formData.category === "Venda" || formData.category === "Venda e Aluguel") && (
                 <Input
-                  label="Preço de Venda"
+                  label="Preço de Venda *"
                   type="text"
                   placeholder="R$ 0"
                   value={formatCurrencyDisplay(formData.price)}
                   onChange={(event) => handleCurrencyChange("price", event)}
+                  error={hasAttemptedSubmit && formValidationErrors.price ? formValidationErrors.price.message : undefined}
                 />
               )}
 
               {(formData.category === "Alugar" || formData.category === "Venda e Aluguel") && (
                 <Input
-                  label="Preço de Aluguel"
+                  label="Preço de Aluguel *"
                   type="text"
                   placeholder="R$ 0"
                   value={formatCurrencyDisplay(formData.rentPrice)}
                   onChange={(event) => handleCurrencyChange("rentPrice", event)}
+                  error={hasAttemptedSubmit && formValidationErrors.rentPrice ? formValidationErrors.rentPrice.message : undefined}
                 />
               )}
+
+              <div className={`${styles.sobConsultaContainer} ${formData.sobConsulta ? styles.sobConsultaContainerActive : ''}`}>
+                <label className={styles.sobConsultaLabel} title="Marcar para exibir 'Sob consulta' no site">
+                  <input
+                    type="checkbox"
+                    checked={formData.sobConsulta}
+                    onChange={(e) => updateField("sobConsulta", e.target.checked)}
+                    className={styles.sobConsultaCheckbox}
+                  />
+                  <div className={styles.sobConsultaTextWrap}>
+                    <span className={styles.sobConsultaText}>
+                      Exibir valor como <strong>"Sob Consulta"</strong> no site
+                    </span>
+                    <span className={styles.sobConsultaHint}>
+                      O valor numérico preenchido acima continuará sendo sincronizado com o Canal Pro, mas no site aparecerá <em>"Sob consulta"</em>.
+                    </span>
+                  </div>
+                </label>
+              </div>
 
               <Input
                 label="Condomínio"
@@ -960,7 +1253,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                   />
                   <div className={styles.featuredToggleText}>
                     <Star size={16} className={formData.featured ? styles.starActive : ""} />
-                    <span>Destacar este imóvel na Home e no topo das buscas</span>
+                    <span>Destacar na página inicial</span>
                   </div>
                 </label>
               </div>
@@ -1021,10 +1314,11 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                   ) : (
                     <div className={styles.selectRow}>
                       <Select
-                        label="Tipo"
+                        label="Tipo de Imóvel *"
                         options={typeOptions}
                         value={formData.type}
                         onChange={(value) => updateField("type", value)}
+                        error={hasAttemptedSubmit && formValidationErrors.type ? formValidationErrors.type.message : undefined}
                       />
                       <Button
                         type="button"
@@ -1047,12 +1341,13 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
           <section className={styles.tabPanel}>
             <div className={styles.formGrid}>
               <Input
-                label="Área Construída (m²)"
+                label="Área Construída / Útil (m²) *"
                 icon={Ruler}
                 type="number"
                 placeholder="Ex: 150"
                 value={formData.area}
                 onChange={(event) => handleAreaFieldChange("area", event.target.value)}
+                error={hasAttemptedSubmit && formValidationErrors.area ? formValidationErrors.area.message : undefined}
               />
               <Input
                 label="Área do Terreno (m²)"
@@ -1082,51 +1377,79 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                       <RotateCcw size={13} /> Recalcular soma automática
                     </button>
                   ) : (
-                    <span className={styles.autoCalcBadge}>
-                      ✨ Soma automática (Construída + Terreno)
-                    </span>
+                    <div className={styles.autoCalcGroup}>
+                      <span className={styles.autoCalcBadge}>
+                        ✨ Soma automática (Construída + Terreno)
+                      </span>
+                      <button
+                        type="button"
+                        className={styles.unlockTotalBtn}
+                        onClick={() => setIsTotalAreaCustom(true)}
+                        title="Desbloquear para editar a área total manualmente"
+                      >
+                        <Unlock size={12} /> Editar manualmente
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
               <Input
-                label="Quartos"
+                label={isResidentialOrOfficeType(formData.type) ? "Quartos *" : "Quartos"}
                 icon={BedDouble}
                 type="number"
+                min="0"
                 placeholder="0"
                 value={formData.bedrooms}
                 onChange={(event) =>
                   updateField("bedrooms", event.target.value)
                 }
+                error={hasAttemptedSubmit && formValidationErrors.bedrooms ? formValidationErrors.bedrooms.message : undefined}
+                warning={!isResidentialOrOfficeType(formData.type) && (!formData.bedrooms || Number(formData.bedrooms) === 0)}
+                warningText={!isResidentialOrOfficeType(formData.type) && (!formData.bedrooms || Number(formData.bedrooms) === 0) ? "ℹ️ 0 quartos (imóvel isento - será enviado 0)" : undefined}
+                success={Number(formData.bedrooms) > 0}
               />
               <Input
                 label="Suítes"
                 icon={BedDouble}
                 type="number"
+                min="0"
                 placeholder="0"
                 value={formData.suites}
                 onChange={(event) =>
                   updateField("suites", event.target.value)
                 }
+                warning={!formData.suites || Number(formData.suites) === 0}
+                warningText={(!formData.suites || Number(formData.suites) === 0) ? "ℹ️ 0 suítes (será enviado 0 para a API/Canal Pro)" : undefined}
+                success={Number(formData.suites) > 0}
               />
               <Input
-                label="Banheiros"
+                label={isResidentialOrOfficeType(formData.type) ? "Banheiros *" : "Banheiros"}
                 icon={Bath}
                 type="number"
+                min="0"
                 placeholder="0"
                 value={formData.bathrooms}
                 onChange={(event) =>
                   updateField("bathrooms", event.target.value)
                 }
+                error={hasAttemptedSubmit && formValidationErrors.bathrooms ? formValidationErrors.bathrooms.message : undefined}
+                warning={!isResidentialOrOfficeType(formData.type) && (!formData.bathrooms || Number(formData.bathrooms) === 0)}
+                warningText={!isResidentialOrOfficeType(formData.type) && (!formData.bathrooms || Number(formData.bathrooms) === 0) ? "ℹ️ 0 banheiros (imóvel isento - será enviado 0)" : undefined}
+                success={Number(formData.bathrooms) > 0}
               />
               <Input
                 label="Vagas"
                 icon={CarFront}
                 type="number"
+                min="0"
                 placeholder="0"
                 value={formData.parkingSpaces}
                 onChange={(event) =>
                   updateField("parkingSpaces", event.target.value)
                 }
+                warning={!formData.parkingSpaces || Number(formData.parkingSpaces) === 0}
+                warningText={(!formData.parkingSpaces || Number(formData.parkingSpaces) === 0) ? "ℹ️ 0 vagas (será enviado 0 para a API/Canal Pro)" : undefined}
+                success={Number(formData.parkingSpaces) > 0}
               />
               <Input
                 label="Andar do imóvel"
@@ -1166,7 +1489,7 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                 }
               />
               <Input
-                label="Nº de Torres (Buildings)"
+                label="Nº de Torres / Edifícios"
                 type="number"
                 placeholder="Ex: 2"
                 value={formData.buildings}
@@ -1201,12 +1524,12 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                 onChange={(value) => updateField("displayAddress", value)}
               />
               <Input
-                label="CEP"
-                placeholder="Apenas números"
+                label="CEP *"
+                placeholder="Apenas números (8 dígitos)"
                 value={formData.cep}
                 onChange={handleCepChange}
                 maxLength={8}
-                error={cepError}
+                error={cepError || (hasAttemptedSubmit && formValidationErrors.cep ? formValidationErrors.cep.message : undefined)}
                 success={cepSuccess}
               />
               <Input
@@ -1229,24 +1552,27 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                 onChange={(event) => updateField("complemento", event.target.value)}
               />
               <Input
-                label="Bairro"
+                label="Bairro *"
                 placeholder="Nome do bairro"
                 value={formData.bairro}
                 onChange={(event) =>
                   updateField("bairro", event.target.value)
                 }
+                error={hasAttemptedSubmit && formValidationErrors.bairro ? formValidationErrors.bairro.message : undefined}
               />
               <Input
-                label="Cidade"
+                label="Cidade *"
                 placeholder="Sua cidade"
                 value={formData.cidade}
                 onChange={(event) => updateField("cidade", event.target.value)}
+                error={hasAttemptedSubmit && formValidationErrors.cidade ? formValidationErrors.cidade.message : undefined}
               />
               <Input
-                label="Estado (UF)"
+                label="Estado (UF) *"
                 placeholder="Ex: SP"
                 value={formData.estado}
                 onChange={(event) => updateField("estado", event.target.value)}
+                error={hasAttemptedSubmit && formValidationErrors.estado ? formValidationErrors.estado.message : undefined}
                 maxLength={2}
               />
             </div>
@@ -1353,6 +1679,12 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
 
         {activeTab === "media" ? (
           <section className={styles.tabPanel}>
+            {hasAttemptedSubmit && formValidationErrors.photos && (
+              <div className={styles.mediaErrorBanner}>
+                <AlertTriangle size={18} />
+                <span>{formValidationErrors.photos.message}</span>
+              </div>
+            )}
             <div className={styles.mediaDropzone}>
               <input
                 type="file"
@@ -1581,13 +1913,22 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                     Gerar Descrição Automática
                   </Button>
                 </div>
+
+                {(formData.description || '').length > 3000 && (
+                  <div className={styles.descriptionWarningAlert}>
+                    <AlertTriangle size={18} style={{ flexShrink: 0 }} />
+                    <span>
+                      <strong>Atenção:</strong> A descrição ultrapassa 3000 caracteres (atual: <strong>{(formData.description || '').length}</strong>). Este imóvel ficará visível no seu site, mas não será sincronizado com o Canal Pro até que o texto seja encurtado.
+                    </span>
+                  </div>
+                )}
+
                 <div className={`${styles.quillContainer} ${(formData.description || '').length > 3000 ? styles.quillWarning : (formData.description || '').length >= 2900 ? styles.quillWarning : ''}`}>
                   <ReactQuill
                     theme="snow"
                     value={formData.description}
                     onChange={(content) => setFormData((prev) => ({ ...prev, description: content }))}
                     modules={quillModules}
-                    maxLength={3000}
                     placeholder="Descreva o imóvel com detalhes, diferenciais, posicionamento solar, acabamentos e contexto de uso."
                   />
                 </div>
@@ -1596,12 +1937,6 @@ export default function PropertyFormModal({ isOpen, onClose, property, onSave })
                     {(formData.description || '').length} / 3000
                   </span>
                 </div>
-                
-                {(formData.description || '').length > 3000 && (
-                  <div className={styles.descriptionWarningAlert}>
-                    <strong>Atenção:</strong> A descrição ultrapassa 3000 caracteres. Este imóvel ficará visível no seu site, mas não será sincronizado com o Canal Pro.
-                  </div>
-                )}
               </div>
             </div>
           </section>

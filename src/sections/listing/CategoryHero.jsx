@@ -19,7 +19,7 @@ export default function CategoryHero({ title, bgImage, videoSrc }) {
   return (
     <section 
       className={styles.hero} 
-      style={!videoSrc && bgImage ? { backgroundImage: `url(${bgImage})` } : {}}
+      style={bgImage ? { backgroundImage: `url(${bgImage})` } : {}}
     >
       {videoSrc && (
         <video 

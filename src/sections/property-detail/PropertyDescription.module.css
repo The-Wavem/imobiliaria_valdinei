@@ -21,13 +21,19 @@
   hyphens: none !important;
 }
 
+.propertyDescription {
+  white-space: pre-line;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
 .richTextContainer {
   margin-top: 1rem;
   width: 100%;
   max-width: 100%;
-  word-break: normal !important;
-  overflow-wrap: break-word !important;
-  white-space: normal;
+  white-space: pre-line;
+  overflow-wrap: break-word;
+  word-break: break-word;
   hyphens: none !important;
 }
 

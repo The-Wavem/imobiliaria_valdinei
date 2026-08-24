@@ -37,6 +37,7 @@ export default function ContactSidebar({
   propertyTitle,
   propertyId,
   status,
+  sobConsulta,
 }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -193,29 +194,53 @@ export default function ContactSidebar({
             <>
               <div className={styles.priceLabel}>Valor de Venda</div>
               <div className={styles.priceValue}>
-                <span className={styles.currency}>R$</span>
-                <span className={styles.amount}>{price ? price.toLocaleString("pt-BR") : "---"}</span>
+                {!sobConsulta && Number(price) > 0 ? (
+                  <>
+                    <span className={styles.currency}>R$</span>
+                    <span className={styles.amount}>{Number(price).toLocaleString("pt-BR")}</span>
+                  </>
+                ) : (
+                  <span className={styles.amount} style={{ fontSize: '1.25rem' }}>Sob consulta</span>
+                )}
               </div>
               <div className={styles.priceLabel} style={{ marginTop: '0.75rem' }}>Valor de Aluguel</div>
               <div className={styles.priceValue}>
-                <span className={styles.currency}>R$</span>
-                <span className={styles.amount}>{rentPrice ? rentPrice.toLocaleString("pt-BR") : "---"}</span>
+                {!sobConsulta && Number(rentPrice) > 0 ? (
+                  <>
+                    <span className={styles.currency}>R$</span>
+                    <span className={styles.amount}>{Number(rentPrice).toLocaleString("pt-BR")}</span>
+                  </>
+                ) : (
+                  <span className={styles.amount} style={{ fontSize: '1.25rem' }}>Sob consulta</span>
+                )}
               </div>
             </>
           ) : category === "Alugar" ? (
             <>
               <div className={styles.priceLabel}>Valor de Aluguel</div>
               <div className={styles.priceValue}>
-                <span className={styles.currency}>R$</span>
-                <span className={styles.amount}>{rentPrice ? rentPrice.toLocaleString("pt-BR") : (price ? price.toLocaleString("pt-BR") : "---")}</span>
+                {!sobConsulta && (Number(rentPrice) > 0 || Number(price) > 0) ? (
+                  <>
+                    <span className={styles.currency}>R$</span>
+                    <span className={styles.amount}>{(Number(rentPrice) || Number(price)).toLocaleString("pt-BR")}</span>
+                  </>
+                ) : (
+                  <span className={styles.amount} style={{ fontSize: '1.25rem' }}>Sob consulta</span>
+                )}
               </div>
             </>
           ) : (
             <>
               <div className={styles.priceLabel}>Valor de Venda</div>
               <div className={styles.priceValue}>
-                <span className={styles.currency}>R$</span>
-                <span className={styles.amount}>{price ? price.toLocaleString("pt-BR") : "---"}</span>
+                {!sobConsulta && Number(price) > 0 ? (
+                  <>
+                    <span className={styles.currency}>R$</span>
+                    <span className={styles.amount}>{Number(price).toLocaleString("pt-BR")}</span>
+                  </>
+                ) : (
+                  <span className={styles.amount} style={{ fontSize: '1.25rem' }}>Sob consulta</span>
+                )}
               </div>
             </>
           )}

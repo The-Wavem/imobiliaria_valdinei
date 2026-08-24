@@ -16,13 +16,7 @@ export function cleanAndFixDescription(raw) {
     "$1-$2"
   );
 
-  // 3. Reúne palavras cortadas por quebras de linha/espaços arbitrários no meio (ex: "Lo\n calizada", "m\n omentos", "a\n os", "em um\n a")
-  str = str.replace(
-    /([a-zA-ZáàâãéèêíïóôõöúçÑñÁÀÂÃÉÈÊÍÏÓÔÕÖÚÇ])\s*(?:\r?\n|<br\s*\/?>)\s*([a-zàâãéèêíïóôõöúçñ])/g,
-    "$1$2"
-  );
-
-  // 4. Se for texto puro sem tags HTML, converte quebras duplas em parágrafos
+  // 3. Se for texto puro sem tags HTML, converte quebras duplas em parágrafos
   if (!/<[a-z][\s\S]*>/i.test(str)) {
     str = str
       .split(/\n\s*\n/)
@@ -42,7 +36,7 @@ export default function PropertyDescription({ description }) {
     <section className={styles.section}>
       <h2 className={styles.subtitle}>Descrição</h2>
       <div 
-        className={styles.richTextContainer}
+        className={`${styles.propertyDescription} ${styles.richTextContainer}`}
         dangerouslySetInnerHTML={{ __html: cleanHtml }} 
       />
     </section>

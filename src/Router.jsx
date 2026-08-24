@@ -82,6 +82,7 @@ export default function Router() {
           <Route path="/venda" element={<Venda />} />
           <Route path="/comprar" element={<Navigate to="/venda" replace />} />
           <Route path="/sobre" element={<Sobre />} />
+          <Route path="/sobre-nos" element={<Navigate to="/sobre" replace />} />
           <Route path="/imovel/:id" element={<PropertyDetail />} />
           <Route path="*" element={<NotFound />} />
         </Route>
