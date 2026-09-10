@@ -196,7 +196,7 @@ export default function ContatoSection() {
               </a>
 
               <a 
-                href="mailto:contato@valdineisouza.com.br" 
+                href="mailto:vsimoveis.01@gmail.com" 
                 className={styles.contactCard}
               >
                 <div className={styles.contactIcon}>
@@ -204,7 +204,7 @@ export default function ContatoSection() {
                 </div>
                 <div>
                   <span className={styles.contactLabel}>E-mail</span>
-                  <strong className={styles.contactValue}>contato@valdineisouza.com.br</strong>
+                  <strong className={styles.contactValue}>vsimoveis.01@gmail.com</strong>
                 </div>
               </a>
             </div>

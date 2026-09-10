@@ -48,7 +48,7 @@ export default function Footer() {
           <address className={styles.address}>
             (41) 98859-1433
             <br />
-            contato@valdineisouza.com.br
+            vsimoveis.01@gmail.com
           </address>
         </div>
       </div>
