@@ -2,6 +2,7 @@ import {
   addDoc,
   collection,
   deleteDoc,
+  deleteField,
   doc,
   getDocs,
   increment,
@@ -118,15 +119,96 @@ export const updateProperty = async (id, propertyData) => {
   }
 };
 
-export const deleteProperty = async (id) => {
+// Move imóvel para a lixeira (Soft Delete com retenção de 7 dias)
+export const moveToTrash = async (id, currentStatus = "Disponível") => {
+  try {
+    const propertyRef = doc(db, PROPERTY_COLLECTION, id);
+    const validPreviousStatus = currentStatus && currentStatus !== "Lixeira" ? currentStatus : "Disponível";
+    await updateDoc(propertyRef, {
+      status: "Lixeira",
+      previousStatus: validPreviousStatus,
+      active: false,
+      deletedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      statusUpdatedAt: new Date().toISOString()
+    });
+    return true;
+  } catch (error) {
+    console.error("Erro ao mover imóvel para a lixeira:", error);
+    throw error;
+  }
+};
+
+// Restaura imóvel da lixeira de volta ao catálogo
+export const restoreFromTrash = async (id, targetStatus) => {
+  try {
+    const propertyRef = doc(db, PROPERTY_COLLECTION, id);
+    const restoredStatus = targetStatus && targetStatus !== "Lixeira" ? targetStatus : "Disponível";
+    await updateDoc(propertyRef, {
+      status: restoredStatus,
+      active: restoredStatus !== "Inativo",
+      deletedAt: deleteField(),
+      previousStatus: deleteField(),
+      updatedAt: new Date().toISOString(),
+      statusUpdatedAt: new Date().toISOString()
+    });
+    return true;
+  } catch (error) {
+    console.error("Erro ao restaurar imóvel da lixeira:", error);
+    throw error;
+  }
+};
+
+// Exclusão definitiva permanente do Firestore
+export const deletePropertyPermanently = async (id) => {
   try {
     const propertyRef = doc(db, PROPERTY_COLLECTION, id);
     await deleteDoc(propertyRef);
     return true;
   } catch (error) {
-    console.error("Erro ao excluir imóvel:", error);
+    console.error("Erro ao excluir imóvel permanentemente:", error);
     throw error;
   }
+};
+
+// Mantemos deleteProperty como atalho para moveToTrash por padrão
+export const deleteProperty = async (id, currentStatus) => {
+  return moveToTrash(id, currentStatus);
+};
+
+// Expurgar itens da lixeira com mais de 7 dias
+export const autoPurgeTrash = async (properties = []) => {
+  const TRASH_RETENTION_MS = 7 * 24 * 60 * 60 * 1000; // 7 dias em ms
+  const now = Date.now();
+  const expiredIds = [];
+
+  for (const p of properties) {
+    if (p.status === "Lixeira" && p.deletedAt) {
+      const deletedTime = new Date(p.deletedAt).getTime();
+      if (!isNaN(deletedTime) && (now - deletedTime) > TRASH_RETENTION_MS) {
+        expiredIds.push(p.firestoreId || p.id);
+      }
+    }
+  }
+
+  if (expiredIds.length > 0) {
+    await Promise.allSettled(
+      expiredIds.map((id) => deletePropertyPermanently(id))
+    );
+  }
+
+  return expiredIds;
+};
+
+// Esvaziar toda a lixeira
+export const emptyTrash = async (properties = []) => {
+  const trashedProperties = properties.filter((p) => p.status === "Lixeira");
+  if (trashedProperties.length === 0) return true;
+
+  await Promise.allSettled(
+    trashedProperties.map((p) => deletePropertyPermanently(p.firestoreId || p.id))
+  );
+  return true;
 };
 
 export async function getPropertiesStats() {
@@ -242,11 +324,18 @@ export const getAllProperties = async () => {
   try {
     const snapshot = await getDocs(collection(db, "properties"));
 
-    const properties = snapshot.docs.map((documentSnapshot) => ({
+    let properties = snapshot.docs.map((documentSnapshot) => ({
       firestoreId: documentSnapshot.id,
+      id: documentSnapshot.id,
       ...documentSnapshot.data(),
       category: normalizeCategoryLabel(documentSnapshot.data()?.category),
     }));
+
+    // Auto expurgar itens na lixeira há mais de 7 dias
+    const expiredIds = await autoPurgeTrash(properties);
+    if (expiredIds.length > 0) {
+      properties = properties.filter((p) => !expiredIds.includes(p.firestoreId || p.id));
+    }
 
     return properties.sort((a, b) => {
       const getTimestamp = (property) => {

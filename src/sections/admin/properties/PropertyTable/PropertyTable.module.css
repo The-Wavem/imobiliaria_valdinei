@@ -359,3 +359,73 @@
     gap: 0.55rem;
   }
 }
+
+.rowStatusLixeira {
+  background-color: rgba(239, 68, 68, 0.02);
+}
+
+.daysRemainingBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 6px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: #dc2626;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.daysRemainingWarning {
+  background: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.3);
+  color: #d97706;
+}
+
+.emptyTrashBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: rgba(239, 68, 68, 0.08);
+  color: #dc2626;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.emptyTrashBtn:hover {
+  background: #dc2626;
+  color: #ffffff;
+  border-color: #dc2626;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
+}
+
+.restoreBtn {
+  border-color: rgba(16, 185, 129, 0.3) !important;
+  color: #059669 !important;
+  background: rgba(16, 185, 129, 0.06) !important;
+}
+
+.restoreBtn:hover {
+  background: #059669 !important;
+  color: #ffffff !important;
+  border-color: #059669 !important;
+}
+
+.dangerBtn {
+  border-color: rgba(239, 68, 68, 0.3) !important;
+  color: #dc2626 !important;
+  background: rgba(239, 68, 68, 0.06) !important;
+}
+
+.dangerBtn:hover {
+  background: #dc2626 !important;
+  color: #ffffff !important;
+  border-color: #dc2626 !important;
+}

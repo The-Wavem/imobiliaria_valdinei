@@ -1,4 +1,4 @@
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, Trash2, RotateCcw } from "lucide-react";
 import Button from "@components/ui/Button/Button.jsx";
 import Input from "@components/ui/Input/Input.jsx";
 import Select from "@components/ui/Select/Select.jsx";
@@ -11,6 +11,7 @@ const statusOptions = [
   { label: "Vendido", value: "Vendido" },
   { label: "Alugado", value: "Alugado" },
   { label: "Inativo", value: "Inativo" },
+  { label: "Lixeira", value: "Lixeira" },
 ];
 
 export default function PropertyFilterBar({
@@ -20,6 +21,8 @@ export default function PropertyFilterBar({
   onStatusChange,
   onAddClick,
 }) {
+  const isTrashActive = filterStatus === "Lixeira";
+
   return (
     <section className={styles.section} aria-label="Filtros de imóveis">
       <div className={styles.container}>
@@ -43,7 +46,23 @@ export default function PropertyFilterBar({
           />
         </div>
 
-        <div className={styles.actionField}>
+        <div className={styles.actionField} style={{ gap: "0.5rem" }}>
+          <Button
+            type="button"
+            variant={isTrashActive ? "primary" : "secondary"}
+            className={styles.addButton}
+            onClick={() => onStatusChange(isTrashActive ? "Todos" : "Lixeira")}
+            title={isTrashActive ? "Voltar aos imóveis do catálogo" : "Abrir Lixeira de Imóveis"}
+            style={
+              isTrashActive
+                ? { backgroundColor: "#dc2626", borderColor: "#dc2626", color: "#fff" }
+                : { border: "1px solid rgba(239, 68, 68, 0.3)", color: "#dc2626", background: "rgba(239, 68, 68, 0.06)" }
+            }
+          >
+            {isTrashActive ? <RotateCcw size={18} /> : <Trash2 size={18} />}
+            <span>{isTrashActive ? "Ver Catálogo" : "Abrir Lixeira"}</span>
+          </Button>
+
           <Button type="button" variant="primary" className={styles.addButton} onClick={onAddClick}>
             <Plus size={18} />
             <span>Adicionar Imóvel</span>

@@ -4,7 +4,17 @@ import PropertyFilterBar from "@sections/admin/properties/PropertyFilterBar/Prop
 import PropertyTable from "@sections/admin/properties/PropertyTable/PropertyTable.jsx";
 import PropertyFormModal from "@sections/admin/properties/PropertyFormModal/PropertyFormModal.jsx";
 import ConfirmDialog from "@components/ui/ConfirmDialog/ConfirmDialog.jsx";
-import { addProperty, updateProperty, getAllProperties, deleteProperty, togglePropertyStatus, togglePropertyFeatured } from "@services/propertyService.js";
+import { 
+  addProperty, 
+  updateProperty, 
+  getAllProperties, 
+  moveToTrash, 
+  restoreFromTrash, 
+  deletePropertyPermanently, 
+  emptyTrash, 
+  togglePropertyStatus, 
+  togglePropertyFeatured 
+} from "@services/propertyService.js";
 import { useDocumentTitle } from "@hooks/useDocumentTitle.js";
 
 export default function PropertyManager() {
@@ -17,18 +27,27 @@ export default function PropertyManager() {
   const itemsPerPage = 8;
   const [editingProperty, setEditingProperty] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [confirmDelete, setConfirmDelete] = useState({ isOpen: false, propertyId: null });
+
+  // Estados dos Modais de Confirmação
+  const [confirmTrash, setConfirmTrash] = useState({ isOpen: false, propertyId: null, status: null });
+  const [confirmPermanentDelete, setConfirmPermanentDelete] = useState({ isOpen: false, propertyId: null, title: "" });
+  const [confirmEmptyTrash, setConfirmEmptyTrash] = useState(false);
 
   const statsCounts = useMemo(() => {
-    const counts = { total: properties.length, disponiveis: 0, reservados: 0, vendidos: 0, alugados: 0, inativos: 0 };
+    const counts = { total: 0, disponiveis: 0, reservados: 0, vendidos: 0, alugados: 0, inativos: 0, lixeira: 0 };
     properties.forEach((p) => {
       const st = p.status;
-      if (st === 'Disponível' || !st) counts.disponiveis++;
-      else if (st === 'Reservado') counts.reservados++;
-      else if (st === 'Vendido') counts.vendidos++;
-      else if (st === 'Alugado') counts.alugados++;
-      else if (st === 'Inativo') counts.inativos++;
-      else counts.inativos++; // Fallback
+      if (st === 'Lixeira') {
+        counts.lixeira++;
+      } else {
+        counts.total++;
+        if (st === 'Disponível' || !st) counts.disponiveis++;
+        else if (st === 'Reservado') counts.reservados++;
+        else if (st === 'Vendido') counts.vendidos++;
+        else if (st === 'Alugado') counts.alugados++;
+        else if (st === 'Inativo') counts.inativos++;
+        else counts.inativos++;
+      }
     });
     return counts;
   }, [properties]);
@@ -52,7 +71,7 @@ export default function PropertyManager() {
   const handleCloseModal = () => {
     setEditingProperty(null);
     setIsModalOpen(false);
-    loadProperties(); // Recarrega a tabela após fechar/salvar o modal
+    loadProperties();
   };
 
   const filteredProperties = useMemo(() => {
@@ -73,6 +92,16 @@ export default function PropertyManager() {
               String(field).toLowerCase().includes(normalizedSearch),
             )
         : true;
+
+      // Se o filtro selecionado for Lixeira, mostra APENAS os itens da Lixeira
+      if (filterStatus === "Lixeira") {
+        return matchesSearch && property.status === "Lixeira";
+      }
+
+      // Para as demais abas ("Todos", "Disponível", etc.), OCULTA os itens da Lixeira
+      if (property.status === "Lixeira") {
+        return false;
+      }
 
       const matchesStatus =
         filterStatus === "Todos"
@@ -100,9 +129,7 @@ export default function PropertyManager() {
   };
 
   const handleToggleStatus = async (id, newStatus) => {
-    // Agora usamos a função cirúrgica recebendo o novo status diretamente do Select
     await togglePropertyStatus(id, newStatus);
-    
     loadProperties();
   };
 
@@ -111,22 +138,70 @@ export default function PropertyManager() {
     loadProperties();
   };
 
-  // Quando clica no botão "Excluir" na tabela
-  const handleDeleteRequest = (id) => {
-    setConfirmDelete({ isOpen: true, propertyId: id });
+  // 1. Mover para a Lixeira
+  const handleMoveToTrashRequest = (id, currentStatus) => {
+    setConfirmTrash({ isOpen: true, propertyId: id, status: currentStatus });
   };
 
-  // Quando clica no botão "Confirmar" dentro do nosso alerta
-  const confirmDeleteAction = async () => {
-    if (confirmDelete.propertyId) {
+  const confirmMoveToTrashAction = async () => {
+    if (confirmTrash.propertyId) {
       try {
-        await deleteProperty(confirmDelete.propertyId);
-        setConfirmDelete({ isOpen: false, propertyId: null });
-        loadProperties(); // Atualiza a tabela imediatamente
+        await moveToTrash(confirmTrash.propertyId, confirmTrash.status);
+        setConfirmTrash({ isOpen: false, propertyId: null, status: null });
+        loadProperties();
       } catch (error) {
-        console.error("Erro ao excluir:", error);
-        alert("Falha ao excluir o imóvel. Tente novamente.");
+        console.error("Erro ao mover para a lixeira:", error);
+        alert("Falha ao mover imóvel para a lixeira.");
       }
+    }
+  };
+
+  // 2. Restaurar da Lixeira
+  const handleRestoreProperty = async (property) => {
+    try {
+      await restoreFromTrash(property.firestoreId || property.id, property.previousStatus);
+      loadProperties();
+    } catch (error) {
+      console.error("Erro ao restaurar imóvel:", error);
+      alert("Falha ao restaurar imóvel.");
+    }
+  };
+
+  // 3. Exclusão Permanente
+  const handlePermanentDeleteRequest = (property) => {
+    setConfirmPermanentDelete({
+      isOpen: true,
+      propertyId: property.firestoreId || property.id,
+      title: property.title || "este imóvel"
+    });
+  };
+
+  const confirmPermanentDeleteAction = async () => {
+    if (confirmPermanentDelete.propertyId) {
+      try {
+        await deletePropertyPermanently(confirmPermanentDelete.propertyId);
+        setConfirmPermanentDelete({ isOpen: false, propertyId: null, title: "" });
+        loadProperties();
+      } catch (error) {
+        console.error("Erro ao excluir permanentemente:", error);
+        alert("Falha ao excluir o imóvel definitivamente.");
+      }
+    }
+  };
+
+  // 4. Esvaziar Lixeira
+  const handleEmptyTrashRequest = () => {
+    setConfirmEmptyTrash(true);
+  };
+
+  const confirmEmptyTrashAction = async () => {
+    try {
+      await emptyTrash(properties);
+      setConfirmEmptyTrash(false);
+      loadProperties();
+    } catch (error) {
+      console.error("Erro ao esvaziar a lixeira:", error);
+      alert("Falha ao esvaziar a lixeira.");
     }
   };
 
@@ -149,11 +224,17 @@ export default function PropertyManager() {
     handleCloseModal();
   };
 
+  const isTrashView = filterStatus === "Lixeira";
+
   return (
     <main className="admin-container">
       <h1 className="admin-title">Imóveis</h1>
 
-      <PropertyStats {...statsCounts} />
+      <PropertyStats 
+        {...statsCounts} 
+        activeFilter={filterStatus}
+        onStatClick={handleStatusFilterChange}
+      />
 
       <PropertyFilterBar
         searchTerm={searchTerm}
@@ -170,9 +251,13 @@ export default function PropertyManager() {
         totalPages={totalPages}
         onPageChange={setCurrentPage}
         onEdit={handleOpenModal}
-        onDelete={handleDeleteRequest} // <-- LIGANDO O GATILHO AQUI
+        onDelete={handleMoveToTrashRequest}
         onToggleStatus={handleToggleStatus}
         onToggleFeatured={handleToggleFeatured}
+        isTrashView={isTrashView}
+        onRestore={handleRestoreProperty}
+        onPermanentDelete={handlePermanentDeleteRequest}
+        onEmptyTrash={handleEmptyTrashRequest}
         onRefresh={loadProperties}
       />
 
@@ -185,13 +270,36 @@ export default function PropertyManager() {
         />
       )}
 
+      {/* Modal 1: Mover para Lixeira */}
       <ConfirmDialog
-        isOpen={confirmDelete.isOpen}
-        onClose={() => setConfirmDelete({ isOpen: false, propertyId: null })}
-        onConfirm={confirmDeleteAction}
-        title="Excluir Imóvel"
-        message="Tem certeza que deseja apagar este imóvel permanentemente? Esta ação não poderá ser desfeita."
-        confirmText="Sim, excluir"
+        isOpen={confirmTrash.isOpen}
+        onClose={() => setConfirmTrash({ isOpen: false, propertyId: null, status: null })}
+        onConfirm={confirmMoveToTrashAction}
+        title="Mover para a Lixeira"
+        message="O imóvel será movido para a Lixeira e ficará oculto do site público. Ele será mantido por 7 dias, podendo ser restaurado a qualquer momento antes da exclusão automática."
+        confirmText="Sim, mover para lixeira"
+        cancelText="Cancelar"
+      />
+
+      {/* Modal 2: Exclusão Permanente */}
+      <ConfirmDialog
+        isOpen={confirmPermanentDelete.isOpen}
+        onClose={() => setConfirmPermanentDelete({ isOpen: false, propertyId: null, title: "" })}
+        onConfirm={confirmPermanentDeleteAction}
+        title="Excluir Definitivamente"
+        message={`Tem certeza que deseja apagar "${confirmPermanentDelete.title}" do banco de dados? Esta ação é irreversível e o imóvel não poderá ser recuperado.`}
+        confirmText="Sim, apagar de vez"
+        cancelText="Cancelar"
+      />
+
+      {/* Modal 3: Esvaziar Lixeira */}
+      <ConfirmDialog
+        isOpen={confirmEmptyTrash}
+        onClose={() => setConfirmEmptyTrash(false)}
+        onConfirm={confirmEmptyTrashAction}
+        title="Esvaziar Lixeira"
+        message="Tem certeza que deseja apagar PERMANENTEMENTE todos os imóveis que estão na lixeira? Todos os dados serão excluídos definitivamente."
+        confirmText="Sim, esvaziar lixeira"
         cancelText="Cancelar"
       />
     </main>

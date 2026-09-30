@@ -104,6 +104,8 @@ export function mapPropertyDocument(snapshot) {
     status: currentStatus,
     visibility: statusObj.visibility || "published",
     createdAt: data.createdAt || data.audit?.createdAt || null,
+    deletedAt: data.deletedAt || null,
+    previousStatus: data.previousStatus || null,
   };
 }
 

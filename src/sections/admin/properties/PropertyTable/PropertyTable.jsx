@@ -1,4 +1,4 @@
-import { Pencil, ToggleLeft, ToggleRight, Trash2, Eye, Star, Share2 } from "lucide-react";
+import { Pencil, ToggleLeft, ToggleRight, Trash2, Eye, Star, Share2, RotateCcw, Clock, AlertTriangle } from "lucide-react";
 import Button from "@components/ui/Button/Button.jsx";
 import Select from "@components/ui/Select/Select.jsx";
 import { calculateTotalScore } from "@utils/rankingEngine.js";
@@ -13,6 +13,18 @@ function formatCurrency(value) {
   }).format(Number(value || 0));
 }
 
+function getDaysRemainingInTrash(deletedAt) {
+  if (!deletedAt) return 7;
+  const deletedTime = new Date(deletedAt).getTime();
+  if (isNaN(deletedTime)) return 7;
+  const now = Date.now();
+  const msElapsed = now - deletedTime;
+  const msIn7Days = 7 * 24 * 60 * 60 * 1000;
+  const msRemaining = msIn7Days - msElapsed;
+  if (msRemaining <= 0) return 0;
+  return Math.ceil(msRemaining / (24 * 60 * 60 * 1000));
+}
+
 export default function PropertyTable({
   properties = [],
   currentPage = 1,
@@ -22,6 +34,10 @@ export default function PropertyTable({
   onDelete,
   onToggleStatus,
   onToggleFeatured,
+  isTrashView = false,
+  onRestore,
+  onPermanentDelete,
+  onEmptyTrash,
 }) {
   const getThumbnail = (property) =>
     (property.photos && property.photos[0]) ||
@@ -70,13 +86,38 @@ export default function PropertyTable({
       <div className={styles.card}>
         <div className={styles.header}>
           <div>
-            <p className={styles.kicker}>Cadastro e controle</p>
-            <h2 className={styles.title}>Imóveis cadastrados</h2>
+            <p className={styles.kicker}>
+              {isTrashView ? "Retenção de 7 dias" : "Cadastro e controle"}
+            </p>
+            <h2 className={styles.title} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              {isTrashView ? (
+                <>
+                  <Trash2 size={22} style={{ color: '#dc2626' }} />
+                  <span>Lixeira de imóveis</span>
+                </>
+              ) : (
+                "Imóveis cadastrados"
+              )}
+            </h2>
           </div>
 
-          <p className={styles.meta}>
-            Página {currentPage} de {totalPages}
-          </p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            {isTrashView && properties.length > 0 && onEmptyTrash && (
+              <button
+                type="button"
+                className={styles.emptyTrashBtn}
+                onClick={onEmptyTrash}
+                title="Apagar permanentemente todos os imóveis da lixeira"
+              >
+                <Trash2 size={16} />
+                <span>Esvaziar Lixeira</span>
+              </button>
+            )}
+
+            <p className={styles.meta}>
+              Página {currentPage} de {totalPages}
+            </p>
+          </div>
         </div>
 
         <div className={styles.tableWrap}>
@@ -87,7 +128,7 @@ export default function PropertyTable({
                 <th>Imóvel</th>
                 <th>Tipo / Categoria</th>
                 <th>Nota</th>
-                <th>Status / Preço</th>
+                <th>{isTrashView ? "Retenção / Expiração" : "Status / Preço"}</th>
                 <th>Wavem Rank</th>
                 <th>Métricas</th>
                 <th>Ações</th>
@@ -111,6 +152,7 @@ export default function PropertyTable({
                       case 'Vendido': return styles.rowStatusVendido;
                       case 'Alugado': return styles.rowStatusAlugado;
                       case 'Inativo': return styles.rowStatusInativo;
+                      case 'Lixeira': return styles.rowStatusLixeira;
                       default: return styles.rowStatusDisponivel;
                     }
                   };
@@ -194,70 +236,88 @@ export default function PropertyTable({
                         </div>
                       </td>
 
-                      <td data-label="Status">
+                      <td data-label={isTrashView ? "Expiração" : "Status"}>
                         <div className={styles.cellContent}>
-                          <div className={styles.statusSelectWrapper}>
-                            <Select
-                              value={property.status || "Disponível"}
-                              onChange={(value) =>
-                                onToggleStatus &&
-                                onToggleStatus(
-                                  property.firestoreId || property.id,
-                                  value
-                                )
-                              }
-                              options={[
-                                { label: "Disponível", value: "Disponível" },
-                                { label: "Reservado", value: "Reservado" },
-                                { label: "Vendido", value: "Vendido" },
-                                { label: "Alugado", value: "Alugado" },
-                                { label: "Inativo", value: "Inativo" },
-                              ]}
-                              compact={true}
-                            />
-                          </div>
-                          <div className={styles.propertyPriceWrap} style={{ marginTop: '0.25rem' }}>
-                            {(() => {
-                              const isBoth = category === "Venda e Aluguel" || category === "Ambos";
-                              const isRent = category === "Alugar";
+                          {isTrashView || property.status === "Lixeira" ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', alignItems: 'flex-start' }}>
+                              <span className={`${styles.daysRemainingBadge} ${getDaysRemainingInTrash(property.deletedAt) <= 2 ? styles.daysRemainingWarning : ''}`.trim()}>
+                                <Clock size={14} />
+                                {(() => {
+                                  const days = getDaysRemainingInTrash(property.deletedAt);
+                                  if (days === 0) return "Expirando hoje";
+                                  return `${days} dia${days > 1 ? 's' : ''} restante${days > 1 ? 's' : ''}`;
+                                })()}
+                              </span>
+                              <small style={{ fontSize: '0.72rem', color: '#64748b' }}>
+                                Descartado em {property.deletedAt ? new Date(property.deletedAt).toLocaleDateString('pt-BR') : 'Sem data'}
+                              </small>
+                            </div>
+                          ) : (
+                            <>
+                              <div className={styles.statusSelectWrapper}>
+                                <Select
+                                  value={property.status || "Disponível"}
+                                  onChange={(value) =>
+                                    onToggleStatus &&
+                                    onToggleStatus(
+                                      property.firestoreId || property.id,
+                                      value
+                                    )
+                                  }
+                                  options={[
+                                    { label: "Disponível", value: "Disponível" },
+                                    { label: "Reservado", value: "Reservado" },
+                                    { label: "Vendido", value: "Vendido" },
+                                    { label: "Alugado", value: "Alugado" },
+                                    { label: "Inativo", value: "Inativo" },
+                                  ]}
+                                  compact={true}
+                                />
+                              </div>
+                              <div className={styles.propertyPriceWrap} style={{ marginTop: '0.25rem' }}>
+                                {(() => {
+                                  const isBoth = category === "Venda e Aluguel" || category === "Ambos";
+                                  const isRent = category === "Alugar";
 
-                              if (isBoth) {
-                                return (
-                                  <>
-                                    {salePrice > 0 && (
-                                      <span className={styles.propertyPrice} style={{ display: "block" }}>
-                                        Venda: {formatCurrency(salePrice)}
+                                  if (isBoth) {
+                                    return (
+                                      <>
+                                        {salePrice > 0 && (
+                                          <span className={styles.propertyPrice} style={{ display: "block" }}>
+                                            Venda: {formatCurrency(salePrice)}
+                                          </span>
+                                        )}
+                                        {rentPrice > 0 && (
+                                          <span className={styles.propertyRentPrice} style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "600", display: "block" }}>
+                                            Aluguel: {formatCurrency(rentPrice)}/mês
+                                          </span>
+                                        )}
+                                        {salePrice === 0 && rentPrice === 0 && (
+                                          <span className={styles.propertyPrice}>Sob consulta</span>
+                                        )}
+                                      </>
+                                    );
+                                  }
+
+                                  if (isRent) {
+                                    const activeRent = rentPrice || salePrice;
+                                    return (
+                                      <span className={styles.propertyPrice}>
+                                        {activeRent > 0 ? `${formatCurrency(activeRent)}/mês` : "Sob consulta"}
                                       </span>
-                                    )}
-                                    {rentPrice > 0 && (
-                                      <span className={styles.propertyRentPrice} style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "600", display: "block" }}>
-                                        Aluguel: {formatCurrency(rentPrice)}/mês
-                                      </span>
-                                    )}
-                                    {salePrice === 0 && rentPrice === 0 && (
-                                      <span className={styles.propertyPrice}>Sob consulta</span>
-                                    )}
-                                  </>
-                                );
-                              }
+                                    );
+                                  }
 
-                              if (isRent) {
-                                const activeRent = rentPrice || salePrice;
-                                return (
-                                  <span className={styles.propertyPrice}>
-                                    {activeRent > 0 ? `${formatCurrency(activeRent)}/mês` : "Sob consulta"}
-                                  </span>
-                                );
-                              }
-
-                              const activeSale = salePrice || rentPrice;
-                              return (
-                                <span className={styles.propertyPrice}>
-                                  {activeSale > 0 ? formatCurrency(activeSale) : "Sob consulta"}
-                                </span>
-                              );
-                            })()}
-                          </div>
+                                  const activeSale = salePrice || rentPrice;
+                                  return (
+                                    <span className={styles.propertyPrice}>
+                                      {activeSale > 0 ? formatCurrency(activeSale) : "Sob consulta"}
+                                    </span>
+                                  );
+                                })()}
+                              </div>
+                            </>
+                          )}
                         </div>
                       </td>
 
@@ -298,28 +358,56 @@ export default function PropertyTable({
                         <div
                           className={`${styles.cellContent} ${styles.actionsCell}`}
                         >
-                          <Button
-                            type="button"
-                            variant="outline"
-                            className={styles.actionButton}
-                            onClick={() => onEdit(property)}
-                          >
-                            <Pencil size={16} />
-                            <span>Editar</span>
-                          </Button>
+                          {isTrashView || property.status === "Lixeira" ? (
+                            <>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                className={`${styles.actionButton} ${styles.restoreBtn}`}
+                                onClick={() => onRestore && onRestore(property)}
+                                title="Restaurar imóvel de volta ao catálogo"
+                              >
+                                <RotateCcw size={16} />
+                                <span>Restaurar</span>
+                              </Button>
 
-                          <Button
-                            type="button"
-                            variant="secondary"
-                            className={styles.actionButton}
-                            onClick={() =>
-                              onDelete &&
-                              onDelete(property.firestoreId || property.id)
-                            }
-                          >
-                            <Trash2 size={16} />
-                            <span>Excluir</span>
-                          </Button>
+                              <Button
+                                type="button"
+                                variant="secondary"
+                                className={`${styles.actionButton} ${styles.dangerBtn}`}
+                                onClick={() => onPermanentDelete && onPermanentDelete(property)}
+                                title="Excluir imóvel permanentemente"
+                              >
+                                <Trash2 size={16} />
+                                <span>Apagar de vez</span>
+                              </Button>
+                            </>
+                          ) : (
+                            <>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                className={styles.actionButton}
+                                onClick={() => onEdit(property)}
+                              >
+                                <Pencil size={16} />
+                                <span>Editar</span>
+                              </Button>
+
+                              <Button
+                                type="button"
+                                variant="secondary"
+                                className={styles.actionButton}
+                                onClick={() =>
+                                  onDelete &&
+                                  onDelete(property.firestoreId || property.id, property.status)
+                                }
+                              >
+                                <Trash2 size={16} />
+                                <span>Excluir</span>
+                              </Button>
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>
